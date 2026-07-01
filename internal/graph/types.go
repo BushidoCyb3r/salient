@@ -94,16 +94,25 @@ type RoleEvidence struct {
 	SampleHosts []string // a few example client IPs, for evidence strings
 }
 
+// L2Gateway is MAC-convergence evidence gathered at scan time (§8.4 primary):
+// a responder MAC that answered for many distinct IPs on a sensor's segment.
+type L2Gateway struct {
+	MAC     string `json:"mac"`
+	Sensor  string `json:"sensor,omitempty"`
+	IPCount int64  `json:"ip_count"`
+}
+
 // SnapshotMeta records how a snapshot was produced.
 type SnapshotMeta struct {
-	CreatedAt      time.Time `json:"created_at"`
-	Window         string    `json:"window"`
-	Scope          []string  `json:"scope"`
-	ClusterName    string    `json:"cluster_name"`
-	Sensors        []string  `json:"sensors,omitempty"`
-	ZeroCovCIDRs   []string  `json:"zero_coverage_cidrs,omitempty"`
-	BetweenSampled bool      `json:"betweenness_sampled"`
-	Tool           string    `json:"tool"`
+	CreatedAt      time.Time   `json:"created_at"`
+	Window         string      `json:"window"`
+	Scope          []string    `json:"scope"`
+	ClusterName    string      `json:"cluster_name"`
+	Sensors        []string    `json:"sensors,omitempty"`
+	ZeroCovCIDRs   []string    `json:"zero_coverage_cidrs,omitempty"`
+	L2Gateways     []L2Gateway `json:"l2_gateways,omitempty"`
+	BetweenSampled bool        `json:"betweenness_sampled"`
+	Tool           string      `json:"tool"`
 }
 
 // Snapshot is the persisted unit and single source of truth.

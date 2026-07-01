@@ -46,6 +46,7 @@ to the local filesystem. No agents, no scans, no changes to the SO stack.`,
 	root.AddCommand(newDiscoverCmd(opts))
 	root.AddCommand(newScanCmd(opts))
 	root.AddCommand(newReportCmd())
+	root.AddCommand(newMapCmd())
 	root.AddCommand(newListCmd())
 	return root
 }

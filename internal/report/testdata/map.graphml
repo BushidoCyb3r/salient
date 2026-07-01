@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="d_label" for="node" attr.name="label" attr.type="string"/>
+  <key id="d_role" for="node" attr.name="role" attr.type="string"/>
+  <key id="d_tier" for="node" attr.name="tier" attr.type="string"/>
+  <key id="d_comp" for="node" attr.name="composite" attr.type="double"/>
+  <key id="d_gw" for="node" attr.name="gateway" attr.type="string"/>
+  <key id="d_blind" for="node" attr.name="blind_spot" attr.type="string"/>
+  <key id="e_class" for="edge" attr.name="service_class" attr.type="string"/>
+  <key id="e_label" for="edge" attr.name="label" attr.type="string"/>
+  <key id="e_conns" for="edge" attr.name="conn_count" attr.type="long"/>
+  <graph id="map" edgedefault="directed">
+    <node id="g:10.0.2.0/24">
+      <data key="d_label">10.0.2.0/24</data>
+      <graph id="g:10.0.2.0/24:" edgedefault="directed">
+        <node id="g:10.0.2.0/24:clients">
+          <data key="d_label">2 workstations</data>
+          <data key="d_role">Unknown</data>
+          <data key="d_tier">client</data>
+          <data key="d_comp">0.0000</data>
+        </node>
+        <node id="g:10.0.2.0/24:gw">
+          <data key="d_label">gateway (inferred)</data>
+          <data key="d_role">Gateway</data>
+          <data key="d_tier">core</data>
+          <data key="d_comp">0.0000</data>
+          <data key="d_gw">inferred</data>
+        </node>
+      </graph>
+    </node>
+    <node id="g:sparse">
+      <data key="d_label">sparse hosts (1)</data>
+      <graph id="g:sparse:" edgedefault="directed">
+        <node id="10.0.1.10">
+          <data key="d_label">10.0.1.10</data>
+          <data key="d_role">DomainController</data>
+          <data key="d_tier">core</data>
+          <data key="d_comp">0.9000</data>
+        </node>
+      </graph>
+    </node>
+    <node id="g:10.0.99.0/24">
+      <data key="d_label">10.0.99.0/24 (no sensor coverage)</data>
+      <data key="d_blind">true</data>
+      <graph id="g:10.0.99.0/24:" edgedefault="directed">
+      </graph>
+    </node>
+    <edge id="e0" source="g:10.0.2.0/24:clients" target="10.0.1.10">
+      <data key="e_class">auth</data>
+      <data key="e_label">2 hosts → auth</data>
+      <data key="e_conns">1000</data>
+    </edge>
+  </graph>
+</graphml>

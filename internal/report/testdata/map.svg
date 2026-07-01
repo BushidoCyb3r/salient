@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="392" viewBox="0 0 900 392" font-family="system-ui,sans-serif">
+<defs><pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#f6e8e8"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c96a6a" stroke-width="2"/></pattern></defs>
+<rect width="100%" height="100%" fill="#fcfcfd"/>
+<text x="24" y="34" font-size="20" font-weight="700" fill="#1c2330">Defilade briefing map — golden</text>
+<text x="24" y="56" font-size="12" fill="#6a7180">window 336h0m0s · generated 2026-07-01 12:00Z · L3 logical dependency map from observed traffic — not physical topology</text>
+<line x1="121" y1="240" x2="355" y2="166" stroke="#d95f30" stroke-width="2.1" opacity="0.75"/>
+<text x="238" y="199" font-size="10" fill="#555c68" text-anchor="middle">2 hosts → auth</text>
+<rect x="24" y="102" width="194" height="182" rx="10" fill="#f2f4f8" fill-opacity="0.55" stroke="#b9c0cc"/>
+<text x="34" y="118" font-size="13" font-weight="600" fill="#39414f">10.0.2.0/24</text>
+<rect x="258" y="102" width="194" height="108" rx="10" fill="#f2f4f8" fill-opacity="0.55" stroke="#b9c0cc"/>
+<text x="268" y="118" font-size="13" font-weight="600" fill="#39414f">sparse hosts (1)</text>
+<rect x="492" y="102" width="194" height="108" rx="10" fill="url(#hatch)" fill-opacity="0.55" stroke="#c96a6a" stroke-dasharray="6,4"/>
+<text x="502" y="118" font-size="13" font-weight="600" fill="#39414f">10.0.99.0/24 (no sensor coverage)</text>
+<rect x="280" y="144" width="150" height="44" rx="7" fill="#fdeee6" stroke="#d95f30" stroke-width="1.6"/>
+<text x="355" y="162" font-size="12" font-weight="600" fill="#1c2330" text-anchor="middle">10.0.1.10</text>
+<text x="355" y="178" font-size="10" fill="#6a7180" text-anchor="middle">#1 · DomainController</text>
+<rect x="46" y="218" width="150" height="44" rx="7" fill="#ffffff" stroke="#8f97a5" stroke-width="1.6"/>
+<text x="121" y="236" font-size="12" font-weight="600" fill="#1c2330" text-anchor="middle">2 workstations</text>
+<text x="121" y="252" font-size="10" fill="#6a7180" text-anchor="middle">aggregated clients</text>
+<rect x="46" y="144" width="150" height="44" rx="7" fill="#fdeee6" stroke="#d95f30" stroke-width="1.6" stroke-dasharray="5,4"/>
+<text x="121" y="162" font-size="12" font-weight="600" fill="#1c2330" text-anchor="middle">gateway (inferred)</text>
+<text x="121" y="178" font-size="10" fill="#6a7180" text-anchor="middle">Gateway</text>
+<text x="24" y="326" font-size="12" font-weight="600" fill="#39414f">Legend:</text>
+<line x1="88" y1="322" x2="114" y2="322" stroke="#d95f30" stroke-width="4"/>
+<text x="120" y="326" font-size="11" fill="#555c68">auth</text>
+<line x1="166" y1="322" x2="192" y2="322" stroke="#3d7edb" stroke-width="4"/>
+<text x="198" y="326" font-size="11" fill="#555c68">name resolution</text>
+<line x1="332" y1="322" x2="358" y2="322" stroke="#3f9d5a" stroke-width="4"/>
+<text x="364" y="326" font-size="11" fill="#555c68">file</text>
+<line x1="410" y1="322" x2="436" y2="322" stroke="#8858c8" stroke-width="4"/>
+<text x="442" y="326" font-size="11" fill="#555c68">database</text>
+<line x1="520" y1="322" x2="546" y2="322" stroke="#8a8f98" stroke-width="4"/>
+<text x="552" y="326" font-size="11" fill="#555c68">web</text>
+<line x1="590" y1="322" x2="616" y2="322" stroke="#d8a02e" stroke-width="4"/>
+<text x="622" y="326" font-size="11" fill="#555c68">admin (RDP/SSH)</text>
+<line x1="756" y1="322" x2="782" y2="322" stroke="#c3c7cd" stroke-width="4"/>
+<text x="788" y="326" font-size="11" fill="#555c68">other</text>
+<text x="24" y="348" font-size="11" fill="#555c68">dashed node = inferred gateway · hatched box = possible sensor blind spot · handle at network classification</text>
+</svg>

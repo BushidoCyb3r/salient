@@ -47,6 +47,48 @@ const (
 	ExactBetweennessMax = 2000                // §10 gonum exact ≤2k nodes
 )
 
+// Map generation (DEFILADE_PLAN.md §8).
+const (
+	GroupPrefixV4         = 24   // §8.2 default subnet grouping prefix
+	SparseGroupMinHosts   = 2    // groups below this collapse into "sparse"
+	GatewayMACMinIPs      = 10   // §8.4 K: MAC answering for ≥K IPs = gateway
+	MapMinConns           = 5    // §8.5 noise floor default
+	ClientAggMaxComposite = 0.15 // §8.5 clients below this composite aggregate
+	MapTargetElements     = 60   // §8.5 readability target
+	MapMaxElements        = 120  // above this, warn to use --focus
+)
+
+// MapPalette is the fixed §8.5 service-class palette, identical in every
+// product and documented in docs/MAPS.md.
+var MapPalette = map[ServiceClass]string{
+	ClassAuth:  "#d95f30", // auth: red-orange
+	ClassName:  "#3d7edb", // name resolution: blue
+	ClassFile:  "#3f9d5a", // file: green
+	ClassDB:    "#8858c8", // db: purple
+	ClassWeb:   "#8a8f98", // web: gray
+	ClassAdmin: "#d8a02e", // admin RDP/SSH: yellow
+	ClassOther: "#c3c7cd", // other: light gray
+}
+
+// ClassLabel names a service class for legends.
+func ClassLabel(c ServiceClass) string {
+	switch c {
+	case ClassAuth:
+		return "auth"
+	case ClassName:
+		return "name resolution"
+	case ClassFile:
+		return "file"
+	case ClassDB:
+		return "database"
+	case ClassWeb:
+		return "web"
+	case ClassAdmin:
+		return "admin (RDP/SSH)"
+	}
+	return "other"
+}
+
 // Temporal classification thresholds (DEFILADE_PLAN.md §9).
 const (
 	TemporalSparseMax     = 10   // <10 conns in window = Sparse

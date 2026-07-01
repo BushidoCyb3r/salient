@@ -14,6 +14,7 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/escli"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/report"
 	"github.com/BushidoCyb3r/defilade/internal/score"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
@@ -105,6 +106,12 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		sensorNames = append(sensorNames, s.Dataset)
 	}
 
+	// §8.4 primary: MAC-convergence gateway evidence, if the grid has it.
+	l2gw, err := cli.FetchGatewayCandidates(ctx, fm, window)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%swarning:%s gateway candidate query failed, maps will use the inferred fallback: %v\n", ansiYellow, ansiReset, err)
+	}
+
 	snap := m.Snapshot(graph.SnapshotMeta{
 		CreatedAt:      time.Now().UTC(),
 		Window:         window.String(),
@@ -112,6 +119,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		ClusterName:    info.ClusterName,
 		Sensors:        sensorNames,
 		ZeroCovCIDRs:   zeroCoverage(scope, m),
+		L2Gateways:     l2gw,
 		BetweenSampled: res.BetweennessSkipped,
 	})
 	path, err := snapshot.Save(dataDir, snap)
@@ -125,6 +133,12 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		return err
 	}
 	fmt.Fprintf(out, "Report:   %s\n", htmlPath)
+
+	mapPath, err := writeBriefingMap(dataDir, snap)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "Map:      %s\n", mapPath)
 	fmt.Fprintf(out, "\nTop terrain:\n")
 	for i, n := range snap.Nodes {
 		if i >= 5 {
@@ -211,6 +225,25 @@ func writeReport(dataDir string, snap graph.Snapshot) (string, error) {
 	}
 	defer f.Close()
 	if err := report.HTML(f, snap); err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func writeBriefingMap(dataDir string, snap graph.Snapshot) (string, error) {
+	dir := filepath.Join(dataDir, "maps")
+	if err := os.MkdirAll(dir, config.OutputDirMode); err != nil {
+		return "", err
+	}
+	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".html"
+	path := filepath.Join(dir, name)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	mm := mapview.Build(snap, mapview.Options{})
+	if err := report.HTMLMap(f, mm); err != nil {
 		return "", err
 	}
 	return path, nil
