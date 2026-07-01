@@ -6,11 +6,12 @@
 
 Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs already aggregated on a Security Onion manager and produces a typed dependency graph, a ranked key-cyber-terrain report with evidence attached to every ranking, briefing-ready network maps, drift detection between snapshots, and a doc-vs-reality reconciliation report. Primary use case: CPT/hunt-team terrain familiarization in the first 72 hours on an unfamiliar network.
 
-> **Project status: Phase 0 (ground-truth validation).** Only `test-connection` and
-> `discover` exist so far — deliberately. The default field map is an *unverified
-> assumption* about how Security Onion maps Zeek fields to ECS, and a wrong field map
-> fails silently. No graph code gets built until `discover` output from a real grid is
-> recorded in `docs/FIELDMAP.md`. See `DEFILADE_PLAN.md` §12.
+> **Project status: Phase 1 (scan → ranked terrain report).** `scan` aggregates the
+> window server-side, builds and scores the dependency graph, and writes a snapshot +
+> analyst report. The default field map is still an *unverified assumption* about how
+> Security Onion maps Zeek fields to ECS — run `discover` against your grid and record
+> ground truth in `docs/FIELDMAP.md` before trusting a scan. Wrong field maps fail
+> loudly by design. Maps (Phase 1.5), drift, and reconciliation are not built yet.
 
 ## 60-second quickstart
 
@@ -26,6 +27,14 @@ export DEFILADE_API_KEY="<base64 id:key — see docs/DEPLOYMENT.md for read-only
 
 # 2. What does this grid actually contain?
 ./bin/defilade discover --ca-cert grid-ca.pem --window 168h
+
+# 3. Scan: aggregate 14 days, score terrain, write snapshot + report
+./bin/defilade scan --ca-cert grid-ca.pem --window 336h \
+    --scope 10.0.0.0/8 --tz America/New_York
+
+# Re-render or export a stored snapshot
+./bin/defilade list
+./bin/defilade report --snapshot defilade-data/snapshots/<ts>.json.gz --format graphml
 ```
 
 `discover` reports which Zeek datasets exist (conn, dns, kerberos, smb, …), document

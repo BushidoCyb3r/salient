@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="d_ip" for="node" attr.name="ip" attr.type="string"/>
+  <key id="d_role" for="node" attr.name="role" attr.type="string"/>
+  <key id="d_subnet" for="node" attr.name="subnet" attr.type="string"/>
+  <key id="d_comp" for="node" attr.name="composite" attr.type="double"/>
+  <key id="d_rank" for="node" attr.name="rank" attr.type="int"/>
+  <key id="e_svc" for="edge" attr.name="service" attr.type="string"/>
+  <key id="e_conn" for="edge" attr.name="conn_count" attr.type="long"/>
+  <graph edgedefault="directed">
+    <node id="10.0.1.10">
+      <data key="d_ip">10.0.1.10</data>
+      <data key="d_role">DomainController</data>
+      <data key="d_subnet">10.0.1.0/24</data>
+      <data key="d_comp">0.9100</data>
+      <data key="d_rank">1</data>
+    </node>
+    <node id="10.0.2.30">
+      <data key="d_ip">10.0.2.30</data>
+      <data key="d_role">Unknown</data>
+      <data key="d_subnet">10.0.2.0/24</data>
+      <data key="d_comp">0.0500</data>
+      <data key="d_rank">2</data>
+    </node>
+    <edge id="e0" source="10.0.2.30" target="10.0.1.10">
+      <data key="e_svc">kerberos</data>
+      <data key="e_conn">500</data>
+    </edge>
+  </graph>
+</graphml>

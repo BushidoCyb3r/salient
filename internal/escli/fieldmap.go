@@ -63,14 +63,14 @@ type DatasetCandidates struct {
 // `defilade discover` against a real grid, recorded in docs/FIELDMAP.md.
 func DefaultFieldMap() FieldMap {
 	return FieldMap{
-		IndexPattern: "logs-*",          // UNVERIFIED
-		Timestamp:    "@timestamp",      // UNVERIFIED
-		DatasetField: "event.dataset",   // UNVERIFIED
-		ObserverName: "observer.name",   // UNVERIFIED
-		SourceIP:     "source.ip",       // UNVERIFIED
-		DestinationIP:   "destination.ip",   // UNVERIFIED
-		DestinationPort: "destination.port", // UNVERIFIED
-		Service:         "network.protocol", // UNVERIFIED
+		IndexPattern:     "logs-*",            // UNVERIFIED
+		Timestamp:        "@timestamp",        // UNVERIFIED
+		DatasetField:     "event.dataset",     // UNVERIFIED
+		ObserverName:     "observer.name",     // UNVERIFIED
+		SourceIP:         "source.ip",         // UNVERIFIED
+		DestinationIP:    "destination.ip",    // UNVERIFIED
+		DestinationPort:  "destination.port",  // UNVERIFIED
+		Service:          "network.protocol",  // UNVERIFIED
 		SourceBytes:      "source.bytes",      // UNVERIFIED
 		DestinationBytes: "destination.bytes", // UNVERIFIED
 		SourceMAC:        "source.mac",        // UNVERIFIED — may not survive ECS mapping

@@ -5,6 +5,7 @@ go 1.26.4
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.19.6
 	github.com/spf13/cobra v1.10.2
+	gonum.org/v1/gonum v0.17.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

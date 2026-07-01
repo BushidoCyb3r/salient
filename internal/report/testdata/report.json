@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "created_at": "2026-07-01T12:00:00Z",
+    "window": "336h0m0s",
+    "scope": null,
+    "cluster_name": "golden",
+    "sensors": [
+      "sensor1"
+    ],
+    "zero_coverage_cidrs": [
+      "10.9.0.0/24"
+    ],
+    "betweenness_sampled": false,
+    "tool": "defilade"
+  },
+  "nodes": [
+    {
+      "ip": "10.0.1.10",
+      "roles": [
+        {
+          "role": "DomainController",
+          "confidence": 0.8,
+          "evidence": [
+            "20 distinct hosts made Kerberos requests to this host; LDAP also observed"
+          ]
+        }
+      ],
+      "subnet": "10.0.1.0/24",
+      "first_seen": "0001-01-01T00:00:00Z",
+      "last_seen": "0001-01-01T00:00:00Z",
+      "scores": {
+        "dependency_in_degree": 20,
+        "pagerank": 0.3,
+        "betweenness": 12,
+        "composite": 0.91,
+        "rank": 1
+      }
+    },
+    {
+      "ip": "10.0.2.30",
+      "roles": [
+        {
+          "role": "Unknown",
+          "confidence": 0,
+          "evidence": null
+        }
+      ],
+      "subnet": "10.0.2.0/24",
+      "first_seen": "0001-01-01T00:00:00Z",
+      "last_seen": "0001-01-01T00:00:00Z",
+      "scores": {
+        "dependency_in_degree": 0,
+        "pagerank": 0,
+        "betweenness": 0,
+        "composite": 0.05,
+        "rank": 2
+      }
+    }
+  ],
+  "edges": [
+    {
+      "src": "10.0.2.30",
+      "dst": "10.0.1.10",
+      "port": 88,
+      "service": "kerberos",
+      "conn_count": 500,
+      "bytes_out": 0,
+      "bytes_in": 0,
+      "first_seen": "2026-06-20T00:00:00Z",
+      "last_seen": "2026-07-01T00:00:00Z"
+    }
+  ]
+}

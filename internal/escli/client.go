@@ -229,7 +229,7 @@ func (c *Client) CheckWritePrivileges(ctx context.Context, pattern string) (Writ
 		}, nil
 	}
 	var decoded struct {
-		HasAllRequested bool `json:"has_all_requested"`
+		HasAllRequested bool                       `json:"has_all_requested"`
 		Index           map[string]map[string]bool `json:"index"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {

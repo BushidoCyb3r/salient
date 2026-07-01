@@ -1,0 +1,81 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
+	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/defilade/internal/report"
+	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+)
+
+func newReportCmd() *cobra.Command {
+	var format string
+	cmd := &cobra.Command{
+		Use:   "report --snapshot FILE",
+		Short: "Re-render a stored snapshot as html, json, or graphml (to stdout for json/graphml)",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("snapshot")
+			if path == "" {
+				return fmt.Errorf("--snapshot is required")
+			}
+			snap, err := snapshot.Load(path)
+			if err != nil {
+				return err
+			}
+			w := cmd.OutOrStdout()
+			switch format {
+			case "json":
+				return report.JSON(w, snap)
+			case "graphml":
+				return report.GraphML(w, snap)
+			case "html":
+				out := path + ".html"
+				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				if err := report.HTML(f, snap); err != nil {
+					return err
+				}
+				fmt.Fprintln(w, out)
+				return nil
+			default:
+				return fmt.Errorf("unknown --format %q (html|json|graphml)", format)
+			}
+		},
+	}
+	cmd.Flags().String("snapshot", "", "snapshot .json.gz to render")
+	cmd.Flags().StringVar(&format, "format", "html", "html|json|graphml")
+	return cmd
+}
+
+func newListCmd() *cobra.Command {
+	var dataDir string
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List stored snapshots",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			entries, err := snapshot.List(dataDir)
+			if err != nil {
+				return err
+			}
+			if len(entries) == 0 {
+				fmt.Fprintln(cmd.OutOrStdout(), "no snapshots — run `defilade scan`")
+				return nil
+			}
+			for _, e := range entries {
+				fmt.Fprintf(cmd.OutOrStdout(), "%s  %s  window %-8s  %5d nodes %6d edges  %s\n",
+					e.File, e.CreatedAt.Format("2006-01-02 15:04"), e.Window, e.Nodes, e.Edges, e.Cluster)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&dataDir, "data-dir", config.DataDirName, "data directory")
+	return cmd
+}
