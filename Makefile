@@ -1,12 +1,17 @@
 BINARY  := defilade
 PKG     := ./cmd/defilade
 GO      ?= go
+WAILS   ?= wails
 LDFLAGS := -s -w
+GUI_TAGS := $(if $(filter linux,$(shell $(GO) env GOOS)),-tags webkit2_41)
 
-.PHONY: build test lint cross clean integration
+.PHONY: build gui test lint cross clean integration
 
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
+
+gui:
+	cd gui && $(WAILS) build $(GUI_TAGS)
 
 test:
 	$(GO) test -race ./...
