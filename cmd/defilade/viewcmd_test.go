@@ -54,6 +54,24 @@ func TestWriteBrowserIndex(t *testing.T) {
 	}
 }
 
+func TestWriteBrowserIndexRejectsSnapshotOnlyDirectory(t *testing.T) {
+	dataDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dataDir, "snapshots"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dataDir, "snapshots", "20260201T000000Z.json.gz"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := writeBrowserIndex(dataDir, []byte("png"))
+	if err == nil || !strings.Contains(err.Error(), "no HTML reports or maps found") {
+		t.Fatalf("writeBrowserIndex() error = %v, want no-artifacts error", err)
+	}
+	if _, err := os.Stat(filepath.Join(dataDir, "index.html")); !os.IsNotExist(err) {
+		t.Fatalf("index.html exists or stat failed: %v", err)
+	}
+}
+
 func TestBrowserCommandLinuxUsesGIO(t *testing.T) {
 	lookPath := func(name string) (string, error) {
 		if name == "gio" {

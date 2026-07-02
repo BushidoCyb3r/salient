@@ -66,7 +66,11 @@ func writeBrowserIndex(dataDir string, logo []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(entries) == 0 {
+	hasHTML := false
+	for _, entry := range entries {
+		hasHTML = hasHTML || entry.Report != "" || entry.Map != ""
+	}
+	if !hasHTML {
 		return "", errors.New("no HTML reports or maps found — run `defilade scan` first")
 	}
 
