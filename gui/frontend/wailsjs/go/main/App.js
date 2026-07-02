@@ -5,3 +5,15 @@
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
+
+export function Legend() {
+  return window['go']['main']['App']['Legend']();
+}
+
+export function ListSnapshots() {
+  return window['go']['main']['App']['ListSnapshots']();
+}
+
+export function LoadModel(arg1) {
+  return window['go']['main']['App']['LoadModel'](arg1);
+}
