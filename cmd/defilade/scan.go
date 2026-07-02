@@ -47,6 +47,7 @@ func newScanCmd(opts *globalOpts) *cobra.Command {
 func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope []string, maxEdges int, dataDir string, tz string) error {
 	ctx := cmd.Context()
 	out := cmd.OutOrStdout()
+	errOut := cmd.ErrOrStderr()
 
 	cfg, err := opts.clientConfig(os.Stderr)
 	if err != nil {
@@ -60,6 +61,9 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 	if err != nil {
 		return err
 	}
+	if isTerminal(errOut) {
+		defer startSpinner(errOut, 100*time.Millisecond)()
+	}
 	info, err := cli.Info(ctx)
 	if err != nil {
 		return err
@@ -71,7 +75,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		return err
 	}
 	if truncated {
-		fmt.Fprintf(os.Stderr, "%sWARNING: edge aggregation hit --max-edges=%d and was truncated. Narrow --scope or raise the limit; rankings may be incomplete.%s\n", ansiRed, maxEdges, ansiReset)
+		fmt.Fprintf(errOut, "%sWARNING: edge aggregation hit --max-edges=%d and was truncated. Narrow --scope or raise the limit; rankings may be incomplete.%s\n", ansiRed, maxEdges, ansiReset)
 	}
 	fmt.Fprintf(out, "Edges aggregated: %d\n", len(edges))
 	if len(edges) == 0 {
@@ -109,7 +113,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 	// §8.4 primary: MAC-convergence gateway evidence, if the grid has it.
 	l2gw, err := cli.FetchGatewayCandidates(ctx, fm, window)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%swarning:%s gateway candidate query failed, maps will use the inferred fallback: %v\n", ansiYellow, ansiReset, err)
+		fmt.Fprintf(errOut, "%swarning:%s gateway candidate query failed, maps will use the inferred fallback: %v\n", ansiYellow, ansiReset, err)
 	}
 
 	snap := m.Snapshot(graph.SnapshotMeta{
@@ -146,7 +150,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		}
 		fmt.Fprintf(out, "  %d. %-16s %-18s composite %.2f\n", n.Scores.Rank, n.IP, topRoleLabel(n), n.Scores.Composite)
 	}
-	fmt.Fprintf(os.Stderr, "%sHandling reminder: report, map, and snapshot describe network terrain — protect at the network's classification.%s\n", ansiYellow, ansiReset)
+	fmt.Fprintf(errOut, "%sHandling reminder: report, map, and snapshot describe network terrain — protect at the network's classification.%s\n", ansiYellow, ansiReset)
 	return nil
 }
 
