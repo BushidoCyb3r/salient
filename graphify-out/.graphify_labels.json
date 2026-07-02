@@ -146,5 +146,10 @@
   "144": "newMapCmd",
   "145": "analysisArtifact",
   "146": "Optional model-assisted analysis",
-  "147": "isEmpty"
+  "147": "isEmpty",
+  "148": ".removeEdge",
+  "149": "baseIndexOf",
+  "150": "initCloneByTag",
+  "151": "assocIndexOf",
+  "152": "baseIsNative"
 }

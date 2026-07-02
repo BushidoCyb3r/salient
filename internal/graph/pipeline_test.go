@@ -64,7 +64,7 @@ func TestPipelineKnownTerrainRanksCorrectly(t *testing.T) {
 	m := graph.Build(edges)
 	m.InferRoles(ev)
 	res := score.Score(m)
-	if res.BetweennessSkipped {
+	if res.BetweennessSampled {
 		t.Fatal("tiny graph must get exact betweenness")
 	}
 	snap := m.Snapshot(graph.SnapshotMeta{Window: "24h"})

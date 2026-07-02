@@ -13,10 +13,10 @@ import (
 )
 
 // Result reports how scoring ran; BetweennessSampled is true when the graph
-// exceeded the exact-computation node limit and betweenness was skipped
-// (sampled approximation is a Phase 4 item).
+// exceeded the exact-computation node limit and betweenness came from the
+// Brandes–Pich pivot approximation instead (flagged in the report).
 type Result struct {
-	BetweennessSkipped bool
+	BetweennessSampled bool
 	NodeCount          int
 }
 
@@ -33,8 +33,8 @@ func Score(m *graph.Model) Result {
 	if len(nodes) <= config.ExactBetweennessMax {
 		bw = network.Betweenness(g)
 	} else {
-		res.BetweennessSkipped = true
-		bw = map[int64]float64{}
+		res.BetweennessSampled = true
+		bw = sampledBetweenness(g, config.BetweennessSamplePivots)
 	}
 
 	critIn := criticalInDegree(m) // distinct critical-service clients per IP

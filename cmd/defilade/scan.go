@@ -86,8 +86,8 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 	m := graph.Build(edges)
 	res := score.Score(m)
 	fmt.Fprintf(out, "Graph: %d nodes scored", res.NodeCount)
-	if res.BetweennessSkipped {
-		fmt.Fprintf(out, " (betweenness skipped: >%d nodes)", config.ExactBetweennessMax)
+	if res.BetweennessSampled {
+		fmt.Fprintf(out, " (betweenness sampled: >%d nodes)", config.ExactBetweennessMax)
 	}
 	fmt.Fprintln(out)
 
@@ -120,7 +120,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		Sensors:        sensorNames,
 		ZeroCovCIDRs:   zeroCoverage(scope, m),
 		L2Gateways:     l2gw,
-		BetweenSampled: res.BetweennessSkipped,
+		BetweenSampled: res.BetweennessSampled,
 	})
 	path, err := snapshot.Save(dataDir, snap)
 	if err != nil {

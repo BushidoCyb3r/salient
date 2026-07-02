@@ -64,7 +64,7 @@ const reportHTML = `<!DOCTYPE html>
  <h2>Sensor coverage</h2>
  {{if .Meta.Sensors}}<div>Observing sensors: {{range .Meta.Sensors}}<span class="role">{{.}}</span>{{end}}</div>{{else}}<div class="warn">No sensor attribution available on this grid.</div>{{end}}
  {{if .Meta.ZeroCovCIDRs}}<div class="warn" style="margin-top:8px">Possible blind spots (in-scope, zero observed traffic): {{range .Meta.ZeroCovCIDRs}}<code>{{.}}</code> {{end}}</div>{{end}}
- {{if .Meta.BetweenSampled}}<div class="warn" style="margin-top:8px">Betweenness was skipped (graph exceeded exact-computation limit).</div>{{end}}
+ {{if .Meta.BetweenSampled}}<div class="warn" style="margin-top:8px">Betweenness was sampled (graph exceeded the exact-computation limit); choke-point scores are approximate.</div>{{end}}
 </div>
 
 <div class="panel">

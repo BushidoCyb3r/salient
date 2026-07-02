@@ -10,7 +10,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd",
-      "community": 145,
+      "community": 141,
       "norm_label": "analyzecmd.go"
     },
     {
@@ -20,7 +20,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "defilade_analysisartifact",
-      "community": 145,
+      "community": 141,
       "norm_label": "analysisartifact"
     },
     {
@@ -30,7 +30,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_time",
-      "community": 145,
+      "community": 141,
       "norm_label": "time"
     },
     {
@@ -40,7 +40,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_result",
-      "community": 145,
+      "community": 141,
       "norm_label": "result"
     },
     {
@@ -250,7 +250,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_main",
-      "community": 141,
+      "community": 15,
       "norm_label": "main.go"
     },
     {
@@ -260,7 +260,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "cmd_defilade_main_main",
-      "community": 141,
+      "community": 15,
       "norm_label": "main()"
     },
     {
@@ -520,7 +520,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_root",
-      "community": 141,
+      "community": 15,
       "norm_label": "root.go"
     },
     {
@@ -540,7 +540,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "cmd_defilade_root_newrootcmd",
-      "community": 141,
+      "community": 15,
       "norm_label": "newrootcmd()"
     },
     {
@@ -550,7 +550,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_root_go_command",
-      "community": 141,
+      "community": 15,
       "norm_label": "command"
     },
     {
@@ -730,7 +730,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "cmd_defilade_scan_writereport",
-      "community": 9,
+      "community": 35,
       "norm_label": "writereport()"
     },
     {
@@ -999,7 +999,7 @@
       "label": "ClassLabel()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L90",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "internal_config_defaults_classlabel",
       "community": 23,
@@ -1009,7 +1009,7 @@
       "label": "ServiceClass",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L145",
+      "source_location": "L146",
       "_origin": "ast",
       "id": "config_serviceclass",
       "community": 23,
@@ -1019,7 +1019,7 @@
       "label": "ClassForPort()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L170",
+      "source_location": "L171",
       "_origin": "ast",
       "id": "internal_config_defaults_classforport",
       "community": 23,
@@ -1029,7 +1029,7 @@
       "label": "ServiceName()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L173",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "internal_config_defaults_servicename",
       "community": 14,
@@ -1039,7 +1039,7 @@
       "label": "IsCriticalDependency()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L211",
+      "source_location": "L212",
       "_origin": "ast",
       "id": "internal_config_defaults_iscriticaldependency",
       "community": 23,
@@ -1049,7 +1049,7 @@
       "label": "IsAuthEdge()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L220",
+      "source_location": "L221",
       "_origin": "ast",
       "id": "internal_config_defaults_isauthedge",
       "community": 23,
@@ -1059,7 +1059,7 @@
       "label": "IsAdminPort()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L226",
+      "source_location": "L227",
       "_origin": "ast",
       "id": "internal_config_defaults_isadminport",
       "community": 23,
@@ -2532,7 +2532,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_graph_types",
-      "community": 138,
+      "community": 35,
       "norm_label": "types.go"
     },
     {
@@ -2562,7 +2562,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "graph_temporalclass",
-      "community": 138,
+      "community": 35,
       "norm_label": "temporalclass"
     },
     {
@@ -2572,7 +2572,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "graph_temporalprofile",
-      "community": 138,
+      "community": 35,
       "norm_label": "temporalprofile"
     },
     {
@@ -2582,7 +2582,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "graph_edge",
-      "community": 138,
+      "community": 35,
       "norm_label": "edge"
     },
     {
@@ -2592,7 +2592,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_graph_types_go_time",
-      "community": 138,
+      "community": 35,
       "norm_label": "time"
     },
     {
@@ -2602,7 +2602,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "graph_scoreset",
-      "community": 138,
+      "community": 35,
       "norm_label": "scoreset"
     },
     {
@@ -2612,7 +2612,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "graph_node",
-      "community": 138,
+      "community": 57,
       "norm_label": "node"
     },
     {
@@ -2642,7 +2642,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "graph_snapshotmeta",
-      "community": 138,
+      "community": 35,
       "norm_label": "snapshotmeta"
     },
     {
@@ -2652,7 +2652,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "graph_snapshot",
-      "community": 138,
+      "community": 35,
       "norm_label": "snapshot"
     },
     {
@@ -2832,7 +2832,7 @@
       "source_location": "L291",
       "_origin": "ast",
       "id": "internal_mapview_mapview_nodelabel",
-      "community": 138,
+      "community": 57,
       "norm_label": "nodelabel()"
     },
     {
@@ -2842,7 +2842,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "internal_mapview_mapview_evidence",
-      "community": 138,
+      "community": 57,
       "norm_label": "evidence()"
     },
     {
@@ -2932,7 +2932,7 @@
       "source_location": "L512",
       "_origin": "ast",
       "id": "internal_mapview_mapview_filterfocus",
-      "community": 138,
+      "community": 57,
       "norm_label": "filterfocus()"
     },
     {
@@ -2942,7 +2942,7 @@
       "source_location": "L529",
       "_origin": "ast",
       "id": "internal_mapview_mapview_filterfocusedges",
-      "community": 138,
+      "community": 35,
       "norm_label": "filterfocusedges()"
     },
     {
@@ -3472,7 +3472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_html",
-      "community": 141,
+      "community": 35,
       "norm_label": "html.go"
     },
     {
@@ -3482,7 +3482,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "internal_report_html_html",
-      "community": 141,
+      "community": 35,
       "norm_label": "html()"
     },
     {
@@ -3492,7 +3492,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_html_go_writer",
-      "community": 141,
+      "community": 35,
       "norm_label": "writer"
     },
     {
@@ -3752,7 +3752,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_report",
-      "community": 7,
+      "community": 35,
       "norm_label": "report.go"
     },
     {
@@ -3762,7 +3762,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "internal_report_report_json",
-      "community": 7,
+      "community": 35,
       "norm_label": "json()"
     },
     {
@@ -3772,7 +3772,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_report_go_writer",
-      "community": 7,
+      "community": 35,
       "norm_label": "writer"
     },
     {
@@ -3782,7 +3782,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "internal_report_report_toprole",
-      "community": 7,
+      "community": 35,
       "norm_label": "toprole()"
     },
     {
@@ -3872,7 +3872,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "report_svgnode",
-      "community": 7,
+      "community": 22,
       "norm_label": "svgnode"
     },
     {
@@ -3934,6 +3934,106 @@
       "id": "internal_report_svg_xmlesc",
       "community": 7,
       "norm_label": "xmlesc()"
+    },
+    {
+      "label": "sampled.go",
+      "file_type": "code",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_score_sampled",
+      "community": 145,
+      "norm_label": "sampled.go"
+    },
+    {
+      "label": "sampledBetweenness()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "internal_score_sampled_sampledbetweenness",
+      "community": 145,
+      "norm_label": "sampledbetweenness()"
+    },
+    {
+      "label": "Directed",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "directed",
+      "community": 145,
+      "norm_label": "directed"
+    },
+    {
+      "label": "brandesFrom()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "internal_score_sampled_brandesfrom",
+      "community": 145,
+      "norm_label": "brandesfrom()"
+    },
+    {
+      "label": "sampled_test.go",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test",
+      "community": 145,
+      "norm_label": "sampled_test.go"
+    },
+    {
+      "label": "chainGraph()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_chaingraph",
+      "community": 145,
+      "norm_label": "chaingraph()"
+    },
+    {
+      "label": "Model",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_go_model",
+      "community": 145,
+      "norm_label": "model"
+    },
+    {
+      "label": "TestSampledBetweennessMatchesExactWithAllPivots()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "community": 145,
+      "norm_label": "testsampledbetweennessmatchesexactwithallpivots()"
+    },
+    {
+      "label": "T",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_go_t",
+      "community": 145,
+      "norm_label": "t"
+    },
+    {
+      "label": "TestSampledBetweennessDeterministicAndSeparatesChokeFromLeaf()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "community": 145,
+      "norm_label": "testsampledbetweennessdeterministicandseparateschokefromleaf()"
     },
     {
       "label": "score.go",
@@ -4132,7 +4232,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "internal_snapshot_diff_abs",
-      "community": 138,
+      "community": 145,
       "norm_label": "abs()"
     },
     {
@@ -6142,7 +6242,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "web_dagre_min_greedyfas",
-      "community": 50,
+      "community": 32,
       "norm_label": "greedyfas()"
     },
     {
@@ -6152,7 +6252,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "web_dagre_min_dogreedyfas",
-      "community": 50,
+      "community": 32,
       "norm_label": "dogreedyfas()"
     },
     {
@@ -6162,7 +6262,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "web_dagre_min_removenode",
-      "community": 10,
+      "community": 6,
       "norm_label": "removenode()"
     },
     {
@@ -6182,7 +6282,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "web_dagre_min_assignbucket",
-      "community": 10,
+      "community": 1,
       "norm_label": "assignbucket()"
     },
     {
@@ -6312,7 +6412,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_removebordernodes",
-      "community": 32,
+      "community": 6,
       "norm_label": "removebordernodes()"
     },
     {
@@ -6332,7 +6432,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_insertselfedges",
-      "community": 26,
+      "community": 6,
       "norm_label": "insertselfedges()"
     },
     {
@@ -6342,7 +6442,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_positionselfedges",
-      "community": 50,
+      "community": 6,
       "norm_label": "positionselfedges()"
     },
     {
@@ -6362,7 +6462,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_canonicalize",
-      "community": 32,
+      "community": 1,
       "norm_label": "canonicalize()"
     },
     {
@@ -6392,7 +6492,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "web_dagre_min_sumweights",
-      "community": 6,
+      "community": 139,
       "norm_label": "sumweights()"
     },
     {
@@ -6412,7 +6512,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "web_dagre_min_normalizeedge",
-      "community": 6,
+      "community": 32,
       "norm_label": "normalizeedge()"
     },
     {
@@ -6432,7 +6532,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "web_dagre_min_barycenter",
-      "community": 10,
+      "community": 1,
       "norm_label": "barycenter()"
     },
     {
@@ -6452,7 +6552,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "web_dagre_min_createrootnode",
-      "community": 26,
+      "community": 32,
       "norm_label": "createrootnode()"
     },
     {
@@ -6482,7 +6582,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_order",
-      "community": 35,
+      "community": 26,
       "norm_label": "order()"
     },
     {
@@ -6492,7 +6592,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_buildlayergraphs",
-      "community": 35,
+      "community": 26,
       "norm_label": "buildlayergraphs()"
     },
     {
@@ -6502,7 +6602,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_sweeplayergraphs",
-      "community": 35,
+      "community": 26,
       "norm_label": "sweeplayergraphs()"
     },
     {
@@ -6512,7 +6612,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_assignorder",
-      "community": 35,
+      "community": 6,
       "norm_label": "assignorder()"
     },
     {
@@ -6522,7 +6622,7 @@
       "source_location": "L229",
       "_origin": "ast",
       "id": "web_dagre_min_initorder",
-      "community": 32,
+      "community": 26,
       "norm_label": "initorder()"
     },
     {
@@ -6622,7 +6722,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_parentdummychains",
-      "community": 6,
+      "community": 32,
       "norm_label": "parentdummychains()"
     },
     {
@@ -6632,7 +6732,7 @@
       "source_location": "L257",
       "_origin": "ast",
       "id": "web_dagre_min_findpath",
-      "community": 26,
+      "community": 32,
       "norm_label": "findpath()"
     },
     {
@@ -6832,7 +6932,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "web_dagre_min_findminslackedge",
-      "community": 139,
+      "community": 32,
       "norm_label": "findminslackedge()"
     },
     {
@@ -6852,7 +6952,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "web_dagre_min_rank",
-      "community": 35,
+      "community": 26,
       "norm_label": "rank()"
     },
     {
@@ -6872,7 +6972,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "web_dagre_min_networksimplexranker",
-      "community": 35,
+      "community": 26,
       "norm_label": "networksimplexranker()"
     },
     {
@@ -6882,7 +6982,7 @@
       "source_location": "L413",
       "_origin": "ast",
       "id": "web_dagre_min_networksimplex",
-      "community": 32,
+      "community": 148,
       "norm_label": "networksimplex()"
     },
     {
@@ -6892,7 +6992,7 @@
       "source_location": "L416",
       "_origin": "ast",
       "id": "web_dagre_min_initcutvalues",
-      "community": 32,
+      "community": 148,
       "norm_label": "initcutvalues()"
     },
     {
@@ -6912,7 +7012,7 @@
       "source_location": "L420",
       "_origin": "ast",
       "id": "web_dagre_min_calccutvalue",
-      "community": 10,
+      "community": 6,
       "norm_label": "calccutvalue()"
     },
     {
@@ -6922,7 +7022,7 @@
       "source_location": "L426",
       "_origin": "ast",
       "id": "web_dagre_min_initlowlimvalues",
-      "community": 32,
+      "community": 148,
       "norm_label": "initlowlimvalues()"
     },
     {
@@ -6932,7 +7032,7 @@
       "source_location": "L426",
       "_origin": "ast",
       "id": "web_dagre_min_dfsassignlowlim",
-      "community": 32,
+      "community": 148,
       "norm_label": "dfsassignlowlim()"
     },
     {
@@ -6962,7 +7062,7 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "web_dagre_min_exchangeedges",
-      "community": 32,
+      "community": 148,
       "norm_label": "exchangeedges()"
     },
     {
@@ -6972,7 +7072,7 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "web_dagre_min_updateranks",
-      "community": 32,
+      "community": 6,
       "norm_label": "updateranks()"
     },
     {
@@ -6982,7 +7082,7 @@
       "source_location": "L438",
       "_origin": "ast",
       "id": "web_dagre_min_istreeedge",
-      "community": 10,
+      "community": 148,
       "norm_label": "istreeedge()"
     },
     {
@@ -7022,7 +7122,7 @@
       "source_location": "L475",
       "_origin": "ast",
       "id": "web_dagre_min_adddummynode",
-      "community": 26,
+      "community": 32,
       "norm_label": "adddummynode()"
     },
     {
@@ -7042,7 +7142,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "web_dagre_min_asnoncompoundgraph",
-      "community": 6,
+      "community": 26,
       "norm_label": "asnoncompoundgraph()"
     },
     {
@@ -7082,7 +7182,7 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "web_dagre_min_buildlayermatrix",
-      "community": 35,
+      "community": 26,
       "norm_label": "buildlayermatrix()"
     },
     {
@@ -7092,7 +7192,7 @@
       "source_location": "L498",
       "_origin": "ast",
       "id": "web_dagre_min_normalizeranks",
-      "community": 1,
+      "community": 6,
       "norm_label": "normalizeranks()"
     },
     {
@@ -7102,7 +7202,7 @@
       "source_location": "L498",
       "_origin": "ast",
       "id": "web_dagre_min_removeemptyranks",
-      "community": 6,
+      "community": 26,
       "norm_label": "removeemptyranks()"
     },
     {
@@ -7112,7 +7212,7 @@
       "source_location": "L500",
       "_origin": "ast",
       "id": "web_dagre_min_maxrank",
-      "community": 35,
+      "community": 26,
       "norm_label": "maxrank()"
     },
     {
@@ -7162,7 +7262,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_dodfs",
-      "community": 1,
+      "community": 32,
       "norm_label": "dodfs()"
     },
     {
@@ -7172,7 +7272,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_dijkstraall",
-      "community": 1,
+      "community": 10,
       "norm_label": "dijkstraall()"
     },
     {
@@ -7182,7 +7282,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_dijkstra",
-      "community": 1,
+      "community": 10,
       "norm_label": "dijkstra()"
     },
     {
@@ -7192,7 +7292,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_rundijkstra",
-      "community": 1,
+      "community": 24,
       "norm_label": "rundijkstra()"
     },
     {
@@ -7202,7 +7302,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_findcycles",
-      "community": 50,
+      "community": 1,
       "norm_label": "findcycles()"
     },
     {
@@ -7232,7 +7332,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_isacyclic",
-      "community": 50,
+      "community": 32,
       "norm_label": "isacyclic()"
     },
     {
@@ -7262,7 +7362,7 @@
       "source_location": "L549",
       "_origin": "ast",
       "id": "web_dagre_min_tarjan",
-      "community": 32,
+      "community": 1,
       "norm_label": "tarjan()"
     },
     {
@@ -7272,7 +7372,7 @@
       "source_location": "L550",
       "_origin": "ast",
       "id": "web_dagre_min_topsort",
-      "community": 50,
+      "community": 32,
       "norm_label": "topsort()"
     },
     {
@@ -7342,7 +7442,7 @@
       "source_location": "L577",
       "_origin": "ast",
       "id": "web_dagre_min_priorityqueue_min",
-      "community": 36,
+      "community": 24,
       "norm_label": ".min()"
     },
     {
@@ -7352,7 +7452,7 @@
       "source_location": "L585",
       "_origin": "ast",
       "id": "web_dagre_min_priorityqueue_add",
-      "community": 1,
+      "community": 24,
       "norm_label": ".add()"
     },
     {
@@ -7452,7 +7552,7 @@
       "source_location": "L632",
       "_origin": "ast",
       "id": "web_dagre_min_graph_graph",
-      "community": 6,
+      "community": 26,
       "norm_label": ".graph()"
     },
     {
@@ -7462,7 +7562,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_setdefaultnodelabel",
-      "community": 44,
+      "community": 50,
       "norm_label": ".setdefaultnodelabel()"
     },
     {
@@ -7472,7 +7572,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_nodecount",
-      "community": 50,
+      "community": 32,
       "norm_label": ".nodecount()"
     },
     {
@@ -7482,7 +7582,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_nodes",
-      "community": 32,
+      "community": 26,
       "norm_label": ".nodes()"
     },
     {
@@ -7502,7 +7602,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_sinks",
-      "community": 50,
+      "community": 32,
       "norm_label": ".sinks()"
     },
     {
@@ -7542,7 +7642,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_hasnode",
-      "community": 26,
+      "community": 32,
       "norm_label": ".hasnode()"
     },
     {
@@ -7552,7 +7652,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removenode",
-      "community": 50,
+      "community": 6,
       "norm_label": ".removenode()"
     },
     {
@@ -7652,7 +7752,7 @@
       "source_location": "L636",
       "_origin": "ast",
       "id": "web_dagre_min_graph_setdefaultedgelabel",
-      "community": 44,
+      "community": 50,
       "norm_label": ".setdefaultedgelabel()"
     },
     {
@@ -7712,7 +7812,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_hasedge",
-      "community": 50,
+      "community": 148,
       "norm_label": ".hasedge()"
     },
     {
@@ -7722,7 +7822,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removeedge",
-      "community": 50,
+      "community": 148,
       "norm_label": ".removeedge()"
     },
     {
@@ -7762,7 +7862,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_incrementorinitentry",
-      "community": 26,
+      "community": 1,
       "norm_label": "incrementorinitentry()"
     },
     {
@@ -7772,7 +7872,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_decrementorremoveentry",
-      "community": 50,
+      "community": 148,
       "norm_label": "decrementorremoveentry()"
     },
     {
@@ -7782,7 +7882,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeargstoid",
-      "community": 50,
+      "community": 148,
       "norm_label": "edgeargstoid()"
     },
     {
@@ -7792,7 +7892,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeargstoobj",
-      "community": 26,
+      "community": 1,
       "norm_label": "edgeargstoobj()"
     },
     {
@@ -7802,7 +7902,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeobjtoid",
-      "community": 50,
+      "community": 148,
       "norm_label": "edgeobjtoid()"
     },
     {
@@ -7822,7 +7922,7 @@
       "source_location": "L647",
       "_origin": "ast",
       "id": "web_dagre_min_writenodes",
-      "community": 50,
+      "community": 26,
       "norm_label": "writenodes()"
     },
     {
@@ -7882,7 +7982,7 @@
       "source_location": "L690",
       "_origin": "ast",
       "id": "web_dagre_min_setcache",
-      "community": 1,
+      "community": 24,
       "norm_label": "setcache()"
     },
     {
@@ -7902,7 +8002,7 @@
       "source_location": "L715",
       "_origin": "ast",
       "id": "web_dagre_min_apply",
-      "community": 1,
+      "community": 134,
       "norm_label": "apply()"
     },
     {
@@ -7932,7 +8032,7 @@
       "source_location": "L744",
       "_origin": "ast",
       "id": "web_dagre_min_arrayincludes",
-      "community": 1,
+      "community": 149,
       "norm_label": "arrayincludes()"
     },
     {
@@ -7952,7 +8052,7 @@
       "source_location": "L764",
       "_origin": "ast",
       "id": "web_dagre_min_arraylikekeys",
-      "community": 11,
+      "community": 1,
       "norm_label": "arraylikekeys()"
     },
     {
@@ -8022,7 +8122,7 @@
       "source_location": "L851",
       "_origin": "ast",
       "id": "web_dagre_min_associndexof",
-      "community": 1,
+      "community": 151,
       "norm_label": "associndexof()"
     },
     {
@@ -8102,7 +8202,7 @@
       "source_location": "L948",
       "_origin": "ast",
       "id": "web_dagre_min_basefindindex",
-      "community": 1,
+      "community": 149,
       "norm_label": "basefindindex()"
     },
     {
@@ -8192,7 +8292,7 @@
       "source_location": "L1047",
       "_origin": "ast",
       "id": "web_dagre_min_baseindexof",
-      "community": 1,
+      "community": 149,
       "norm_label": "baseindexof()"
     },
     {
@@ -8252,7 +8352,7 @@
       "source_location": "L1114",
       "_origin": "ast",
       "id": "web_dagre_min_baseisnan",
-      "community": 1,
+      "community": 149,
       "norm_label": "baseisnan()"
     },
     {
@@ -8262,7 +8362,7 @@
       "source_location": "L1131",
       "_origin": "ast",
       "id": "web_dagre_min_baseisnative",
-      "community": 44,
+      "community": 152,
       "norm_label": "baseisnative()"
     },
     {
@@ -8312,7 +8412,7 @@
       "source_location": "L1176",
       "_origin": "ast",
       "id": "web_dagre_min_basekeysin",
-      "community": 134,
+      "community": 11,
       "norm_label": "basekeysin()"
     },
     {
@@ -8332,7 +8432,7 @@
       "source_location": "L1194",
       "_origin": "ast",
       "id": "web_dagre_min_basemap",
-      "community": 36,
+      "community": 63,
       "norm_label": "basemap()"
     },
     {
@@ -8452,7 +8552,7 @@
       "source_location": "L1315",
       "_origin": "ast",
       "id": "web_dagre_min_baserest",
-      "community": 139,
+      "community": 134,
       "norm_label": "baserest()"
     },
     {
@@ -8482,7 +8582,7 @@
       "source_location": "L1354",
       "_origin": "ast",
       "id": "web_dagre_min_basetimes",
-      "community": 11,
+      "community": 1,
       "norm_label": "basetimes()"
     },
     {
@@ -8552,7 +8652,7 @@
       "source_location": "L1422",
       "_origin": "ast",
       "id": "web_dagre_min_castfunction",
-      "community": 1,
+      "community": 139,
       "norm_label": "castfunction()"
     },
     {
@@ -8572,7 +8672,7 @@
       "source_location": "L1437",
       "_origin": "ast",
       "id": "web_dagre_min_clonearraybuffer",
-      "community": 11,
+      "community": 150,
       "norm_label": "clonearraybuffer()"
     },
     {
@@ -8592,7 +8692,7 @@
       "source_location": "L1457",
       "_origin": "ast",
       "id": "web_dagre_min_clonedataview",
-      "community": 11,
+      "community": 150,
       "norm_label": "clonedataview()"
     },
     {
@@ -8602,7 +8702,7 @@
       "source_location": "L1466",
       "_origin": "ast",
       "id": "web_dagre_min_cloneregexp",
-      "community": 11,
+      "community": 150,
       "norm_label": "cloneregexp()"
     },
     {
@@ -8612,7 +8712,7 @@
       "source_location": "L1474",
       "_origin": "ast",
       "id": "web_dagre_min_clonesymbol",
-      "community": 11,
+      "community": 150,
       "norm_label": "clonesymbol()"
     },
     {
@@ -8622,7 +8722,7 @@
       "source_location": "L1482",
       "_origin": "ast",
       "id": "web_dagre_min_clonetypedarray",
-      "community": 11,
+      "community": 150,
       "norm_label": "clonetypedarray()"
     },
     {
@@ -8632,7 +8732,7 @@
       "source_location": "L1490",
       "_origin": "ast",
       "id": "web_dagre_min_compareascending",
-      "community": 63,
+      "community": 33,
       "norm_label": "compareascending()"
     },
     {
@@ -8822,7 +8922,7 @@
       "source_location": "L1715",
       "_origin": "ast",
       "id": "web_dagre_min_getnative",
-      "community": 44,
+      "community": 152,
       "norm_label": "getnative()"
     },
     {
@@ -8842,7 +8942,7 @@
       "source_location": "L1769",
       "_origin": "ast",
       "id": "web_dagre_min_getvalue",
-      "community": 44,
+      "community": 152,
       "norm_label": "getvalue()"
     },
     {
@@ -8862,7 +8962,7 @@
       "source_location": "L1789",
       "_origin": "ast",
       "id": "web_dagre_min_hasunicode",
-      "community": 36,
+      "community": 24,
       "norm_label": "hasunicode()"
     },
     {
@@ -8932,7 +9032,7 @@
       "source_location": "L1866",
       "_origin": "ast",
       "id": "web_dagre_min_initclonebytag",
-      "community": 11,
+      "community": 150,
       "norm_label": "initclonebytag()"
     },
     {
@@ -9002,7 +9102,7 @@
       "source_location": "L1927",
       "_origin": "ast",
       "id": "web_dagre_min_ismasked",
-      "community": 44,
+      "community": 152,
       "norm_label": "ismasked()"
     },
     {
@@ -9042,7 +9142,7 @@
       "source_location": "L1963",
       "_origin": "ast",
       "id": "web_dagre_min_listcachedelete",
-      "community": 1,
+      "community": 151,
       "norm_label": "listcachedelete()"
     },
     {
@@ -9052,7 +9152,7 @@
       "source_location": "L1972",
       "_origin": "ast",
       "id": "web_dagre_min_listcacheget",
-      "community": 1,
+      "community": 151,
       "norm_label": "listcacheget()"
     },
     {
@@ -9062,7 +9162,7 @@
       "source_location": "L1981",
       "_origin": "ast",
       "id": "web_dagre_min_listcachehas",
-      "community": 1,
+      "community": 151,
       "norm_label": "listcachehas()"
     },
     {
@@ -9072,7 +9172,7 @@
       "source_location": "L1991",
       "_origin": "ast",
       "id": "web_dagre_min_listcacheset",
-      "community": 1,
+      "community": 151,
       "norm_label": "listcacheset()"
     },
     {
@@ -9132,7 +9232,7 @@
       "source_location": "L2043",
       "_origin": "ast",
       "id": "web_dagre_min_maptoarray",
-      "community": 32,
+      "community": 1,
       "norm_label": "maptoarray()"
     },
     {
@@ -9152,7 +9252,7 @@
       "source_location": "L2062",
       "_origin": "ast",
       "id": "web_dagre_min_memoizecapped",
-      "community": 1,
+      "community": 134,
       "norm_label": "memoizecapped()"
     },
     {
@@ -9162,7 +9262,7 @@
       "source_location": "L2074",
       "_origin": "ast",
       "id": "web_dagre_min_nativekeysin",
-      "community": 134,
+      "community": 11,
       "norm_label": "nativekeysin()"
     },
     {
@@ -9182,7 +9282,7 @@
       "source_location": "L2106",
       "_origin": "ast",
       "id": "web_dagre_min_overarg",
-      "community": 1,
+      "community": 11,
       "norm_label": "overarg()"
     },
     {
@@ -9192,7 +9292,7 @@
       "source_location": "L2116",
       "_origin": "ast",
       "id": "web_dagre_min_overrest",
-      "community": 1,
+      "community": 134,
       "norm_label": "overrest()"
     },
     {
@@ -9242,7 +9342,7 @@
       "source_location": "L2177",
       "_origin": "ast",
       "id": "web_dagre_min_shortout",
-      "community": 1,
+      "community": 134,
       "norm_label": "shortout()"
     },
     {
@@ -9302,7 +9402,7 @@
       "source_location": "L2236",
       "_origin": "ast",
       "id": "web_dagre_min_strictindexof",
-      "community": 1,
+      "community": 149,
       "norm_label": "strictindexof()"
     },
     {
@@ -9312,7 +9412,7 @@
       "source_location": "L2243",
       "_origin": "ast",
       "id": "web_dagre_min_stringsize",
-      "community": 36,
+      "community": 24,
       "norm_label": "stringsize()"
     },
     {
@@ -9332,7 +9432,7 @@
       "source_location": "L2270",
       "_origin": "ast",
       "id": "web_dagre_min_tosource",
-      "community": 44,
+      "community": 152,
       "norm_label": "tosource()"
     },
     {
@@ -9342,7 +9442,7 @@
       "source_location": "L2282",
       "_origin": "ast",
       "id": "web_dagre_min_unicodesize",
-      "community": 36,
+      "community": 24,
       "norm_label": "unicodesize()"
     },
     {
@@ -9362,7 +9462,7 @@
       "source_location": "L2328",
       "_origin": "ast",
       "id": "web_dagre_min_clonedeep",
-      "community": 35,
+      "community": 26,
       "norm_label": "clonedeep()"
     },
     {
@@ -9372,7 +9472,7 @@
       "source_location": "L2348",
       "_origin": "ast",
       "id": "web_dagre_min_constant",
-      "community": 44,
+      "community": 50,
       "norm_label": "constant()"
     },
     {
@@ -9402,7 +9502,7 @@
       "source_location": "L2513",
       "_origin": "ast",
       "id": "web_dagre_min_findindex",
-      "community": 1,
+      "community": 149,
       "norm_label": "findindex()"
     },
     {
@@ -9422,7 +9522,7 @@
       "source_location": "L2557",
       "_origin": "ast",
       "id": "web_dagre_min_foreach",
-      "community": 32,
+      "community": 6,
       "norm_label": "foreach()"
     },
     {
@@ -9432,7 +9532,7 @@
       "source_location": "L2585",
       "_origin": "ast",
       "id": "web_dagre_min_forin",
-      "community": 1,
+      "community": 139,
       "norm_label": "forin()"
     },
     {
@@ -9512,7 +9612,7 @@
       "source_location": "L2851",
       "_origin": "ast",
       "id": "web_dagre_min_isfunction",
-      "community": 44,
+      "community": 11,
       "norm_label": "isfunction()"
     },
     {
@@ -9532,7 +9632,7 @@
       "source_location": "L2926",
       "_origin": "ast",
       "id": "web_dagre_min_isobject",
-      "community": 134,
+      "community": 11,
       "norm_label": "isobject()"
     },
     {
@@ -9562,7 +9662,7 @@
       "source_location": "L3020",
       "_origin": "ast",
       "id": "web_dagre_min_isstring",
-      "community": 36,
+      "community": 24,
       "norm_label": "isstring()"
     },
     {
@@ -9582,7 +9682,7 @@
       "source_location": "L3074",
       "_origin": "ast",
       "id": "web_dagre_min_isundefined",
-      "community": 50,
+      "community": 26,
       "norm_label": "isundefined()"
     },
     {
@@ -9652,7 +9752,7 @@
       "source_location": "L3273",
       "_origin": "ast",
       "id": "web_dagre_min_memoize",
-      "community": 1,
+      "community": 134,
       "norm_label": "memoize()"
     },
     {
@@ -9712,7 +9812,7 @@
       "source_location": "L3517",
       "_origin": "ast",
       "id": "web_dagre_min_size",
-      "community": 36,
+      "community": 24,
       "norm_label": "size()"
     },
     {
@@ -9742,7 +9842,7 @@
       "source_location": "L3603",
       "_origin": "ast",
       "id": "web_dagre_min_tofinite",
-      "community": 134,
+      "community": 149,
       "norm_label": "tofinite()"
     },
     {
@@ -9752,7 +9852,7 @@
       "source_location": "L3629",
       "_origin": "ast",
       "id": "web_dagre_min_tointeger",
-      "community": 1,
+      "community": 149,
       "norm_label": "tointeger()"
     },
     {
@@ -9762,7 +9862,7 @@
       "source_location": "L3658",
       "_origin": "ast",
       "id": "web_dagre_min_tonumber",
-      "community": 134,
+      "community": 149,
       "norm_label": "tonumber()"
     },
     {
@@ -9792,7 +9892,7 @@
       "source_location": "L3733",
       "_origin": "ast",
       "id": "web_dagre_min_transform",
-      "community": 1,
+      "community": 11,
       "norm_label": "transform()"
     },
     {
@@ -9802,7 +9902,7 @@
       "source_location": "L3767",
       "_origin": "ast",
       "id": "web_dagre_min_uniqueid",
-      "community": 26,
+      "community": 32,
       "norm_label": "uniqueid()"
     },
     {
@@ -16726,7 +16826,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "config_serviceclass",
@@ -16736,7 +16836,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_classforport",
@@ -16746,7 +16846,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_classlabel",
@@ -16756,7 +16856,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_isadminport",
@@ -16766,7 +16866,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L220",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_isauthedge",
@@ -16776,7 +16876,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L211",
+      "source_location": "L212",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_iscriticaldependency",
@@ -16786,7 +16886,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L173",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_servicename",
@@ -16796,7 +16896,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_config_defaults_classlabel",
@@ -16840,7 +16940,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0,
       "context": "return_type",
       "source": "internal_config_defaults_classforport",
@@ -16874,7 +16974,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "internal_config_defaults_isadminport",
       "target": "internal_config_defaults_classforport",
@@ -16885,7 +16985,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L221",
+      "source_location": "L222",
       "weight": 1.0,
       "source": "internal_config_defaults_isauthedge",
       "target": "internal_config_defaults_classforport",
@@ -16896,7 +16996,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L212",
+      "source_location": "L213",
       "weight": 1.0,
       "source": "internal_config_defaults_iscriticaldependency",
       "target": "internal_config_defaults_classforport",
@@ -24128,6 +24228,188 @@
       "context": "return_type",
       "source": "internal_report_svg_legenditems",
       "target": "report_legenditem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "internal_score_sampled",
+      "target": "internal_score_sampled_brandesfrom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "internal_score_sampled",
+      "target": "internal_score_sampled_sampledbetweenness",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L16",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_sampledbetweenness",
+      "target": "directed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "internal_score_sampled_sampledbetweenness",
+      "target": "internal_score_sampled_brandesfrom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "target": "internal_score_sampled_sampledbetweenness"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_score_sampled_sampledbetweenness"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/score.go",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "internal_score_score_score",
+      "target": "internal_score_sampled_sampledbetweenness"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L45",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_brandesfrom",
+      "target": "directed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test",
+      "target": "internal_score_sampled_test_chaingraph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test",
+      "target": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test",
+      "target": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L15",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "internal_score_sampled_test_chaingraph",
+      "target": "internal_score_sampled_test_go_model",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "target": "internal_score_sampled_test_chaingraph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_score_sampled_test_chaingraph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L29",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_score_sampled_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_snapshot_diff_abs"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L43",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "target": "internal_score_sampled_test_go_t",
       "confidence_score": 1.0
     },
     {
@@ -47874,5 +48156,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8d619ddcae29b53549ef928b85f2a9abea72e6c5"
+  "built_at_commit": "a3dcc0d7431ab4c2beb83e7651cd2646d7b904ae"
 }

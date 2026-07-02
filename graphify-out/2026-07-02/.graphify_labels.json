@@ -144,5 +144,7 @@
   "142": "assocIndexOf",
   "143": "globalOpts",
   "144": "newMapCmd",
-  "146": "Optional model-assisted analysis"
+  "145": "analysisArtifact",
+  "146": "Optional model-assisted analysis",
+  "147": "isEmpty"
 }

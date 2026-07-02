@@ -49,12 +49,13 @@ const (
 
 // Scan defaults.
 const (
-	DefaultWindow       = 14 * 24 * time.Hour // §11 scan --window default
-	CompositePageSize   = 1000                // §6.1 composite agg page size
-	DefaultMaxEdges     = 500_000             // §6.1 --max-edges safety limit
-	ResponderTermsSize  = 2000                // role-evidence responder terms cap
-	TopNTemporal        = 50                  // §6.1 second-pass temporal for top-N nodes
-	ExactBetweennessMax = 2000                // §10 gonum exact ≤2k nodes
+	DefaultWindow           = 14 * 24 * time.Hour // §11 scan --window default
+	CompositePageSize       = 1000                // §6.1 composite agg page size
+	DefaultMaxEdges         = 500_000             // §6.1 --max-edges safety limit
+	ResponderTermsSize      = 2000                // role-evidence responder terms cap
+	TopNTemporal            = 50                  // §6.1 second-pass temporal for top-N nodes
+	ExactBetweennessMax     = 2000                // §10 gonum exact ≤2k nodes
+	BetweennessSamplePivots = 256                 // Brandes–Pich pivots above the exact limit
 )
 
 // Map generation (DEFILADE_PLAN.md §8).

@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "cmd/defilade/scan.go": {
-    "mtime": 1782986362.9967768,
-    "ast_hash": "af228ae6b2ec70fd1dcddf75e7539211",
+    "mtime": 1782988806.1523528,
+    "ast_hash": "ba97cd4b631d57291b7cefd111dd91f2",
     "semantic_hash": ""
   },
   "cmd/defilade/testconnection.go": {
@@ -45,8 +45,8 @@
     "semantic_hash": "1e3a1fbac589f6726718c4f1c475c0d9"
   },
   "internal/config/defaults.go": {
-    "mtime": 1782986362.9967768,
-    "ast_hash": "dcb99537cbcfd94c3866f53f8881cefe",
+    "mtime": 1782988876.105624,
+    "ast_hash": "1af7b090a7a0561e20d5eaa84b9a3434",
     "semantic_hash": ""
   },
   "internal/escli/client.go": {
@@ -110,9 +110,9 @@
     "semantic_hash": "953a4193c65e1466bb88dda8a0d31f65"
   },
   "internal/graph/pipeline_test.go": {
-    "mtime": 1782946449.0825036,
-    "ast_hash": "9186c0d700251011d4deec2e1e3049d7",
-    "semantic_hash": "9186c0d700251011d4deec2e1e3049d7"
+    "mtime": 1782988806.1523528,
+    "ast_hash": "d444f6825ff1ced6e08f8a6e4d09c459",
+    "semantic_hash": ""
   },
   "internal/graph/temporal.go": {
     "mtime": 1782946449.0825036,
@@ -145,9 +145,9 @@
     "semantic_hash": "be6974d6651412320d06fb92d2d8dfc7"
   },
   "internal/report/html.go": {
-    "mtime": 1782946449.0825036,
-    "ast_hash": "937894b0492c51a0991f66928de033f9",
-    "semantic_hash": "937894b0492c51a0991f66928de033f9"
+    "mtime": 1782988806.1523528,
+    "ast_hash": "b2ff52d8ed278d5818ba4c7676efb235",
+    "semantic_hash": ""
   },
   "internal/report/map_golden_test.go": {
     "mtime": 1782986359.6447637,
@@ -185,9 +185,9 @@
     "semantic_hash": "f6d3ada6bf8668750551d1eb99b17b0f"
   },
   "internal/score/score.go": {
-    "mtime": 1782946449.0825036,
-    "ast_hash": "abdfbd40dafe320a6a95b3fba020dd10",
-    "semantic_hash": "abdfbd40dafe320a6a95b3fba020dd10"
+    "mtime": 1782988784.7162697,
+    "ast_hash": "b8dc68af6343a38dc4fbc96f97f07c95",
+    "semantic_hash": ""
   },
   "internal/snapshot/store.go": {
     "mtime": 1782946449.0825036,
@@ -412,6 +412,21 @@
   "internal/report/reconcilehtml_test.go": {
     "mtime": 1782987274.4413662,
     "ast_hash": "ecdf4bb9494ab6f42c5d588d75c4e1a9",
+    "semantic_hash": ""
+  },
+  "internal/score/sampled.go": {
+    "mtime": 1782988768.537207,
+    "ast_hash": "f6792676485d414f11d8cf9182fc1383",
+    "semantic_hash": ""
+  },
+  "internal/score/sampled_test.go": {
+    "mtime": 1782988848.1125154,
+    "ast_hash": "bcef484e5fff538471cf348befe32abf",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1782988861.0245655,
+    "ast_hash": "d1c145ed5f3bace951e8c69b0abe81c5",
     "semantic_hash": ""
   }
 }
