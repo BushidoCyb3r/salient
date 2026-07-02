@@ -146,7 +146,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 		}
 		fmt.Fprintf(out, "  %d. %-16s %-18s composite %.2f\n", n.Scores.Rank, n.IP, topRoleLabel(n), n.Scores.Composite)
 	}
-	fmt.Fprintf(os.Stderr, "%sHandling reminder: report and snapshot describe network terrain — protect at the network's classification.%s\n", ansiYellow, ansiReset)
+	fmt.Fprintf(os.Stderr, "%sHandling reminder: report, map, and snapshot describe network terrain — protect at the network's classification.%s\n", ansiYellow, ansiReset)
 	return nil
 }
 

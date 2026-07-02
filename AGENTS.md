@@ -13,30 +13,37 @@ report, and briefing maps. Full spec, architecture, and phased plan:
 non-trivial, it's the source of truth for scope and constraints. Quickstart
 and current status: `README.md` in this repo.
 
-Claude Code has been doing the implementation work in this repo and keeps
-notes on the user's working preferences at
-`/home/phill/.claude/projects/-home-phill/memory/` (see `MEMORY.md` there for
-the index). Worth a read for anything not covered here.
-
 ## Hard constraints (from DEFILADE_PLAN.md — do not violate)
 
 - Pure Go, no cgo, single static binary.
 - Read-only against Elasticsearch. The only writes are to the local filesystem.
-- Fully offline once pointed at a grid — no external calls, no CDN assets,
-  everything embedded via `go:embed` (see `web/`).
+- Fully offline by default — no telemetry or CDN assets, everything embedded
+  via `go:embed` (see `web/`). The snapshot-only `analyze` command is the sole
+  exception: it may call an explicitly configured endpoint, with an additional
+  acknowledgement required for remote network-data egress.
 - No new servers, containers, agents, or Security Onion config changes.
 
-## Current status (as of the last Claude session)
+## Current status
 
-- **Phase 0** (ground-truth validation: `test-connection`, `discover`) — done.
-- **Phase 1** (`scan` → scored snapshot + analyst report) — done, committed.
-- **Phase 1.5** (briefing maps, `mapview` package) — in progress, uncommitted
-  in the working tree: subnet grouping, gateway synthesis (L2 MAC-convergence
-  primary / cross-subnet inferred fallback), simplification pipeline, SVG +
-  interactive HTML (Cytoscape/fcose/dagre) + grouped GraphML renderers exist;
-  the `map` CLI subcommand and its tests are not yet wired up. Check
-  `git log` and `git status` for the exact boundary before continuing —
-  this note will drift.
+- **Phase 0 implementation** (`test-connection`, `discover`) — done. Live-grid
+  field-map verification is still pending.
+- **Phase 1** (`scan` → scored snapshot + analyst report) — done and committed
+  at `b6019c6`.
+- **Phase 1.5** (briefing maps) — implementation committed at `246ca9b`.
+  Additional CLI validation and artifact-handling tests are uncommitted.
+  Offline yEd/draw.io round-trip and cold-reader homelab validation remain
+  manual acceptance checks.
+- **Phase 2** (drift) — repository implementation complete but uncommitted:
+  deterministic node/edge/rank/full-role-set comparison, HTML + JSON reports,
+  `diff --map` drift overlays, low-volume critical-drift preservation, and CLI
+  tests. The live-homelab new-server exercise remains pending.
+- Optional snapshot-only model analysis with deliberate opt-in network egress
+  is approved and currently uncommitted. Remote use requires HTTPS and the
+  explicit `--allow-network-data-egress` acknowledgement.
+- The working tree also contains expected Graphify integration/output. Inspect
+  `git status` before editing and do not discard or overwrite unrelated changes.
+- Next implementation phase is **Phase 3 reconciliation** unless live-grid
+  validation is available first.
 - Every field name in `internal/escli/fieldmap.go` is still `// UNVERIFIED`
   until `discover` has been run against a real homelab grid and
   `docs/FIELDMAP.md` filled in. Don't build Phase 2+ features assuming the
@@ -55,8 +62,8 @@ tests.
 
 - `docs/FIELDMAP.md` — field-map verification worksheet, Phase 0 deliverable.
 - `docs/DEPLOYMENT.md` — read-only API key + firewall allow-list steps.
-- `docs/MAPS.md` — not created yet; owed by Phase 1.5 per the plan (§8.6,
-  §12) once the `map` command and yEd/draw.io import walkthrough exist.
+- `docs/MAPS.md` — briefing-map interpretation, export/import, and drift maps.
+- `docs/AI.md` — optional model-analysis egress and integrity boundary.
 
 ## graphify
 

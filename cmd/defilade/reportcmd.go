@@ -29,9 +29,13 @@ func newReportCmd() *cobra.Command {
 			w := cmd.OutOrStdout()
 			switch format {
 			case "json":
-				return report.JSON(w, snap)
+				if err := report.JSON(w, snap); err != nil {
+					return err
+				}
 			case "graphml":
-				return report.GraphML(w, snap)
+				if err := report.GraphML(w, snap); err != nil {
+					return err
+				}
 			case "html":
 				out := path + ".html"
 				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
@@ -43,10 +47,11 @@ func newReportCmd() *cobra.Command {
 					return err
 				}
 				fmt.Fprintln(w, out)
-				return nil
 			default:
 				return fmt.Errorf("unknown --format %q (html|json|graphml)", format)
 			}
+			fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this report describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
+			return nil
 		},
 	}
 	cmd.Flags().String("snapshot", "", "snapshot .json.gz to render")

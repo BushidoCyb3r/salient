@@ -6,12 +6,16 @@
 
 Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs already aggregated on a Security Onion manager and produces a typed dependency graph, a ranked key-cyber-terrain report with evidence attached to every ranking, briefing-ready network maps, drift detection between snapshots, and a doc-vs-reality reconciliation report. Primary use case: CPT/hunt-team terrain familiarization in the first 72 hours on an unfamiliar network.
 
-> **Project status: Phase 1 (scan → ranked terrain report).** `scan` aggregates the
-> window server-side, builds and scores the dependency graph, and writes a snapshot +
-> analyst report. The default field map is still an *unverified assumption* about how
+> **Project status: Phase 2 implemented; live-grid validation pending.** `scan` aggregates the window
+> server-side, builds and scores the dependency graph, and writes a snapshot,
+> analyst report, and briefing map. Stored snapshots can also be rendered offline as
+> HTML, SVG, or GraphML; `diff` compares snapshots and emits HTML or JSON drift
+> reports. Optional model-assisted analysis is available only through the explicit
+> snapshot-only `analyze` command. `diff --map` also writes an interactive map with
+> new, vanished, and rank-changing terrain highlighted. The default field map is still an *unverified assumption* about how
 > Security Onion maps Zeek fields to ECS — run `discover` against your grid and record
 > ground truth in `docs/FIELDMAP.md` before trusting a scan. Wrong field maps fail
-> loudly by design. Maps (Phase 1.5), drift, and reconciliation are not built yet.
+> loudly by design. Reconciliation is not built yet.
 
 ## 60-second quickstart
 
@@ -35,6 +39,13 @@ export DEFILADE_API_KEY="<base64 id:key — see docs/DEPLOYMENT.md for read-only
 # Re-render or export a stored snapshot
 ./bin/defilade list
 ./bin/defilade report --snapshot defilade-data/snapshots/<ts>.json.gz --format graphml
+./bin/defilade map --snapshot defilade-data/snapshots/<ts>.json.gz --format svg > map.svg
+./bin/defilade diff --from defilade-data/snapshots/<older>.json.gz \
+    --to defilade-data/snapshots/<newer>.json.gz --format html --map
+
+# Optional: analyze a stored snapshot with a local compatible endpoint
+./bin/defilade analyze --snapshot defilade-data/snapshots/<ts>.json.gz \
+    --endpoint http://127.0.0.1:11434/v1/chat/completions --model local-model
 ```
 
 `discover` reports which Zeek datasets exist (conn, dns, kerberos, smb, …), document
@@ -46,7 +57,9 @@ field names differ from the defaults, pin them with `--fieldmap custom.yaml`
 
 - Pure Go, no cgo, single static binary (linux/amd64, darwin/arm64, windows/amd64: `make cross`).
 - **Read-only against Elasticsearch.** The only writes are to the local filesystem.
-- Fully offline once pointed at the grid: no external calls, no telemetry, no CDN assets.
+- Fully offline by default: no telemetry or CDN assets. The snapshot-only `analyze`
+  command may call an explicitly configured endpoint; remote HTTPS endpoints require
+  `--allow-network-data-egress` (see `docs/AI.md`).
 - Mode 1 deployment only: a binary on an analyst workstation with reach to the manager's ES API. No new servers, containers, agents, or SO config changes.
 
 ## Limitations (read before trusting the output)
@@ -71,9 +84,11 @@ of the network it describes.
 See `DEFILADE_PLAN.md` for the full architecture and phased plan. Current tree:
 
 ```
-cmd/defilade/          CLI (cobra): test-connection, discover
+cmd/defilade/          CLI (cobra): test-connection, discover, scan, report, map, diff, analyze, list
 internal/config/       every tunable default — no magic numbers inline
 internal/escli/        read-only ES client, FieldMap, query builders
+internal/mapview/      subnet grouping, gateway inference, map simplification
+internal/report/       analyst reports and HTML/SVG/GraphML map renderers
 docs/DEPLOYMENT.md     read-only API key + so-firewall allow-list steps
 docs/FIELDMAP.md       field-map verification worksheet (Phase 0 output)
 ```
