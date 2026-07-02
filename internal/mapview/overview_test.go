@@ -42,7 +42,7 @@ func TestOverviewPrefix(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := overviewPrefix(nodesInSubnets(tc.subnets), tc.start); got != tc.want {
+			if got := overviewPrefix(nodesInSubnets(tc.subnets), tc.start, config.MapOverviewMaxGroups); got != tc.want {
 				t.Errorf("overviewPrefix(start=%d) = %d, want %d", tc.start, got, tc.want)
 			}
 		})
@@ -50,8 +50,8 @@ func TestOverviewPrefix(t *testing.T) {
 	// Determinism: same input, same answer, and group count at the chosen
 	// prefix respects the cap whenever a satisfying prefix exists.
 	nodes := nodesInSubnets(spread)
-	p := overviewPrefix(nodes, 24)
-	if p2 := overviewPrefix(nodes, 24); p2 != p {
+	p := overviewPrefix(nodes, 24, config.MapOverviewMaxGroups)
+	if p2 := overviewPrefix(nodes, 24, config.MapOverviewMaxGroups); p2 != p {
 		t.Fatalf("overviewPrefix not deterministic: %d vs %d", p, p2)
 	}
 	distinct := map[string]bool{}

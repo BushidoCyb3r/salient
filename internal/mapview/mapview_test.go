@@ -160,6 +160,86 @@ func TestOverviewRetainsTopRanksAndAggregatesRest(t *testing.T) {
 	}
 }
 
+// TestOverviewInternetHeavySnapshot mirrors the real homelab scan: a small
+// internal network plus thousands of public peers pulled in by outbound
+// traffic, with multicast/broadcast noise ranked into the top 20.
+func TestOverviewInternetHeavySnapshot(t *testing.T) {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	var snap graph.Snapshot
+	snap.Meta = graph.SnapshotMeta{Window: "336h", ClusterName: "test"}
+	rank := 0
+	addNode := func(ip, subnet string, composite float64) {
+		rank++
+		snap.Nodes = append(snap.Nodes, graph.Node{
+			IP: ip, Subnet: subnet, FirstSeen: t0, LastSeen: t0.Add(time.Hour),
+			Scores: graph.ScoreSet{Composite: composite, Rank: rank},
+		})
+	}
+	// Ranks 1-8: real internal terrain across two /16s.
+	for i := 0; i < 4; i++ {
+		addNode(fmt.Sprintf("10.10.40.%d", i+1), "10.10.40.0/24", 0.9)
+		addNode(fmt.Sprintf("10.18.61.%d", i+1), "10.18.61.0/24", 0.9)
+	}
+	// Ranks 9-10: multicast + broadcast noise scored into the top block.
+	addNode("224.0.0.251", "224.0.0.0/24", 0.8)
+	addNode("255.255.255.255", "255.255.255.0/24", 0.8)
+	// Remaining internal hosts.
+	for i := 0; i < 20; i++ {
+		addNode(fmt.Sprintf("10.10.40.%d", 100+i), "10.10.40.0/24", 0.3)
+	}
+	// Thousands of public peers: 300 /24s across many /8s, ten hosts each,
+	// mid composite so they stay individually visible in the detailed map
+	// (mirroring the real scan's hundreds of classified public web servers).
+	for i := 0; i < 3000; i++ {
+		s := i / 10
+		subnet := fmt.Sprintf("%d.%d.%d.0/24", 43+(s%40), s%100, s/100)
+		addNode(fmt.Sprintf("%d.%d.%d.%d", 43+(s%40), s%100, s/100, 10+i%10), subnet, 0.5)
+	}
+	for _, n := range snap.Nodes[1:] {
+		snap.Edges = append(snap.Edges, graph.Edge{
+			Src: n.IP, Dst: "10.10.40.1", Port: 443, ConnCount: 50,
+			FirstSeen: t0, LastSeen: t0.Add(time.Hour),
+		})
+	}
+
+	mm := mapview.Build(snap, mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("expected overview mode")
+	}
+	byID := map[string]mapview.MapNode{}
+	for _, n := range mm.Nodes {
+		byID[n.ID] = n
+	}
+	// Internal terrain groups must survive; public space must not own them.
+	groupCIDRs := map[string]bool{}
+	for _, g := range mm.Groups {
+		groupCIDRs[g.CIDR] = true
+		if g.CIDR != "" && !strings.HasPrefix(g.CIDR, "10.") && g.ID != "g:external" {
+			t.Errorf("public space must collapse into the external group, found group %q", g.CIDR)
+		}
+	}
+	if _, ok := byID["10.10.40.1"]; !ok {
+		t.Error("top-ranked internal host missing from overview")
+	}
+	if _, ok := byID["10.18.61.1"]; !ok {
+		t.Error("top-ranked internal host in second enclave missing from overview")
+	}
+	// Multicast/broadcast are not hosts and must never be individually shown.
+	for _, ip := range []string{"224.0.0.251", "255.255.255.255"} {
+		if _, ok := byID[ip]; ok {
+			t.Errorf("%s must be aggregated, not shown as terrain", ip)
+		}
+	}
+	// The external aggregate carries the public peers.
+	ext, ok := byID["g:external:clients"]
+	if !ok || ext.AggCount < 3000 {
+		t.Errorf("external aggregate = %+v, want >=3000 public peers", ext)
+	}
+	if got := mm.Elements(); got > config.MapTargetElements {
+		t.Errorf("overview has %d elements, target <= %d", got, config.MapTargetElements)
+	}
+}
+
 func TestOverviewGatewayBudget(t *testing.T) {
 	snap := largeFixture()
 	for i := 0; i < 40; i++ {

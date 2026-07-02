@@ -20,7 +20,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd",
-      "community": 149,
+      "community": 141,
       "norm_label": "analyzecmd.go"
     },
     {
@@ -30,7 +30,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "defilade_analysisartifact",
-      "community": 149,
+      "community": 141,
       "norm_label": "analysisartifact"
     },
     {
@@ -40,7 +40,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_time",
-      "community": 149,
+      "community": 141,
       "norm_label": "time"
     },
     {
@@ -50,7 +50,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_result",
-      "community": 149,
+      "community": 141,
       "norm_label": "result"
     },
     {
@@ -60,7 +60,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_newanalyzecmd",
-      "community": 149,
+      "community": 141,
       "norm_label": "newanalyzecmd()"
     },
     {
@@ -70,7 +70,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_command",
-      "community": 149,
+      "community": 141,
       "norm_label": "command"
     },
     {
@@ -890,7 +890,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd",
-      "community": 2,
+      "community": 156,
       "norm_label": "viewcmd.go"
     },
     {
@@ -900,7 +900,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "defilade_browserindexentry",
-      "community": 2,
+      "community": 156,
       "norm_label": "browserindexentry"
     },
     {
@@ -910,7 +910,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_newviewcmd",
-      "community": 2,
+      "community": 156,
       "norm_label": "newviewcmd()"
     },
     {
@@ -920,7 +920,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_go_command",
-      "community": 2,
+      "community": 156,
       "norm_label": "command"
     },
     {
@@ -930,7 +930,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_writebrowserindex",
-      "community": 2,
+      "community": 156,
       "norm_label": "writebrowserindex()"
     },
     {
@@ -940,7 +940,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_browsercommand",
-      "community": 2,
+      "community": 156,
       "norm_label": "browsercommand()"
     },
     {
@@ -950,7 +950,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_test",
-      "community": 2,
+      "community": 156,
       "norm_label": "viewcmd_test.go"
     },
     {
@@ -960,7 +960,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_test_testwritebrowserindex",
-      "community": 2,
+      "community": 156,
       "norm_label": "testwritebrowserindex()"
     },
     {
@@ -970,7 +970,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_test_go_t",
-      "community": 2,
+      "community": 156,
       "norm_label": "t"
     },
     {
@@ -980,7 +980,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_test_testbrowsercommandlinuxusesgio",
-      "community": 2,
+      "community": 156,
       "norm_label": "testbrowsercommandlinuxusesgio()"
     },
     {
@@ -990,7 +990,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "cmd_defilade_viewcmd_test_testbrowsercommandreportsmissinglauncher",
-      "community": 2,
+      "community": 156,
       "norm_label": "testbrowsercommandreportsmissinglauncher()"
     },
     {
@@ -1012,7 +1012,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_assist_client",
-      "community": 14,
+      "community": 150,
       "norm_label": "client.go"
     },
     {
@@ -1022,7 +1022,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "assist_config",
-      "community": 14,
+      "community": 150,
       "norm_label": "config"
     },
     {
@@ -1032,7 +1032,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_assist_client_go_duration",
-      "community": 14,
+      "community": 150,
       "norm_label": "duration"
     },
     {
@@ -1042,7 +1042,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "assist_finding",
-      "community": 14,
+      "community": 150,
       "norm_label": "finding"
     },
     {
@@ -1052,7 +1052,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "assist_result",
-      "community": 14,
+      "community": 150,
       "norm_label": "result"
     },
     {
@@ -1062,7 +1062,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "assist_nodepayload",
-      "community": 14,
+      "community": 150,
       "norm_label": "nodepayload"
     },
     {
@@ -1072,7 +1072,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "assist_edgepayload",
-      "community": 14,
+      "community": 150,
       "norm_label": "edgepayload"
     },
     {
@@ -1082,7 +1082,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "internal_assist_client_analyze",
-      "community": 14,
+      "community": 150,
       "norm_label": "analyze()"
     },
     {
@@ -1092,7 +1092,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_assist_client_go_context",
-      "community": 14,
+      "community": 150,
       "norm_label": "context"
     },
     {
@@ -1102,7 +1102,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "internal_assist_client_validateendpoint",
-      "community": 14,
+      "community": 150,
       "norm_label": "validateendpoint()"
     },
     {
@@ -1112,7 +1112,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "internal_assist_client_summarize",
-      "community": 14,
+      "community": 150,
       "norm_label": "summarize()"
     },
     {
@@ -1122,7 +1122,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "internal_assist_client_edgeid",
-      "community": 14,
+      "community": 150,
       "norm_label": "edgeid()"
     },
     {
@@ -1132,7 +1132,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_assist_client_go_edge",
-      "community": 14,
+      "community": 150,
       "norm_label": "edge"
     },
     {
@@ -1142,7 +1142,7 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "internal_assist_client_validatecitations",
-      "community": 14,
+      "community": 150,
       "norm_label": "validatecitations()"
     },
     {
@@ -1152,7 +1152,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_assist_client_test",
-      "community": 14,
+      "community": 149,
       "norm_label": "client_test.go"
     },
     {
@@ -1162,7 +1162,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "internal_assist_client_test_testanalyzesendscappedsnapshotandvalidatescitations",
-      "community": 14,
+      "community": 149,
       "norm_label": "testanalyzesendscappedsnapshotandvalidatescitations()"
     },
     {
@@ -1172,7 +1172,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_assist_client_test_go_t",
-      "community": 14,
+      "community": 149,
       "norm_label": "t"
     },
     {
@@ -1182,7 +1182,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "internal_assist_client_test_testanalyzerejectsunknowncitations",
-      "community": 14,
+      "community": 149,
       "norm_label": "testanalyzerejectsunknowncitations()"
     },
     {
@@ -1192,7 +1192,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "internal_assist_client_test_testvalidateendpointrequiresexplicitsecureremoteegress",
-      "community": 14,
+      "community": 149,
       "norm_label": "testvalidateendpointrequiresexplicitsecureremoteegress()"
     },
     {
@@ -1202,7 +1202,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_config_defaults",
-      "community": 23,
+      "community": 10,
       "norm_label": "defaults.go"
     },
     {
@@ -1212,7 +1212,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "internal_config_defaults_classlabel",
-      "community": 23,
+      "community": 10,
       "norm_label": "classlabel()"
     },
     {
@@ -1222,7 +1222,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "config_serviceclass",
-      "community": 23,
+      "community": 10,
       "norm_label": "serviceclass"
     },
     {
@@ -1232,7 +1232,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "internal_config_defaults_classforport",
-      "community": 23,
+      "community": 10,
       "norm_label": "classforport()"
     },
     {
@@ -1252,7 +1252,7 @@
       "source_location": "L214",
       "_origin": "ast",
       "id": "internal_config_defaults_iscriticaldependency",
-      "community": 23,
+      "community": 10,
       "norm_label": "iscriticaldependency()"
     },
     {
@@ -1262,7 +1262,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "internal_config_defaults_isauthedge",
-      "community": 23,
+      "community": 10,
       "norm_label": "isauthedge()"
     },
     {
@@ -1272,7 +1272,7 @@
       "source_location": "L229",
       "_origin": "ast",
       "id": "internal_config_defaults_isadminport",
-      "community": 23,
+      "community": 10,
       "norm_label": "isadminport()"
     },
     {
@@ -1482,7 +1482,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "handlerfunc",
-      "community": 14,
+      "community": 149,
       "norm_label": "handlerfunc"
     },
     {
@@ -2562,7 +2562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_graph_infer",
-      "community": 147,
+      "community": 10,
       "norm_label": "infer.go"
     },
     {
@@ -2572,7 +2572,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "graph_evidence",
-      "community": 23,
+      "community": 10,
       "norm_label": "evidence"
     },
     {
@@ -2582,7 +2582,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "internal_graph_infer_go_graph_model",
-      "community": 23,
+      "community": 10,
       "norm_label": "model"
     },
     {
@@ -2592,7 +2592,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "graph_model_inferroles",
-      "community": 23,
+      "community": 10,
       "norm_label": ".inferroles()"
     },
     {
@@ -2602,7 +2602,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "internal_graph_infer_assert",
-      "community": 147,
+      "community": 10,
       "norm_label": "assert()"
     },
     {
@@ -2612,7 +2612,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "internal_graph_infer_maxclients",
-      "community": 147,
+      "community": 10,
       "norm_label": "maxclients()"
     },
     {
@@ -2622,7 +2622,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "graph_degree",
-      "community": 147,
+      "community": 10,
       "norm_label": "degree"
     },
     {
@@ -2632,7 +2632,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "graph_model_adminshape",
-      "community": 23,
+      "community": 10,
       "norm_label": ".adminshape()"
     },
     {
@@ -2642,7 +2642,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "graph_model_dbclientcounts",
-      "community": 23,
+      "community": 10,
       "norm_label": ".dbclientcounts()"
     },
     {
@@ -2652,7 +2652,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "graph_model_dbtemporal",
-      "community": 23,
+      "community": 10,
       "norm_label": ".dbtemporal()"
     },
     {
@@ -2812,7 +2812,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "graph_role",
-      "community": 10,
+      "community": 5,
       "norm_label": "role"
     },
     {
@@ -2822,7 +2822,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "graph_roleassertion",
-      "community": 147,
+      "community": 10,
       "norm_label": "roleassertion"
     },
     {
@@ -2882,7 +2882,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "graph_node",
-      "community": 35,
+      "community": 147,
       "norm_label": "node"
     },
     {
@@ -2892,7 +2892,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "graph_roleevidence",
-      "community": 147,
+      "community": 10,
       "norm_label": "roleevidence"
     },
     {
@@ -2922,7 +2922,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "graph_snapshot",
-      "community": 22,
+      "community": 147,
       "norm_label": "snapshot"
     },
     {
@@ -2932,7 +2932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_mapview_mapview",
-      "community": 35,
+      "community": 22,
       "norm_label": "mapview.go"
     },
     {
@@ -2942,7 +2942,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "mapview_tier",
-      "community": 35,
+      "community": 22,
       "norm_label": "tier"
     },
     {
@@ -2972,7 +2972,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "mapview_group",
-      "community": 35,
+      "community": 22,
       "norm_label": "group"
     },
     {
@@ -2982,7 +2982,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "mapview_mapnode",
-      "community": 35,
+      "community": 22,
       "norm_label": "mapnode"
     },
     {
@@ -2992,7 +2992,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "mapview_mapedge",
-      "community": 35,
+      "community": 22,
       "norm_label": "mapedge"
     },
     {
@@ -3032,7 +3032,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "mapview_rawedgekey",
-      "community": 35,
+      "community": 10,
       "norm_label": "rawedgekey"
     },
     {
@@ -3042,7 +3042,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "internal_mapview_mapview_builddrift",
-      "community": 22,
+      "community": 38,
       "norm_label": "builddrift()"
     },
     {
@@ -3092,7 +3092,7 @@
       "source_location": "L291",
       "_origin": "ast",
       "id": "internal_mapview_mapview_sortmodel",
-      "community": 35,
+      "community": 22,
       "norm_label": "sortmodel()"
     },
     {
@@ -3102,7 +3102,7 @@
       "source_location": "L305",
       "_origin": "ast",
       "id": "internal_mapview_mapview_groupid",
-      "community": 35,
+      "community": 22,
       "norm_label": "groupid()"
     },
     {
@@ -3112,7 +3112,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "internal_mapview_mapview_toprole",
-      "community": 35,
+      "community": 22,
       "norm_label": "toprole()"
     },
     {
@@ -3122,7 +3122,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "internal_mapview_mapview_nodelabel",
-      "community": 35,
+      "community": 147,
       "norm_label": "nodelabel()"
     },
     {
@@ -3132,7 +3132,7 @@
       "source_location": "L321",
       "_origin": "ast",
       "id": "internal_mapview_mapview_evidence",
-      "community": 35,
+      "community": 147,
       "norm_label": "evidence()"
     },
     {
@@ -3142,7 +3142,7 @@
       "source_location": "L329",
       "_origin": "ast",
       "id": "internal_mapview_mapview_tierof",
-      "community": 35,
+      "community": 22,
       "norm_label": "tierof()"
     },
     {
@@ -3152,7 +3152,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "internal_mapview_mapview_groupnodes",
-      "community": 35,
+      "community": 22,
       "norm_label": "groupnodes()"
     },
     {
@@ -3182,7 +3182,7 @@
       "source_location": "L443",
       "_origin": "ast",
       "id": "mapview_model_bundleedges",
-      "community": 35,
+      "community": 10,
       "norm_label": ".bundleedges()"
     },
     {
@@ -3192,7 +3192,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_mapview_mapview_go_edge",
-      "community": 35,
+      "community": 10,
       "norm_label": "edge"
     },
     {
@@ -3232,7 +3232,7 @@
       "source_location": "L535",
       "_origin": "ast",
       "id": "internal_mapview_mapview_filterfocus",
-      "community": 35,
+      "community": 147,
       "norm_label": "filterfocus()"
     },
     {
@@ -3242,7 +3242,7 @@
       "source_location": "L552",
       "_origin": "ast",
       "id": "internal_mapview_mapview_filterfocusedges",
-      "community": 35,
+      "community": 10,
       "norm_label": "filterfocusedges()"
     },
     {
@@ -3252,7 +3252,7 @@
       "source_location": "L564",
       "_origin": "ast",
       "id": "internal_mapview_mapview_settoslice",
-      "community": 35,
+      "community": 22,
       "norm_label": "settoslice()"
     },
     {
@@ -3326,10 +3326,20 @@
       "norm_label": "testoverviewretainstopranksandaggregatesrest()"
     },
     {
+      "label": "TestOverviewInternetHeavySnapshot()",
+      "file_type": "code",
+      "source_file": "internal/mapview/mapview_test.go",
+      "source_location": "L166",
+      "_origin": "ast",
+      "id": "internal_mapview_mapview_test_testoverviewinternetheavysnapshot",
+      "community": 38,
+      "norm_label": "testoverviewinternetheavysnapshot()"
+    },
+    {
       "label": "TestOverviewGatewayBudget()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L163",
+      "source_location": "L243",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testoverviewgatewaybudget",
       "community": 38,
@@ -3339,7 +3349,7 @@
       "label": "TestOverviewDriftMarkedNodesRetained()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L192",
+      "source_location": "L272",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testoverviewdriftmarkednodesretained",
       "community": 38,
@@ -3349,7 +3359,7 @@
       "label": "TestOverviewReconcileSkipsGhostsKeepsFindings()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L211",
+      "source_location": "L291",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testoverviewreconcileskipsghostskeepsfindings",
       "community": 38,
@@ -3359,7 +3369,7 @@
       "label": "TestBuildGroupsAndSparseCollapse()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L249",
+      "source_location": "L329",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildgroupsandsparsecollapse",
       "community": 38,
@@ -3369,7 +3379,7 @@
       "label": "TestBuildClientAggregation()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L277",
+      "source_location": "L357",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildclientaggregation",
       "community": 38,
@@ -3379,7 +3389,7 @@
       "label": "TestBuildInferredGatewayFallback()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L303",
+      "source_location": "L383",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildinferredgatewayfallback",
       "community": 38,
@@ -3389,7 +3399,7 @@
       "label": "TestBuildObservedGatewayFromL2Evidence()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L319",
+      "source_location": "L399",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildobservedgatewayfroml2evidence",
       "community": 38,
@@ -3399,7 +3409,7 @@
       "label": "TestBuildBlindSpotFinding()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L337",
+      "source_location": "L417",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildblindspotfinding",
       "community": 38,
@@ -3409,7 +3419,7 @@
       "label": "TestBuildNoiseFloorDropsLowVolumeEdges()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L353",
+      "source_location": "L433",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildnoisefloordropslowvolumeedges",
       "community": 38,
@@ -3419,7 +3429,7 @@
       "label": "TestBuildFocusRestrictsToOneSubnet()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L361",
+      "source_location": "L441",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildfocusrestrictstoonesubnet",
       "community": 38,
@@ -3429,7 +3439,7 @@
       "label": "TestElementsCountAndDeterminism()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L370",
+      "source_location": "L450",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testelementscountanddeterminism",
       "community": 38,
@@ -3439,7 +3449,7 @@
       "label": "TestBuildDriftAnnotatesNodesAndCriticalEdges()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L384",
+      "source_location": "L464",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuilddriftannotatesnodesandcriticaledges",
       "community": 38,
@@ -3449,7 +3459,7 @@
       "label": "TestBuildReconcileFlagsGhostsAndLabels()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L428",
+      "source_location": "L508",
       "_origin": "ast",
       "id": "internal_mapview_mapview_test_testbuildreconcileflagsghostsandlabels",
       "community": 38,
@@ -3469,17 +3479,37 @@
       "label": "overviewPrefix()",
       "file_type": "code",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "internal_mapview_overview_overviewprefix",
       "community": 35,
       "norm_label": "overviewprefix()"
     },
     {
-      "label": "buildOverview()",
+      "label": "internalCIDR()",
       "file_type": "code",
       "source_file": "internal/mapview/overview.go",
       "source_location": "L38",
+      "_origin": "ast",
+      "id": "internal_mapview_overview_internalcidr",
+      "community": 35,
+      "norm_label": "internalcidr()"
+    },
+    {
+      "label": "terrainAddr()",
+      "file_type": "code",
+      "source_file": "internal/mapview/overview.go",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "internal_mapview_overview_terrainaddr",
+      "community": 35,
+      "norm_label": "terrainaddr()"
+    },
+    {
+      "label": "buildOverview()",
+      "file_type": "code",
+      "source_file": "internal/mapview/overview.go",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "internal_mapview_overview_buildoverview",
       "community": 35,
@@ -3499,27 +3529,27 @@
       "label": "Model",
       "file_type": "code",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L175",
+      "source_location": "L235",
       "_origin": "ast",
       "id": "internal_mapview_overview_go_mapview_model",
-      "community": 35,
+      "community": 147,
       "norm_label": "model"
     },
     {
       "label": ".addOverviewGateways()",
       "file_type": "code",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L175",
+      "source_location": "L235",
       "_origin": "ast",
       "id": "mapview_model_addoverviewgateways",
-      "community": 35,
+      "community": 147,
       "norm_label": ".addoverviewgateways()"
     },
     {
       "label": "trimOverviewEdges()",
       "file_type": "code",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L225",
+      "source_location": "L287",
       "_origin": "ast",
       "id": "internal_mapview_overview_trimoverviewedges",
       "community": 35,
@@ -3532,7 +3562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_mapview_overview_test",
-      "community": 162,
+      "community": 35,
       "norm_label": "overview_test.go"
     },
     {
@@ -3542,7 +3572,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "internal_mapview_overview_test_nodesinsubnets",
-      "community": 162,
+      "community": 35,
       "norm_label": "nodesinsubnets()"
     },
     {
@@ -3552,7 +3582,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "internal_mapview_overview_test_testoverviewprefix",
-      "community": 162,
+      "community": 35,
       "norm_label": "testoverviewprefix()"
     },
     {
@@ -3562,7 +3592,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_mapview_overview_test_go_t",
-      "community": 162,
+      "community": 35,
       "norm_label": "t"
     },
     {
@@ -3572,7 +3602,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "internal_mapview_overview_test_testtrimoverviewedgesdriftexempt",
-      "community": 162,
+      "community": 35,
       "norm_label": "testtrimoverviewedgesdriftexempt()"
     },
     {
@@ -3582,7 +3612,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_reconcile_compare",
-      "community": 10,
+      "community": 5,
       "norm_label": "compare.go"
     },
     {
@@ -3592,7 +3622,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "reconcile_silentasset",
-      "community": 10,
+      "community": 5,
       "norm_label": "silentasset"
     },
     {
@@ -3602,7 +3632,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "reconcile_contradiction",
-      "community": 10,
+      "community": 5,
       "norm_label": "contradiction"
     },
     {
@@ -3612,7 +3642,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "reconcile_result",
-      "community": 10,
+      "community": 5,
       "norm_label": "result"
     },
     {
@@ -3622,7 +3652,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "internal_reconcile_compare_compare",
-      "community": 10,
+      "community": 5,
       "norm_label": "compare()"
     },
     {
@@ -3632,7 +3662,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "internal_reconcile_compare_normalizerole",
-      "community": 10,
+      "community": 5,
       "norm_label": "normalizerole()"
     },
     {
@@ -3642,7 +3672,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "internal_reconcile_compare_uniqueroles",
-      "community": 10,
+      "community": 5,
       "norm_label": "uniqueroles()"
     },
     {
@@ -3652,7 +3682,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "internal_reconcile_compare_contains",
-      "community": 10,
+      "community": 5,
       "norm_label": "contains()"
     },
     {
@@ -3662,7 +3692,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "internal_reconcile_compare_inany",
-      "community": 10,
+      "community": 5,
       "norm_label": "inany()"
     },
     {
@@ -3672,7 +3702,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_reconcile_compare_go_prefix",
-      "community": 10,
+      "community": 5,
       "norm_label": "prefix"
     },
     {
@@ -3882,7 +3912,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_drift",
-      "community": 156,
+      "community": 5,
       "norm_label": "drift.go"
     },
     {
@@ -3892,7 +3922,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "internal_report_drift_drifthtml",
-      "community": 156,
+      "community": 5,
       "norm_label": "drifthtml()"
     },
     {
@@ -3902,7 +3932,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_drift_go_writer",
-      "community": 156,
+      "community": 5,
       "norm_label": "writer"
     },
     {
@@ -3912,7 +3942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_drift_test",
-      "community": 156,
+      "community": 5,
       "norm_label": "drift_test.go"
     },
     {
@@ -3922,7 +3952,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "internal_report_drift_test_testdrifthtmlrenderseverysignalandhandlingbanner",
-      "community": 156,
+      "community": 5,
       "norm_label": "testdrifthtmlrenderseverysignalandhandlingbanner()"
     },
     {
@@ -3932,7 +3962,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_drift_test_go_t",
-      "community": 156,
+      "community": 5,
       "norm_label": "t"
     },
     {
@@ -3992,7 +4022,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_html",
-      "community": 141,
+      "community": 9,
       "norm_label": "html.go"
     },
     {
@@ -4002,7 +4032,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "internal_report_html_html",
-      "community": 141,
+      "community": 9,
       "norm_label": "html()"
     },
     {
@@ -4012,7 +4042,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_html_go_writer",
-      "community": 141,
+      "community": 9,
       "norm_label": "writer"
     },
     {
@@ -4192,7 +4222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml",
-      "community": 150,
+      "community": 5,
       "norm_label": "reconcilehtml.go"
     },
     {
@@ -4202,7 +4232,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_reconcilehtml",
-      "community": 150,
+      "community": 5,
       "norm_label": "reconcilehtml()"
     },
     {
@@ -4212,7 +4242,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_go_writer",
-      "community": 150,
+      "community": 5,
       "norm_label": "writer"
     },
     {
@@ -4222,7 +4252,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_go_result",
-      "community": 150,
+      "community": 5,
       "norm_label": "result"
     },
     {
@@ -4232,7 +4262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_test",
-      "community": 150,
+      "community": 5,
       "norm_label": "reconcilehtml_test.go"
     },
     {
@@ -4242,7 +4272,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_test_testreconcilehtmlrendersallsections",
-      "community": 150,
+      "community": 5,
       "norm_label": "testreconcilehtmlrendersallsections()"
     },
     {
@@ -4252,7 +4282,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_test_go_t",
-      "community": 150,
+      "community": 5,
       "norm_label": "t"
     },
     {
@@ -4262,7 +4292,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "internal_report_reconcilehtml_test_testreconcilehtmlemptylists",
-      "community": 150,
+      "community": 5,
       "norm_label": "testreconcilehtmlemptylists()"
     },
     {
@@ -4272,7 +4302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_report",
-      "community": 10,
+      "community": 147,
       "norm_label": "report.go"
     },
     {
@@ -4282,7 +4312,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "internal_report_report_json",
-      "community": 10,
+      "community": 147,
       "norm_label": "json()"
     },
     {
@@ -4292,7 +4322,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_report_go_writer",
-      "community": 10,
+      "community": 147,
       "norm_label": "writer"
     },
     {
@@ -4302,7 +4332,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "internal_report_report_toprole",
-      "community": 10,
+      "community": 147,
       "norm_label": "toprole()"
     },
     {
@@ -4462,7 +4492,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_score_sampled",
-      "community": 2,
+      "community": 134,
       "norm_label": "sampled.go"
     },
     {
@@ -4472,7 +4502,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "internal_score_sampled_sampledbetweenness",
-      "community": 2,
+      "community": 134,
       "norm_label": "sampledbetweenness()"
     },
     {
@@ -4482,7 +4512,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "directed",
-      "community": 2,
+      "community": 134,
       "norm_label": "directed"
     },
     {
@@ -4492,7 +4522,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "internal_score_sampled_brandesfrom",
-      "community": 2,
+      "community": 134,
       "norm_label": "brandesfrom()"
     },
     {
@@ -4502,7 +4532,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_score_sampled_test",
-      "community": 2,
+      "community": 134,
       "norm_label": "sampled_test.go"
     },
     {
@@ -4512,7 +4542,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "internal_score_sampled_test_chaingraph",
-      "community": 2,
+      "community": 134,
       "norm_label": "chaingraph()"
     },
     {
@@ -4522,7 +4552,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_score_sampled_test_go_model",
-      "community": 2,
+      "community": 134,
       "norm_label": "model"
     },
     {
@@ -4532,7 +4562,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
-      "community": 2,
+      "community": 134,
       "norm_label": "testsampledbetweennessmatchesexactwithallpivots()"
     },
     {
@@ -4542,7 +4572,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_score_sampled_test_go_t",
-      "community": 2,
+      "community": 134,
       "norm_label": "t"
     },
     {
@@ -4552,7 +4582,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
-      "community": 2,
+      "community": 134,
       "norm_label": "testsampledbetweennessdeterministicandseparateschokefromleaf()"
     },
     {
@@ -4562,7 +4592,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_score_score",
-      "community": 23,
+      "community": 134,
       "norm_label": "score.go"
     },
     {
@@ -4572,7 +4602,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "score_result",
-      "community": 23,
+      "community": 134,
       "norm_label": "result"
     },
     {
@@ -4582,7 +4612,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "internal_score_score_score",
-      "community": 23,
+      "community": 134,
       "norm_label": "score()"
     },
     {
@@ -4592,7 +4622,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_score_score_go_model",
-      "community": 23,
+      "community": 134,
       "norm_label": "model"
     },
     {
@@ -4602,7 +4632,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "internal_score_score_criticalindegree",
-      "community": 23,
+      "community": 134,
       "norm_label": "criticalindegree()"
     },
     {
@@ -4612,7 +4642,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "internal_score_score_subnetspread",
-      "community": 23,
+      "community": 134,
       "norm_label": "subnetspread()"
     },
     {
@@ -4622,7 +4652,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "internal_score_score_distinctsrcperdst",
-      "community": 23,
+      "community": 134,
       "norm_label": "distinctsrcperdst()"
     },
     {
@@ -4632,7 +4662,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "internal_score_score_minmax",
-      "community": 23,
+      "community": 134,
       "norm_label": "minmax()"
     },
     {
@@ -4762,7 +4792,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "internal_snapshot_diff_abs",
-      "community": 2,
+      "community": 134,
       "norm_label": "abs()"
     },
     {
@@ -4862,7 +4892,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "internal_snapshot_store_load",
-      "community": 149,
+      "community": 141,
       "norm_label": "load()"
     },
     {
@@ -5742,7 +5772,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "web_cytoscape_dagre",
-      "community": 44,
+      "community": 160,
       "norm_label": "cytoscape-dagre.js"
     },
     {
@@ -5752,7 +5782,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "web_cytoscape_dagre_webpack_require",
-      "community": 44,
+      "community": 160,
       "norm_label": "__webpack_require__()"
     },
     {
@@ -5762,7 +5792,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "web_cytoscape_dagre_typeof",
-      "community": 44,
+      "community": 160,
       "norm_label": "_typeof()"
     },
     {
@@ -5772,7 +5802,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "web_cytoscape_dagre_dagrelayout",
-      "community": 44,
+      "community": 160,
       "norm_label": "dagrelayout()"
     },
     {
@@ -5782,7 +5812,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "web_cytoscape_dagre_dagrelayout_run",
-      "community": 44,
+      "community": 160,
       "norm_label": ".run()"
     },
     {
@@ -6732,7 +6762,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "web_dagre_min_run",
-      "community": 32,
+      "community": 6,
       "norm_label": "run()"
     },
     {
@@ -6742,7 +6772,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "web_dagre_min_dfsfas",
-      "community": 32,
+      "community": 6,
       "norm_label": "dfsfas()"
     },
     {
@@ -6802,7 +6832,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "web_dagre_min_swapwidthheightone",
-      "community": 1,
+      "community": 6,
       "norm_label": "swapwidthheightone()"
     },
     {
@@ -6822,7 +6852,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "web_dagre_min_reverseyone",
-      "community": 1,
+      "community": 6,
       "norm_label": "reverseyone()"
     },
     {
@@ -6842,7 +6872,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "web_dagre_min_swapxyone",
-      "community": 1,
+      "community": 6,
       "norm_label": "swapxyone()"
     },
     {
@@ -6942,7 +6972,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "web_dagre_min_removenode",
-      "community": 26,
+      "community": 148,
       "norm_label": "removenode()"
     },
     {
@@ -6962,7 +6992,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "web_dagre_min_assignbucket",
-      "community": 26,
+      "community": 148,
       "norm_label": "assignbucket()"
     },
     {
@@ -6972,7 +7002,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "web_dagre_min_layout",
-      "community": 6,
+      "community": 1,
       "norm_label": "layout()"
     },
     {
@@ -7172,7 +7202,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "web_dagre_min_sumweights",
-      "community": 139,
+      "community": 6,
       "norm_label": "sumweights()"
     },
     {
@@ -7192,7 +7222,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "web_dagre_min_normalizeedge",
-      "community": 32,
+      "community": 6,
       "norm_label": "normalizeedge()"
     },
     {
@@ -7232,7 +7262,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "web_dagre_min_createrootnode",
-      "community": 1,
+      "community": 26,
       "norm_label": "createrootnode()"
     },
     {
@@ -7242,7 +7272,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "web_dagre_min_crosscount",
-      "community": 1,
+      "community": 148,
       "norm_label": "crosscount()"
     },
     {
@@ -7252,7 +7282,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "web_dagre_min_twolayercrosscount",
-      "community": 1,
+      "community": 148,
       "norm_label": "twolayercrosscount()"
     },
     {
@@ -7262,7 +7292,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_order",
-      "community": 152,
+      "community": 6,
       "norm_label": "order()"
     },
     {
@@ -7272,7 +7302,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_buildlayergraphs",
-      "community": 152,
+      "community": 140,
       "norm_label": "buildlayergraphs()"
     },
     {
@@ -7292,7 +7322,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_assignorder",
-      "community": 152,
+      "community": 6,
       "norm_label": "assignorder()"
     },
     {
@@ -7302,7 +7332,7 @@
       "source_location": "L229",
       "_origin": "ast",
       "id": "web_dagre_min_initorder",
-      "community": 32,
+      "community": 6,
       "norm_label": "initorder()"
     },
     {
@@ -7312,7 +7342,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_resolveconflicts",
-      "community": 6,
+      "community": 1,
       "norm_label": "resolveconflicts()"
     },
     {
@@ -7322,7 +7352,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_doresolveconflicts",
-      "community": 6,
+      "community": 1,
       "norm_label": "doresolveconflicts()"
     },
     {
@@ -7492,7 +7522,7 @@
       "source_location": "L300",
       "_origin": "ast",
       "id": "web_dagre_min_horizontalcompaction",
-      "community": 26,
+      "community": 139,
       "norm_label": "horizontalcompaction()"
     },
     {
@@ -7512,7 +7542,7 @@
       "source_location": "L315",
       "_origin": "ast",
       "id": "web_dagre_min_findsmallestwidthalignment",
-      "community": 139,
+      "community": 50,
       "norm_label": "findsmallestwidthalignment()"
     },
     {
@@ -7552,7 +7582,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "web_dagre_min_sep",
-      "community": 26,
+      "community": 152,
       "norm_label": "sep()"
     },
     {
@@ -7562,7 +7592,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "web_dagre_min_width",
-      "community": 139,
+      "community": 50,
       "norm_label": "width()"
     },
     {
@@ -7632,7 +7662,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "web_dagre_min_rank",
-      "community": 152,
+      "community": 140,
       "norm_label": "rank()"
     },
     {
@@ -7642,7 +7672,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "web_dagre_min_tighttreeranker",
-      "community": 50,
+      "community": 32,
       "norm_label": "tighttreeranker()"
     },
     {
@@ -7652,7 +7682,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "web_dagre_min_networksimplexranker",
-      "community": 152,
+      "community": 140,
       "norm_label": "networksimplexranker()"
     },
     {
@@ -7712,7 +7742,7 @@
       "source_location": "L426",
       "_origin": "ast",
       "id": "web_dagre_min_dfsassignlowlim",
-      "community": 148,
+      "community": 140,
       "norm_label": "dfsassignlowlim()"
     },
     {
@@ -7722,7 +7752,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "web_dagre_min_leaveedge",
-      "community": 140,
+      "community": 6,
       "norm_label": "leaveedge()"
     },
     {
@@ -7732,7 +7762,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "web_dagre_min_enteredge",
-      "community": 140,
+      "community": 50,
       "norm_label": "enteredge()"
     },
     {
@@ -7772,7 +7802,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "web_dagre_min_isdescendant",
-      "community": 140,
+      "community": 50,
       "norm_label": "isdescendant()"
     },
     {
@@ -7782,7 +7812,7 @@
       "source_location": "L463",
       "_origin": "ast",
       "id": "web_dagre_min_longestpath",
-      "community": 50,
+      "community": 32,
       "norm_label": "longestpath()"
     },
     {
@@ -7802,7 +7832,7 @@
       "source_location": "L475",
       "_origin": "ast",
       "id": "web_dagre_min_adddummynode",
-      "community": 32,
+      "community": 26,
       "norm_label": "adddummynode()"
     },
     {
@@ -7812,7 +7842,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "web_dagre_min_simplify",
-      "community": 6,
+      "community": 26,
       "norm_label": "simplify()"
     },
     {
@@ -7832,7 +7862,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "web_dagre_min_successorweights",
-      "community": 6,
+      "community": 148,
       "norm_label": "successorweights()"
     },
     {
@@ -7842,7 +7872,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "web_dagre_min_predecessorweights",
-      "community": 6,
+      "community": 148,
       "norm_label": "predecessorweights()"
     },
     {
@@ -7862,7 +7892,7 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "web_dagre_min_buildlayermatrix",
-      "community": 152,
+      "community": 6,
       "norm_label": "buildlayermatrix()"
     },
     {
@@ -7892,7 +7922,7 @@
       "source_location": "L500",
       "_origin": "ast",
       "id": "web_dagre_min_maxrank",
-      "community": 152,
+      "community": 6,
       "norm_label": "maxrank()"
     },
     {
@@ -7912,7 +7942,7 @@
       "source_location": "L509",
       "_origin": "ast",
       "id": "web_dagre_min_time",
-      "community": 6,
+      "community": 1,
       "norm_label": "time()"
     },
     {
@@ -7942,7 +7972,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_dodfs",
-      "community": 26,
+      "community": 152,
       "norm_label": "dodfs()"
     },
     {
@@ -7972,7 +8002,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_rundijkstra",
-      "community": 6,
+      "community": 24,
       "norm_label": "rundijkstra()"
     },
     {
@@ -7982,7 +8012,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_findcycles",
-      "community": 32,
+      "community": 152,
       "norm_label": "findcycles()"
     },
     {
@@ -7992,7 +8022,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_floydwarshall",
-      "community": 26,
+      "community": 148,
       "norm_label": "floydwarshall()"
     },
     {
@@ -8042,7 +8072,7 @@
       "source_location": "L549",
       "_origin": "ast",
       "id": "web_dagre_min_tarjan",
-      "community": 32,
+      "community": 152,
       "norm_label": "tarjan()"
     },
     {
@@ -8132,7 +8162,7 @@
       "source_location": "L585",
       "_origin": "ast",
       "id": "web_dagre_min_priorityqueue_add",
-      "community": 26,
+      "community": 24,
       "norm_label": ".add()"
     },
     {
@@ -8182,7 +8212,7 @@
       "source_location": "L605",
       "_origin": "ast",
       "id": "web_dagre_min_graph",
-      "community": 26,
+      "community": 148,
       "norm_label": "graph()"
     },
     {
@@ -8202,7 +8232,7 @@
       "source_location": "L632",
       "_origin": "ast",
       "id": "web_dagre_min_graph_ismultigraph",
-      "community": 152,
+      "community": 148,
       "norm_label": ".ismultigraph()"
     },
     {
@@ -8212,7 +8242,7 @@
       "source_location": "L632",
       "_origin": "ast",
       "id": "web_dagre_min_graph_iscompound",
-      "community": 152,
+      "community": 148,
       "norm_label": ".iscompound()"
     },
     {
@@ -8272,7 +8302,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_sources",
-      "community": 50,
+      "community": 32,
       "norm_label": ".sources()"
     },
     {
@@ -8292,7 +8322,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_setnodes",
-      "community": 26,
+      "community": 148,
       "norm_label": ".setnodes()"
     },
     {
@@ -8332,7 +8362,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removenode",
-      "community": 26,
+      "community": 148,
       "norm_label": ".removenode()"
     },
     {
@@ -8352,7 +8382,7 @@
       "source_location": "L635",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removefromparentschildlist",
-      "community": 26,
+      "community": 148,
       "norm_label": "._removefromparentschildlist()"
     },
     {
@@ -8442,7 +8472,7 @@
       "source_location": "L636",
       "_origin": "ast",
       "id": "web_dagre_min_graph_edgecount",
-      "community": 26,
+      "community": 148,
       "norm_label": ".edgecount()"
     },
     {
@@ -8462,7 +8492,7 @@
       "source_location": "L636",
       "_origin": "ast",
       "id": "web_dagre_min_graph_setpath",
-      "community": 26,
+      "community": 139,
       "norm_label": ".setpath()"
     },
     {
@@ -8492,7 +8522,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_hasedge",
-      "community": 32,
+      "community": 152,
       "norm_label": ".hasedge()"
     },
     {
@@ -8502,7 +8532,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removeedge",
-      "community": 32,
+      "community": 6,
       "norm_label": ".removeedge()"
     },
     {
@@ -8512,7 +8542,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_inedges",
-      "community": 26,
+      "community": 148,
       "norm_label": ".inedges()"
     },
     {
@@ -8522,7 +8552,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_outedges",
-      "community": 26,
+      "community": 148,
       "norm_label": ".outedges()"
     },
     {
@@ -8532,7 +8562,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_nodeedges",
-      "community": 26,
+      "community": 148,
       "norm_label": ".nodeedges()"
     },
     {
@@ -8552,7 +8582,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_decrementorremoveentry",
-      "community": 32,
+      "community": 6,
       "norm_label": "decrementorremoveentry()"
     },
     {
@@ -8562,7 +8592,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeargstoid",
-      "community": 32,
+      "community": 152,
       "norm_label": "edgeargstoid()"
     },
     {
@@ -8582,7 +8612,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeobjtoid",
-      "community": 32,
+      "community": 152,
       "norm_label": "edgeobjtoid()"
     },
     {
@@ -8592,7 +8622,7 @@
       "source_location": "L647",
       "_origin": "ast",
       "id": "web_dagre_min_write",
-      "community": 152,
+      "community": 148,
       "norm_label": "write()"
     },
     {
@@ -8602,7 +8632,7 @@
       "source_location": "L647",
       "_origin": "ast",
       "id": "web_dagre_min_writenodes",
-      "community": 152,
+      "community": 26,
       "norm_label": "writenodes()"
     },
     {
@@ -8612,7 +8642,7 @@
       "source_location": "L647",
       "_origin": "ast",
       "id": "web_dagre_min_writeedges",
-      "community": 152,
+      "community": 6,
       "norm_label": "writeedges()"
     },
     {
@@ -8662,7 +8692,7 @@
       "source_location": "L690",
       "_origin": "ast",
       "id": "web_dagre_min_setcache",
-      "community": 26,
+      "community": 24,
       "norm_label": "setcache()"
     },
     {
@@ -8732,7 +8762,7 @@
       "source_location": "L764",
       "_origin": "ast",
       "id": "web_dagre_min_arraylikekeys",
-      "community": 33,
+      "community": 1,
       "norm_label": "arraylikekeys()"
     },
     {
@@ -8742,7 +8772,7 @@
       "source_location": "L782",
       "_origin": "ast",
       "id": "web_dagre_min_arraymap",
-      "community": 1,
+      "community": 159,
       "norm_label": "arraymap()"
     },
     {
@@ -8862,7 +8892,7 @@
       "source_location": "L928",
       "_origin": "ast",
       "id": "web_dagre_min_baseextremum",
-      "community": 139,
+      "community": 50,
       "norm_label": "baseextremum()"
     },
     {
@@ -8902,7 +8932,7 @@
       "source_location": "L980",
       "_origin": "ast",
       "id": "web_dagre_min_baseforown",
-      "community": 148,
+      "community": 139,
       "norm_label": "baseforown()"
     },
     {
@@ -8942,7 +8972,7 @@
       "source_location": "L1018",
       "_origin": "ast",
       "id": "web_dagre_min_basegt",
-      "community": 139,
+      "community": 50,
       "norm_label": "basegt()"
     },
     {
@@ -8952,7 +8982,7 @@
       "source_location": "L1029",
       "_origin": "ast",
       "id": "web_dagre_min_basehas",
-      "community": 26,
+      "community": 152,
       "norm_label": "basehas()"
     },
     {
@@ -9082,7 +9112,7 @@
       "source_location": "L1167",
       "_origin": "ast",
       "id": "web_dagre_min_basekeys",
-      "community": 134,
+      "community": 36,
       "norm_label": "basekeys()"
     },
     {
@@ -9092,7 +9122,7 @@
       "source_location": "L1176",
       "_origin": "ast",
       "id": "web_dagre_min_basekeysin",
-      "community": 134,
+      "community": 44,
       "norm_label": "basekeysin()"
     },
     {
@@ -9102,7 +9132,7 @@
       "source_location": "L1186",
       "_origin": "ast",
       "id": "web_dagre_min_baselt",
-      "community": 139,
+      "community": 50,
       "norm_label": "baselt()"
     },
     {
@@ -9112,7 +9142,7 @@
       "source_location": "L1194",
       "_origin": "ast",
       "id": "web_dagre_min_basemap",
-      "community": 63,
+      "community": 159,
       "norm_label": "basemap()"
     },
     {
@@ -9162,7 +9192,7 @@
       "source_location": "L1247",
       "_origin": "ast",
       "id": "web_dagre_min_baseorderby",
-      "community": 63,
+      "community": 159,
       "norm_label": "baseorderby()"
     },
     {
@@ -9212,7 +9242,7 @@
       "source_location": "L1293",
       "_origin": "ast",
       "id": "web_dagre_min_baserange",
-      "community": 159,
+      "community": 44,
       "norm_label": "baserange()"
     },
     {
@@ -9262,7 +9292,7 @@
       "source_location": "L1354",
       "_origin": "ast",
       "id": "web_dagre_min_basetimes",
-      "community": 33,
+      "community": 1,
       "norm_label": "basetimes()"
     },
     {
@@ -9272,7 +9302,7 @@
       "source_location": "L1364",
       "_origin": "ast",
       "id": "web_dagre_min_basetostring",
-      "community": 1,
+      "community": 159,
       "norm_label": "basetostring()"
     },
     {
@@ -9282,7 +9312,7 @@
       "source_location": "L1376",
       "_origin": "ast",
       "id": "web_dagre_min_baseunary",
-      "community": 63,
+      "community": 159,
       "norm_label": "baseunary()"
     },
     {
@@ -9302,7 +9332,7 @@
       "source_location": "L1396",
       "_origin": "ast",
       "id": "web_dagre_min_basevalues",
-      "community": 1,
+      "community": 148,
       "norm_label": "basevalues()"
     },
     {
@@ -9312,7 +9342,7 @@
       "source_location": "L1406",
       "_origin": "ast",
       "id": "web_dagre_min_basezipobject",
-      "community": 1,
+      "community": 148,
       "norm_label": "basezipobject()"
     },
     {
@@ -9322,7 +9352,7 @@
       "source_location": "L1415",
       "_origin": "ast",
       "id": "web_dagre_min_cachehas",
-      "community": 26,
+      "community": 152,
       "norm_label": "cachehas()"
     },
     {
@@ -9352,7 +9382,7 @@
       "source_location": "L1437",
       "_origin": "ast",
       "id": "web_dagre_min_clonearraybuffer",
-      "community": 160,
+      "community": 11,
       "norm_label": "clonearraybuffer()"
     },
     {
@@ -9372,7 +9402,7 @@
       "source_location": "L1457",
       "_origin": "ast",
       "id": "web_dagre_min_clonedataview",
-      "community": 160,
+      "community": 11,
       "norm_label": "clonedataview()"
     },
     {
@@ -9382,7 +9412,7 @@
       "source_location": "L1466",
       "_origin": "ast",
       "id": "web_dagre_min_cloneregexp",
-      "community": 160,
+      "community": 11,
       "norm_label": "cloneregexp()"
     },
     {
@@ -9392,7 +9422,7 @@
       "source_location": "L1474",
       "_origin": "ast",
       "id": "web_dagre_min_clonesymbol",
-      "community": 160,
+      "community": 11,
       "norm_label": "clonesymbol()"
     },
     {
@@ -9402,7 +9432,7 @@
       "source_location": "L1482",
       "_origin": "ast",
       "id": "web_dagre_min_clonetypedarray",
-      "community": 160,
+      "community": 11,
       "norm_label": "clonetypedarray()"
     },
     {
@@ -9412,7 +9442,7 @@
       "source_location": "L1490",
       "_origin": "ast",
       "id": "web_dagre_min_compareascending",
-      "community": 33,
+      "community": 159,
       "norm_label": "compareascending()"
     },
     {
@@ -9422,7 +9452,7 @@
       "source_location": "L1504",
       "_origin": "ast",
       "id": "web_dagre_min_comparemultiple",
-      "community": 63,
+      "community": 159,
       "norm_label": "comparemultiple()"
     },
     {
@@ -9472,7 +9502,7 @@
       "source_location": "L1555",
       "_origin": "ast",
       "id": "web_dagre_min_createassigner",
-      "community": 159,
+      "community": 1,
       "norm_label": "createassigner()"
     },
     {
@@ -9512,7 +9542,7 @@
       "source_location": "L1585",
       "_origin": "ast",
       "id": "web_dagre_min_createrange",
-      "community": 159,
+      "community": 44,
       "norm_label": "createrange()"
     },
     {
@@ -9662,7 +9692,7 @@
       "source_location": "L1807",
       "_origin": "ast",
       "id": "web_dagre_min_hashdelete",
-      "community": 26,
+      "community": 152,
       "norm_label": "hashdelete()"
     },
     {
@@ -9692,7 +9722,7 @@
       "source_location": "L1841",
       "_origin": "ast",
       "id": "web_dagre_min_hashset",
-      "community": 26,
+      "community": 152,
       "norm_label": "hashset()"
     },
     {
@@ -9712,7 +9742,7 @@
       "source_location": "L1866",
       "_origin": "ast",
       "id": "web_dagre_min_initclonebytag",
-      "community": 160,
+      "community": 11,
       "norm_label": "initclonebytag()"
     },
     {
@@ -9722,7 +9752,7 @@
       "source_location": "L1873",
       "_origin": "ast",
       "id": "web_dagre_min_initcloneobject",
-      "community": 134,
+      "community": 36,
       "norm_label": "initcloneobject()"
     },
     {
@@ -9752,7 +9782,7 @@
       "source_location": "L1902",
       "_origin": "ast",
       "id": "web_dagre_min_isiterateecall",
-      "community": 159,
+      "community": 44,
       "norm_label": "isiterateecall()"
     },
     {
@@ -9792,7 +9822,7 @@
       "source_location": "L1936",
       "_origin": "ast",
       "id": "web_dagre_min_isprototype",
-      "community": 134,
+      "community": 36,
       "norm_label": "isprototype()"
     },
     {
@@ -9942,7 +9972,7 @@
       "source_location": "L2074",
       "_origin": "ast",
       "id": "web_dagre_min_nativekeysin",
-      "community": 134,
+      "community": 44,
       "norm_label": "nativekeysin()"
     },
     {
@@ -10132,7 +10162,7 @@
       "source_location": "L2309",
       "_origin": "ast",
       "id": "web_dagre_min_clone",
-      "community": 152,
+      "community": 148,
       "norm_label": "clone()"
     },
     {
@@ -10142,7 +10172,7 @@
       "source_location": "L2328",
       "_origin": "ast",
       "id": "web_dagre_min_clonedeep",
-      "community": 152,
+      "community": 1,
       "norm_label": "clonedeep()"
     },
     {
@@ -10212,7 +10242,7 @@
       "source_location": "L2585",
       "_origin": "ast",
       "id": "web_dagre_min_forin",
-      "community": 1,
+      "community": 11,
       "norm_label": "forin()"
     },
     {
@@ -10232,7 +10262,7 @@
       "source_location": "L2637",
       "_origin": "ast",
       "id": "web_dagre_min_has",
-      "community": 26,
+      "community": 152,
       "norm_label": "has()"
     },
     {
@@ -10252,7 +10282,7 @@
       "source_location": "L2680",
       "_origin": "ast",
       "id": "web_dagre_min_identity",
-      "community": 139,
+      "community": 1,
       "norm_label": "identity()"
     },
     {
@@ -10282,7 +10312,7 @@
       "source_location": "L2833",
       "_origin": "ast",
       "id": "web_dagre_min_isempty",
-      "community": 134,
+      "community": 36,
       "norm_label": "isempty()"
     },
     {
@@ -10312,7 +10342,7 @@
       "source_location": "L2926",
       "_origin": "ast",
       "id": "web_dagre_min_isobject",
-      "community": 11,
+      "community": 44,
       "norm_label": "isobject()"
     },
     {
@@ -10352,7 +10382,7 @@
       "source_location": "L3038",
       "_origin": "ast",
       "id": "web_dagre_min_issymbol",
-      "community": 33,
+      "community": 159,
       "norm_label": "issymbol()"
     },
     {
@@ -10362,7 +10392,7 @@
       "source_location": "L3074",
       "_origin": "ast",
       "id": "web_dagre_min_isundefined",
-      "community": 152,
+      "community": 26,
       "norm_label": "isundefined()"
     },
     {
@@ -10422,7 +10452,7 @@
       "source_location": "L3228",
       "_origin": "ast",
       "id": "web_dagre_min_max",
-      "community": 139,
+      "community": 50,
       "norm_label": "max()"
     },
     {
@@ -10442,7 +10472,7 @@
       "source_location": "L3324",
       "_origin": "ast",
       "id": "web_dagre_min_min",
-      "community": 139,
+      "community": 50,
       "norm_label": "min()"
     },
     {
@@ -10452,7 +10482,7 @@
       "source_location": "L3347",
       "_origin": "ast",
       "id": "web_dagre_min_minby",
-      "community": 139,
+      "community": 50,
       "norm_label": "minby()"
     },
     {
@@ -10522,7 +10552,7 @@
       "source_location": "L3603",
       "_origin": "ast",
       "id": "web_dagre_min_tofinite",
-      "community": 159,
+      "community": 44,
       "norm_label": "tofinite()"
     },
     {
@@ -10542,7 +10572,7 @@
       "source_location": "L3658",
       "_origin": "ast",
       "id": "web_dagre_min_tonumber",
-      "community": 159,
+      "community": 44,
       "norm_label": "tonumber()"
     },
     {
@@ -10562,7 +10592,7 @@
       "source_location": "L3703",
       "_origin": "ast",
       "id": "web_dagre_min_tostring",
-      "community": 1,
+      "community": 159,
       "norm_label": "tostring()"
     },
     {
@@ -10582,7 +10612,7 @@
       "source_location": "L3767",
       "_origin": "ast",
       "id": "web_dagre_min_uniqueid",
-      "community": 1,
+      "community": 26,
       "norm_label": "uniqueid()"
     },
     {
@@ -10592,7 +10622,7 @@
       "source_location": "L3793",
       "_origin": "ast",
       "id": "web_dagre_min_values",
-      "community": 139,
+      "community": 148,
       "norm_label": "values()"
     },
     {
@@ -10602,7 +10632,7 @@
       "source_location": "L3809",
       "_origin": "ast",
       "id": "web_dagre_min_zipobject",
-      "community": 1,
+      "community": 148,
       "norm_label": "zipobject()"
     },
     {
@@ -13879,7 +13909,7 @@
       "label": "Export formats",
       "file_type": "document",
       "source_file": "docs/MAPS.md",
-      "source_location": "L86",
+      "source_location": "L90",
       "_origin": "ast",
       "id": "docs_maps_export_formats",
       "community": 55,
@@ -13889,7 +13919,7 @@
       "label": "Importing GraphML into draw.io or yEd (offline)",
       "file_type": "document",
       "source_file": "docs/MAPS.md",
-      "source_location": "L97",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "docs_maps_importing_graphml_into_draw_io_or_yed_offline",
       "community": 55,
@@ -13899,7 +13929,7 @@
       "label": "Drift-highlighted maps",
       "file_type": "document",
       "source_file": "docs/MAPS.md",
-      "source_location": "L115",
+      "source_location": "L119",
       "_origin": "ast",
       "id": "docs_maps_drift_highlighted_maps",
       "community": 55,
@@ -13909,7 +13939,7 @@
       "label": "Reconciliation-flagged maps",
       "file_type": "document",
       "source_file": "docs/MAPS.md",
-      "source_location": "L130",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "docs_maps_reconciliation_flagged_maps",
       "community": 55,
@@ -22316,7 +22346,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_overview_overviewprefix",
@@ -22404,7 +22434,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L175",
+      "source_location": "L235",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "mapview_model_addoverviewgateways",
@@ -22558,7 +22588,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L38",
+      "source_location": "L60",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_overview_buildoverview",
@@ -22668,7 +22698,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L175",
+      "source_location": "L235",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "mapview_model_addoverviewgateways",
@@ -22985,7 +23015,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L38",
+      "source_location": "L60",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_overview_buildoverview",
@@ -23105,7 +23135,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L225",
+      "source_location": "L287",
       "weight": 1.0,
       "context": "return_type",
       "source": "internal_mapview_overview_trimoverviewedges",
@@ -23411,7 +23441,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L338",
+      "source_location": "L418",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildblindspotfinding",
       "target": "internal_mapview_mapview_build"
@@ -23422,7 +23452,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L278",
+      "source_location": "L358",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildclientaggregation",
       "target": "internal_mapview_mapview_build"
@@ -23433,7 +23463,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L362",
+      "source_location": "L442",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildfocusrestrictstoonesubnet",
       "target": "internal_mapview_mapview_build"
@@ -23444,7 +23474,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L250",
+      "source_location": "L330",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildgroupsandsparsecollapse",
       "target": "internal_mapview_mapview_build"
@@ -23455,7 +23485,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L304",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildinferredgatewayfallback",
       "target": "internal_mapview_mapview_build"
@@ -23477,7 +23507,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L355",
+      "source_location": "L435",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildnoisefloordropslowvolumeedges",
       "target": "internal_mapview_mapview_build"
@@ -23488,7 +23518,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L322",
+      "source_location": "L402",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildobservedgatewayfroml2evidence",
       "target": "internal_mapview_mapview_build"
@@ -23499,7 +23529,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L372",
+      "source_location": "L452",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testelementscountanddeterminism",
       "target": "internal_mapview_mapview_build"
@@ -23510,9 +23540,20 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L170",
+      "source_location": "L250",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewgatewaybudget",
+      "target": "internal_mapview_mapview_build"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/mapview/mapview_test.go",
+      "source_location": "L205",
+      "weight": 1.0,
+      "source": "internal_mapview_mapview_test_testoverviewinternetheavysnapshot",
       "target": "internal_mapview_mapview_build"
     },
     {
@@ -23530,7 +23571,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L38",
+      "source_location": "L60",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_overview_buildoverview",
@@ -23565,7 +23606,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L402",
+      "source_location": "L482",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuilddriftannotatesnodesandcriticaledges",
       "target": "internal_mapview_mapview_builddrift"
@@ -23576,7 +23617,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L196",
+      "source_location": "L276",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewdriftmarkednodesretained",
       "target": "internal_mapview_mapview_builddrift"
@@ -23642,7 +23683,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L438",
+      "source_location": "L518",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildreconcileflagsghostsandlabels",
       "target": "internal_mapview_mapview_buildreconcile"
@@ -23653,7 +23694,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L218",
+      "source_location": "L298",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewreconcileskipsghostskeepsfindings",
       "target": "internal_mapview_mapview_buildreconcile"
@@ -23686,7 +23727,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L169",
+      "source_location": "L229",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_sortmodel"
@@ -23708,7 +23749,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L69",
+      "source_location": "L154",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_groupid"
@@ -23741,7 +23782,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L121",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_toprole"
@@ -23752,7 +23793,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L120",
+      "source_location": "L180",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_nodelabel"
@@ -23763,7 +23804,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L123",
+      "source_location": "L183",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_evidence"
@@ -23774,7 +23815,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L121",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_tierof"
@@ -23818,7 +23859,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L46",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_regroup"
@@ -23829,7 +23870,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "internal_mapview_overview_overviewprefix",
       "target": "internal_mapview_mapview_regroup"
@@ -23895,7 +23936,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L152",
+      "source_location": "L212",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_mapview_filterfocusedges"
@@ -23934,7 +23975,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L337",
+      "source_location": "L417",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildblindspotfinding",
@@ -23944,7 +23985,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L277",
+      "source_location": "L357",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildclientaggregation",
@@ -23954,7 +23995,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L384",
+      "source_location": "L464",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuilddriftannotatesnodesandcriticaledges",
@@ -23964,7 +24005,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L361",
+      "source_location": "L441",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildfocusrestrictstoonesubnet",
@@ -23974,7 +24015,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L249",
+      "source_location": "L329",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildgroupsandsparsecollapse",
@@ -23984,7 +24025,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L303",
+      "source_location": "L383",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildinferredgatewayfallback",
@@ -24004,7 +24045,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L353",
+      "source_location": "L433",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildnoisefloordropslowvolumeedges",
@@ -24014,7 +24055,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L319",
+      "source_location": "L399",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildobservedgatewayfroml2evidence",
@@ -24024,7 +24065,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L428",
+      "source_location": "L508",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testbuildreconcileflagsghostsandlabels",
@@ -24034,7 +24075,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L370",
+      "source_location": "L450",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testelementscountanddeterminism",
@@ -24044,7 +24085,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L192",
+      "source_location": "L272",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testoverviewdriftmarkednodesretained",
@@ -24054,7 +24095,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L163",
+      "source_location": "L243",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testoverviewgatewaybudget",
@@ -24064,7 +24105,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L211",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "internal_mapview_mapview_test",
+      "target": "internal_mapview_mapview_test_testoverviewinternetheavysnapshot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/mapview_test.go",
+      "source_location": "L291",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test",
       "target": "internal_mapview_mapview_test_testoverviewreconcileskipsghostskeepsfindings",
@@ -24107,7 +24158,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L338",
+      "source_location": "L418",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildblindspotfinding",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24118,7 +24169,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L278",
+      "source_location": "L358",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildclientaggregation",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24129,7 +24180,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L362",
+      "source_location": "L442",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildfocusrestrictstoonesubnet",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24140,7 +24191,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L250",
+      "source_location": "L330",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildgroupsandsparsecollapse",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24151,7 +24202,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L304",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildinferredgatewayfallback",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24162,7 +24213,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L355",
+      "source_location": "L435",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildnoisefloordropslowvolumeedges",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24173,7 +24224,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L320",
+      "source_location": "L400",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildobservedgatewayfroml2evidence",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24184,7 +24235,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L429",
+      "source_location": "L509",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testbuildreconcileflagsghostsandlabels",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24195,7 +24246,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L371",
+      "source_location": "L451",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testelementscountanddeterminism",
       "target": "internal_mapview_mapview_test_fixture",
@@ -24216,7 +24267,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L337",
+      "source_location": "L417",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildblindspotfinding",
@@ -24227,7 +24278,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L277",
+      "source_location": "L357",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildclientaggregation",
@@ -24238,7 +24289,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L384",
+      "source_location": "L464",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuilddriftannotatesnodesandcriticaledges",
@@ -24249,7 +24300,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L361",
+      "source_location": "L441",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildfocusrestrictstoonesubnet",
@@ -24260,7 +24311,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L249",
+      "source_location": "L329",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildgroupsandsparsecollapse",
@@ -24271,7 +24322,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L303",
+      "source_location": "L383",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildinferredgatewayfallback",
@@ -24293,7 +24344,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L353",
+      "source_location": "L433",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildnoisefloordropslowvolumeedges",
@@ -24304,7 +24355,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L319",
+      "source_location": "L399",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildobservedgatewayfroml2evidence",
@@ -24315,7 +24366,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L428",
+      "source_location": "L508",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testbuildreconcileflagsghostsandlabels",
@@ -24326,7 +24377,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L370",
+      "source_location": "L450",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testelementscountanddeterminism",
@@ -24337,7 +24388,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L192",
+      "source_location": "L272",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testoverviewdriftmarkednodesretained",
@@ -24348,7 +24399,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L163",
+      "source_location": "L243",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testoverviewgatewaybudget",
@@ -24359,7 +24410,18 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L211",
+      "source_location": "L166",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_mapview_mapview_test_testoverviewinternetheavysnapshot",
+      "target": "internal_mapview_mapview_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/mapview_test.go",
+      "source_location": "L291",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_mapview_mapview_test_testoverviewreconcileskipsghostskeepsfindings",
@@ -24393,7 +24455,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L193",
+      "source_location": "L273",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewdriftmarkednodesretained",
       "target": "internal_mapview_mapview_test_largefixture",
@@ -24404,7 +24466,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L164",
+      "source_location": "L244",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewgatewaybudget",
       "target": "internal_mapview_mapview_test_largefixture",
@@ -24415,7 +24477,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L212",
+      "source_location": "L292",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewreconcileskipsghostskeepsfindings",
       "target": "internal_mapview_mapview_test_largefixture",
@@ -24460,7 +24522,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "internal/mapview/mapview_test.go",
-      "source_location": "L229",
+      "source_location": "L309",
       "weight": 1.0,
       "source": "internal_mapview_mapview_test_testoverviewreconcileskipsghostskeepsfindings",
       "target": "internal_reconcile_compare_contains"
@@ -24469,7 +24531,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L38",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "internal_mapview_overview",
       "target": "internal_mapview_overview_buildoverview",
@@ -24479,7 +24541,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L18",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "internal_mapview_overview",
+      "target": "internal_mapview_overview_internalcidr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/overview.go",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "internal_mapview_overview",
       "target": "internal_mapview_overview_overviewprefix",
@@ -24489,7 +24561,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L225",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "internal_mapview_overview",
+      "target": "internal_mapview_overview_terrainaddr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/overview.go",
+      "source_location": "L287",
       "weight": 1.0,
       "source": "internal_mapview_overview",
       "target": "internal_mapview_overview_trimoverviewedges",
@@ -24500,7 +24582,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L40",
+      "source_location": "L120",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_overview_overviewprefix",
@@ -24518,10 +24600,32 @@
       "target": "internal_mapview_overview_overviewprefix"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/overview.go",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "internal_mapview_overview_buildoverview",
+      "target": "internal_mapview_overview_internalcidr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/overview.go",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "internal_mapview_overview_buildoverview",
+      "target": "internal_mapview_overview_terrainaddr",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L38",
+      "source_location": "L60",
       "weight": 1.0,
       "context": "return_type",
       "source": "internal_mapview_overview_buildoverview",
@@ -24533,7 +24637,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L154",
+      "source_location": "L214",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "internal_mapview_overview_trimoverviewedges",
@@ -24544,7 +24648,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L149",
+      "source_location": "L209",
       "weight": 1.0,
       "source": "internal_mapview_overview_buildoverview",
       "target": "mapview_model_addoverviewgateways",
@@ -24554,7 +24658,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "internal/mapview/overview.go",
-      "source_location": "L175",
+      "source_location": "L235",
       "weight": 1.0,
       "source": "internal_mapview_overview_go_mapview_model",
       "target": "mapview_model_addoverviewgateways",
@@ -50317,7 +50421,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/MAPS.md",
-      "source_location": "L115",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "docs_maps_briefing_maps",
       "target": "docs_maps_drift_highlighted_maps",
@@ -50327,7 +50431,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/MAPS.md",
-      "source_location": "L86",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "docs_maps_briefing_maps",
       "target": "docs_maps_export_formats",
@@ -50337,7 +50441,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/MAPS.md",
-      "source_location": "L97",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "docs_maps_briefing_maps",
       "target": "docs_maps_importing_graphml_into_draw_io_or_yed_offline",
@@ -50357,7 +50461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/MAPS.md",
-      "source_location": "L130",
+      "source_location": "L134",
       "weight": 1.0,
       "source": "docs_maps_briefing_maps",
       "target": "docs_maps_reconciliation_flagged_maps",
@@ -50695,5 +50799,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "70718ef17ab7faddea40c7caeaea9b96bb8530ed"
+  "built_at_commit": "e2f2bffae51170cc1d58d5fcc3e06a06d22870e3"
 }

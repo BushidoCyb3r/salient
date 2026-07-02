@@ -2,6 +2,7 @@ package mapview
 
 import (
 	"fmt"
+	"net/netip"
 	"sort"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
@@ -13,9 +14,9 @@ import (
 var overviewPrefixes = []int{24, 20, 16, 12, 8}
 
 // overviewPrefix returns the finest grouping prefix, no finer than start,
-// that yields at most MapOverviewMaxGroups groups. If even /8 exceeds the
-// cap the caller merges overflow groups into one "other networks" group.
-func overviewPrefix(nodes []graph.Node, start int) int {
+// that yields at most max groups. If even /8 exceeds the cap the caller
+// merges overflow groups into one "other networks" group.
+func overviewPrefix(nodes []graph.Node, start, max int) int {
 	for _, p := range overviewPrefixes {
 		if p > start {
 			continue
@@ -24,11 +25,32 @@ func overviewPrefix(nodes []graph.Node, start int) int {
 		for _, n := range nodes {
 			distinct[regroup(n.Subnet, p)] = true
 		}
-		if len(distinct) <= config.MapOverviewMaxGroups {
+		if len(distinct) <= max {
 			return p
 		}
 	}
 	return overviewPrefixes[len(overviewPrefixes)-1]
+}
+
+// internalCIDR reports whether a grouping CIDR is private address space —
+// the terrain the briefing is about. Everything else (internet peers,
+// multicast, broadcast) collapses into the single external group.
+func internalCIDR(cidr string) bool {
+	p, err := netip.ParsePrefix(cidr)
+	return err == nil && p.Addr().IsPrivate()
+}
+
+// terrainAddr reports whether an IP can be individually retained terrain.
+// Multicast, broadcast, and unspecified addresses are traffic artifacts,
+// not hosts, no matter how high the scorer ranked them.
+// ponytail: only the all-ones broadcast is caught; subnet-directed
+// broadcasts (x.x.x.255) need the subnet mask, add if they show up ranked.
+func terrainAddr(ip string) bool {
+	a, err := netip.ParseAddr(ip)
+	if err != nil {
+		return false
+	}
+	return !a.IsMulticast() && !a.IsUnspecified() && ip != "255.255.255.255"
 }
 
 // buildOverview rebuilds an oversized unfocused map as a condensed briefing
@@ -37,50 +59,11 @@ func overviewPrefix(nodes []graph.Node, start int) int {
 // the element budget. The snapshot stays complete — --focus recovers detail.
 func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeDrift map[rawEdgeKey]string, detailedElements int) *Model {
 	m := &Model{Meta: snap.Meta, Overview: true}
-	prefix := overviewPrefix(snap.Nodes, opts.GroupPrefix)
 
-	// Groups at the coarse prefix, largest first; overflow past the cap
-	// merges into one "other networks" group.
-	counts := map[string]int{}
-	for _, n := range snap.Nodes {
-		counts[regroup(n.Subnet, prefix)]++
-	}
-	cidrs := make([]string, 0, len(counts))
-	for c := range counts {
-		cidrs = append(cidrs, c)
-	}
-	sort.Slice(cidrs, func(i, j int) bool {
-		if counts[cidrs[i]] != counts[cidrs[j]] {
-			return counts[cidrs[i]] > counts[cidrs[j]]
-		}
-		return cidrs[i] < cidrs[j]
-	})
-	overflow := len(cidrs) > config.MapOverviewMaxGroups
-	if overflow {
-		cidrs = cidrs[:config.MapOverviewMaxGroups-1]
-	}
-	kept := make(map[string]bool, len(cidrs))
-	for _, c := range cidrs {
-		label := c
-		if lbl := opts.GroupLabels[c]; lbl != "" {
-			label = c + " — " + lbl
-		}
-		kept[c] = true
-		m.Groups = append(m.Groups, Group{ID: groupID(c), CIDR: c, Label: label})
-	}
-	if overflow {
-		m.Groups = append(m.Groups, Group{ID: "g:other", Label: "other networks"})
-	}
-	sort.Slice(m.Groups, func(i, j int) bool { return m.Groups[i].ID < m.Groups[j].ID })
-	resolve := func(subnet string) string {
-		if c := regroup(subnet, prefix); kept[c] {
-			return groupID(c)
-		}
-		return "g:other"
-	}
-
-	// Retention: overlay-marked nodes first, then top-ranked terrain, all
-	// ordered by valid positive rank with IP as the tie-breaker.
+	// Retention first, so group selection can prioritize the CIDRs the
+	// terrain actually lives in: overlay-marked nodes ahead of everything,
+	// then valid positive rank, IP as the tie-breaker. Multicast/broadcast
+	// artifacts are never retainable no matter their rank.
 	byIP := make(map[string]*graph.Node, len(snap.Nodes))
 	idx := make([]int, 0, len(snap.Nodes))
 	for i := range snap.Nodes {
@@ -109,13 +92,90 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	omittedMarked := 0
 	for _, i := range idx {
 		n := &snap.Nodes[i]
-		if len(retained) >= config.MapOverviewTopNodes {
+		if !terrainAddr(n.IP) || len(retained) >= config.MapOverviewTopNodes {
 			if nodeDrift[n.IP] != "" {
 				omittedMarked++
 			}
 			continue
 		}
 		retained[n.IP] = true
+	}
+
+	// Internal (private) address space gets the real groups; every public,
+	// multicast, or broadcast peer collapses into one external box so the
+	// briefing shows the operator's terrain, not the internet's.
+	var internal []graph.Node
+	external := false
+	for _, n := range snap.Nodes {
+		if internalCIDR(n.Subnet) {
+			internal = append(internal, n)
+		} else {
+			external = true
+		}
+	}
+	maxPriv := config.MapOverviewMaxGroups
+	if external {
+		maxPriv--
+	}
+	prefix := overviewPrefix(internal, opts.GroupPrefix, maxPriv)
+	counts := map[string]int{}
+	retainedIn := map[string]int{}
+	for _, n := range internal {
+		c := regroup(n.Subnet, prefix)
+		counts[c]++
+		if retained[n.IP] {
+			retainedIn[c]++
+		}
+	}
+	cidrs := make([]string, 0, len(counts))
+	for c := range counts {
+		cidrs = append(cidrs, c)
+	}
+	sort.Slice(cidrs, func(i, j int) bool {
+		if retainedIn[cidrs[i]] != retainedIn[cidrs[j]] {
+			return retainedIn[cidrs[i]] > retainedIn[cidrs[j]]
+		}
+		if counts[cidrs[i]] != counts[cidrs[j]] {
+			return counts[cidrs[i]] > counts[cidrs[j]]
+		}
+		return cidrs[i] < cidrs[j]
+	})
+	overflow := len(cidrs) > maxPriv
+	if overflow {
+		cidrs = cidrs[:maxPriv-1]
+	}
+	kept := make(map[string]bool, len(cidrs))
+	for _, c := range cidrs {
+		label := c
+		if lbl := opts.GroupLabels[c]; lbl != "" {
+			label = c + " — " + lbl
+		}
+		kept[c] = true
+		m.Groups = append(m.Groups, Group{ID: groupID(c), CIDR: c, Label: label})
+	}
+	if overflow {
+		m.Groups = append(m.Groups, Group{ID: "g:other", Label: "other internal networks"})
+	}
+	if external {
+		m.Groups = append(m.Groups, Group{ID: "g:external", Label: "external (internet / non-private)"})
+	}
+	sort.Slice(m.Groups, func(i, j int) bool { return m.Groups[i].ID < m.Groups[j].ID })
+	resolve := func(subnet string) string {
+		c := regroup(subnet, prefix)
+		if internalCIDR(c) {
+			if kept[c] {
+				return groupID(c)
+			}
+			return "g:other"
+		}
+		return "g:external"
+	}
+
+	for _, i := range idx {
+		n := &snap.Nodes[i]
+		if !retained[n.IP] {
+			continue
+		}
 		m.Nodes = append(m.Nodes, MapNode{
 			ID: n.IP, Group: resolve(n.Subnet), Label: nodeLabel(n),
 			Role: string(topRole(n)), Tier: tierOf(n),
@@ -209,7 +269,9 @@ func (m *Model) addOverviewGateways(snap graph.Snapshot, byIP map[string]*graph.
 		}
 	}
 	for _, g := range m.Groups {
-		if crossGroup[g.ID] {
+		// Only real internal CIDR groups get an inferred gateway — a dashed
+		// gateway inside the "external" or "other" box would be noise.
+		if crossGroup[g.ID] && g.CIDR != "" {
 			m.Nodes = append(m.Nodes, MapNode{
 				ID: g.ID + ":gw", Group: g.ID, Label: "gateway (inferred)",
 				Role: "Gateway", Tier: TierCore, Gateway: true, Inferred: true,

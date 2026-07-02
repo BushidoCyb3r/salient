@@ -45,7 +45,7 @@
     "semantic_hash": "1e3a1fbac589f6726718c4f1c475c0d9"
   },
   "internal/config/defaults.go": {
-    "mtime": 1783016258.1118114,
+    "mtime": 1783016742.275639,
     "ast_hash": "126ff28cc347bf21d03c3c40682da667",
     "semantic_hash": ""
   },
@@ -130,13 +130,13 @@
     "semantic_hash": "8bb022d01c65042e59b14feb3ea5aa4c"
   },
   "internal/mapview/mapview.go": {
-    "mtime": 1783016420.3274238,
+    "mtime": 1783016742.275639,
     "ast_hash": "ece5eaa7ab9a78ed3eb554adfa2a3e97",
     "semantic_hash": ""
   },
   "internal/mapview/mapview_test.go": {
-    "mtime": 1783016373.5492473,
-    "ast_hash": "8cf60e62f550173804d35cfc34f61498",
+    "mtime": 1783017999.5233822,
+    "ast_hash": "740e9e492a2c5c8dd171e8367afbf68a",
     "semantic_hash": ""
   },
   "internal/report/graphml.go": {
@@ -285,7 +285,7 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1783016542.6658857,
+    "mtime": 1783016742.271639,
     "ast_hash": "d3893dd5bbe5462b6012112d3c784f78",
     "semantic_hash": ""
   },
@@ -300,8 +300,8 @@
     "semantic_hash": "ad99cfb66cf8d147a930dd9788d92c59"
   },
   "docs/MAPS.md": {
-    "mtime": 1783016526.575825,
-    "ast_hash": "3feae02744e16bdd1a12041784b28218",
+    "mtime": 1783018038.9655309,
+    "ast_hash": "54487a598a262b188436c2caecf5483a",
     "semantic_hash": ""
   },
   "internal/report/testdata/map.svg": {
@@ -485,13 +485,13 @@
     "semantic_hash": ""
   },
   "internal/mapview/overview.go": {
-    "mtime": 1783016483.7586632,
-    "ast_hash": "455fa1e20686e99eb1934f5e118ade58",
+    "mtime": 1783017938.726153,
+    "ast_hash": "5ff4a5eb68646c25848305ef696de1bf",
     "semantic_hash": ""
   },
   "internal/mapview/overview_test.go": {
-    "mtime": 1783016385.8642938,
-    "ast_hash": "12fd6fe595eeb657b2ba20385f55548e",
+    "mtime": 1783017947.0411842,
+    "ast_hash": "891e9e3b244e86f623fc74c82562f5c8",
     "semantic_hash": ""
   }
 }

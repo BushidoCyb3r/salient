@@ -54,12 +54,16 @@ An unfocused map that exceeds 120 elements is automatically condensed into a
 **briefing overview** near the 60-element target instead of rendering an
 unreadable wall:
 
-- subnet groups coarsen (`/24` → `/20` → `/16` → `/12` → `/8`) until at most
-  8 groups remain; if even `/8` yields more, the largest groups stay and the
-  rest merge into one "other networks" box;
-- the top 20 hosts by score rank stay individually visible; **every other
-  host — including lower-ranked servers — collapses into one "N other hosts"
-  aggregate per group**;
+- **private (RFC1918) space gets the groups; everything else — internet
+  peers, multicast, broadcast — collapses into one "external" box.** The
+  briefing shows your terrain, not the internet's. Multicast and broadcast
+  addresses are never shown as individual hosts regardless of score rank;
+- internal subnet groups coarsen (`/24` → `/20` → `/16` → `/12` → `/8`)
+  until they fit the group budget, keeping the groups that contain
+  top-ranked terrain first; overflow merges into "other internal networks";
+- the top 20 hosts by score rank (excluding multicast/broadcast artifacts)
+  stay individually visible; **every other host — including lower-ranked
+  servers — collapses into one "N other hosts" aggregate per group**;
 - at most one gateway per group survives (observed L2 candidates win by
   distinct-IP count);
 - only the strongest bundled edges that fit the element budget remain, with
