@@ -25,39 +25,48 @@ and current status: `README.md` in this repo.
 
 ## Current status
 
-- **Phase 0 implementation** (`test-connection`, `discover`) — done. Live-grid
-  field-map verification is still pending.
-- **Phase 1** (`scan` → scored snapshot + analyst report) — done and committed
-  at `b6019c6`.
-- **Phase 1.5** (briefing maps) — implementation committed at `246ca9b`.
-  Additional CLI validation and artifact-handling tests are uncommitted.
-  Offline yEd/draw.io round-trip and cold-reader homelab validation remain
-  manual acceptance checks.
-- **Phase 2** (drift) — repository implementation complete but uncommitted:
-  deterministic node/edge/rank/full-role-set comparison, HTML + JSON reports,
-  `diff --map` drift overlays, low-volume critical-drift preservation, and CLI
-  tests. The live-homelab new-server exercise remains pending.
-- Optional snapshot-only model analysis with deliberate opt-in network egress
-  is approved and currently uncommitted. Remote use requires HTTPS and the
-  explicit `--allow-network-data-egress` acknowledgement.
-- The working tree also contains expected Graphify integration/output. Inspect
-  `git status` before editing and do not discard or overwrite unrelated changes.
-- **Phase 3** (reconciliation) — implemented: forgiving CSV asset-list
-  ingest, documented-silent/observed-undocumented/role-contradicted lists,
-  HTML + JSON reports, `reconcile --map` flagged briefing maps with
-  asset-doc segment names enriching group labels. Handing the report to a
-  real supported unit's staff remains the acceptance check.
-- **Phase 4** (hardening) — implemented: sampled betweenness above the 2k
-  exact limit (deterministic Brandes-Pich, flagged in the report), GitHub
-  Actions CI, cross-build memory guard. Layout-position persistence skipped
-  as the plan's nice-to-have.
-- All plan phases are implemented. Remaining work is validation, not code:
-  live-grid field-map verification and end-to-end exercise, yEd/draw.io
-  round-trip, cold-reader map test, handing reconcile output to a real unit.
+- **All plan phases (0–4) are implemented and committed on master.**
+  Phase 0 `b6019c6`-era, Phase 1 `b6019c6`, Phase 1.5 `246ca9b`+`fdbf60a`,
+  Phase 2 (drift/diff) `9c71bf3`, analyze `f0f210f`, Phase 3 (reconcile)
+  `a3dcc0d`, Phase 4 (sampled betweenness, CI, cross-build memory guard)
+  `7f225c4`, fuzz targets `de2052a`. Working tree should be clean — check
+  `git status` before assuming otherwise.
+- **Nothing has been pushed to GitHub yet.** The user wanted extensive local
+  testing first; that testing is done (see "Pre-push test evidence" below).
+  Push when the user says so — remember the identity rules at the top.
+- Remaining work is validation, not code: live-grid field-map verification
+  and end-to-end exercise against the homelab Security Onion grid,
+  yEd/draw.io GraphML round-trip on an offline machine, cold-reader map
+  test, handing reconcile output to a real supported unit.
 - Every field name in `internal/escli/fieldmap.go` is still `// UNVERIFIED`
   until `discover` has been run against a real homelab grid and
-  `docs/FIELDMAP.md` filled in. Don't build Phase 2+ features assuming the
-  defaults are correct.
+  `docs/FIELDMAP.md` filled in.
+
+## Pre-push test evidence (2026-07-02 session)
+
+Everything below passed; re-run any of it with the harness in
+`testdata/fakees/`.
+
+- **End-to-end against a fake ES** (`testdata/fakees/main.go`, stdlib-only):
+  `go run ./testdata/fakees -port 9299 -variant 1` then point the real binary
+  at `--es http://127.0.0.1:9299`. Serves cluster info, _resolve, _field_caps,
+  _has_privileges, and body-sniffed _search aggs (composite edge pages with
+  after_key, responder cardinality, datasets, sensors, temporal hist, gateway
+  MACs), plus `/v1/chat/completions` for `analyze`. `-variant 2` mutates the
+  network (new DB server appears, web server vanishes) — `diff` caught
+  appeared/vanished/new-critical-edges exactly; `scan` ranked the new server
+  #4 (the plan's Phase 2 acceptance scenario, synthetically).
+- **Artifacts:** SVG/GraphML XML-parse clean, every HTML self-contained (zero
+  external refs), binary-written files 0600 in 0700 dirs.
+- **Egress guards:** remote HTTP refused; remote HTTPS without
+  `--allow-network-data-egress` refused; HTTP with the flag still refused;
+  loopback allowed.
+- **Fuzzing:** `FuzzParseCSV` ~1.9M execs and `FuzzLoadFieldMap` clean; seed
+  corpus runs in normal `go test`.
+- **Security greps:** only outbound dialers are the ES client and the opt-in
+  assist path; embedded web/*.js has no runtime network calls; no telemetry.
+- **Gap:** `-race` has never run locally (no C compiler here); CI runs it on
+  first push. Live-grid validation still pending.
 
 ## Build/test
 
@@ -67,6 +76,12 @@ test`. `make build`, `make test`, `make cross` work once that's set. No C
 compiler is installed, so `-race` (used by `make test`) will fail here —
 drop `-race` for local runs, or note the gap rather than silently skipping
 tests.
+
+This box has 4GB RAM. Anything that gets SIGKILLed (exit 137) is the OOM
+killer, not a code bug: cross-compiles must not run in parallel (`make
+cross` already sets GOFLAGS=-p=2), and `go test -fuzz` needs
+`-parallel 1` (optionally GOGC=50). Elastic's typedapi/types package is the
+usual trigger.
 
 ## Docs that matter
 
