@@ -151,5 +151,15 @@
   "149": "baseIndexOf",
   "150": "initCloneByTag",
   "151": "assocIndexOf",
-  "152": "baseIsNative"
+  "152": "baseIsNative",
+  "153": "GraphML",
+  "154": "startSpinner",
+  "155": "ReconcileHTML",
+  "156": "DriftHTML",
+  "157": ".ResponderCardinality",
+  "158": ".FetchGatewayCandidates",
+  "159": "isIterateeCall",
+  "160": "initCloneByTag",
+  "161": "Scan Spinner Design",
+  "162": "TestOverviewPrefix"
 }

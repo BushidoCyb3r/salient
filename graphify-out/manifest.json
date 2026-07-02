@@ -25,13 +25,13 @@
     "semantic_hash": ""
   },
   "cmd/defilade/root.go": {
-    "mtime": 1782987128.0167892,
-    "ast_hash": "2e1d792bc5caa0d14f0690955252ef70",
+    "mtime": 1783014955.1128943,
+    "ast_hash": "d3afc18d9c445daf920fb2cd8ee53b6b",
     "semantic_hash": ""
   },
   "cmd/defilade/scan.go": {
-    "mtime": 1782988806.1523528,
-    "ast_hash": "ba97cd4b631d57291b7cefd111dd91f2",
+    "mtime": 1782996604.2857382,
+    "ast_hash": "711b0e01a6c9fe3051acec9f618529c2",
     "semantic_hash": ""
   },
   "cmd/defilade/testconnection.go": {
@@ -45,8 +45,8 @@
     "semantic_hash": "1e3a1fbac589f6726718c4f1c475c0d9"
   },
   "internal/config/defaults.go": {
-    "mtime": 1782988876.105624,
-    "ast_hash": "1af7b090a7a0561e20d5eaa84b9a3434",
+    "mtime": 1783016258.1118114,
+    "ast_hash": "126ff28cc347bf21d03c3c40682da667",
     "semantic_hash": ""
   },
   "internal/escli/client.go": {
@@ -130,13 +130,13 @@
     "semantic_hash": "8bb022d01c65042e59b14feb3ea5aa4c"
   },
   "internal/mapview/mapview.go": {
-    "mtime": 1782987053.0304935,
-    "ast_hash": "95bc04f98460be0feb41734ceaa87d77",
+    "mtime": 1783016420.3274238,
+    "ast_hash": "ece5eaa7ab9a78ed3eb554adfa2a3e97",
     "semantic_hash": ""
   },
   "internal/mapview/mapview_test.go": {
-    "mtime": 1782987256.5432956,
-    "ast_hash": "aca1e9b49e838463f4b1aaac69e15ac2",
+    "mtime": 1783016373.5492473,
+    "ast_hash": "8cf60e62f550173804d35cfc34f61498",
     "semantic_hash": ""
   },
   "internal/report/graphml.go": {
@@ -280,13 +280,13 @@
     "semantic_hash": "c698309979460d0f02ba616417844399"
   },
   "AGENTS.md": {
-    "mtime": 1782987415.731923,
-    "ast_hash": "ce57cb9975f6ba0f55af0e3c271e595d",
+    "mtime": 1782994611.046287,
+    "ast_hash": "8a18b5c23fecbfb692694b0ae26cf220",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1782987415.731923,
-    "ast_hash": "1f2643e08054ee459803c6256fd9ab37",
+    "mtime": 1783016542.6658857,
+    "ast_hash": "d3893dd5bbe5462b6012112d3c784f78",
     "semantic_hash": ""
   },
   "docs/DEPLOYMENT.md": {
@@ -300,8 +300,8 @@
     "semantic_hash": "ad99cfb66cf8d147a930dd9788d92c59"
   },
   "docs/MAPS.md": {
-    "mtime": 1782987347.5676544,
-    "ast_hash": "a9f50d324213aa7c871e225140a612b4",
+    "mtime": 1783016526.575825,
+    "ast_hash": "3feae02744e16bdd1a12041784b28218",
     "semantic_hash": ""
   },
   "internal/report/testdata/map.svg": {
@@ -427,6 +427,71 @@
   ".github/workflows/ci.yml": {
     "mtime": 1782988861.0245655,
     "ast_hash": "d1c145ed5f3bace951e8c69b0abe81c5",
+    "semantic_hash": ""
+  },
+  "cmd/defilade/progress.go": {
+    "mtime": 1782996604.210738,
+    "ast_hash": "86ad06308bb5ae55a6718f6f6b7a3768",
+    "semantic_hash": ""
+  },
+  "cmd/defilade/progress_test.go": {
+    "mtime": 1782996544.8165238,
+    "ast_hash": "b28670cc079d16137747648f1bf28150",
+    "semantic_hash": ""
+  },
+  "internal/escli/fuzz_test.go": {
+    "mtime": 1782991338.0791268,
+    "ast_hash": "f530968d31b6ead44a86a2ce11c56acb",
+    "semantic_hash": ""
+  },
+  "internal/reconcile/fuzz_test.go": {
+    "mtime": 1782991352.7741828,
+    "ast_hash": "3bf20424eaab9f17a9043480e2ec0bae",
+    "semantic_hash": ""
+  },
+  "testdata/fakees/main.go": {
+    "mtime": 1782994577.3121605,
+    "ast_hash": "e93b24de63f8cc3e007282d6ccd2ddd0",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-02-scan-spinner-design.md": {
+    "mtime": 1782996179.752182,
+    "ast_hash": "3d9d4545ee98bd3fe9b5f51cfaf9fc5f",
+    "semantic_hash": ""
+  },
+  "assets.go": {
+    "mtime": 1783014954.973894,
+    "ast_hash": "e4a27c43b334289bacdea736e36e9659",
+    "semantic_hash": ""
+  },
+  "cmd/defilade/viewcmd.go": {
+    "mtime": 1783014980.8199914,
+    "ast_hash": "20d68f16450f6c10e01469fc227c332a",
+    "semantic_hash": ""
+  },
+  "cmd/defilade/viewcmd_test.go": {
+    "mtime": 1783014971.958958,
+    "ast_hash": "93d17e2497a777347287dcefb3464111",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-02-report-browser-index-design.md": {
+    "mtime": 1783014720.846011,
+    "ast_hash": "1af864079f91c1af6b16048a12e84740",
+    "semantic_hash": ""
+  },
+  "defilade-logo.png": {
+    "mtime": 1783015083.7793798,
+    "ast_hash": "c6d8556906709535e0788758b63a9a73",
+    "semantic_hash": ""
+  },
+  "internal/mapview/overview.go": {
+    "mtime": 1783016483.7586632,
+    "ast_hash": "455fa1e20686e99eb1934f5e118ade58",
+    "semantic_hash": ""
+  },
+  "internal/mapview/overview_test.go": {
+    "mtime": 1783016385.8642938,
+    "ast_hash": "12fd6fe595eeb657b2ba20385f55548e",
     "semantic_hash": ""
   }
 }

@@ -1,9 +1,12 @@
 package mapview_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/reconcile"
@@ -48,6 +51,199 @@ func fixture(t *testing.T) graph.Snapshot {
 	return m.Snapshot(graph.SnapshotMeta{
 		Window: "24h", ClusterName: "test", ZeroCovCIDRs: []string{"10.0.99.0/24"},
 	})
+}
+
+// largeFixture synthesizes a broad-scope snapshot in memory: 200 active /24
+// subnets spread over 20 /16s, each with a web server, two mid-score unknown
+// hosts, and a low-score client, plus cross-subnet edges to the top server.
+// Ranks are assigned in creation order (composite descending), mirroring the
+// real 14-day scan whose map blew past every readability target.
+func largeFixture() graph.Snapshot {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	var snap graph.Snapshot
+	snap.Meta = graph.SnapshotMeta{Window: "336h", ClusterName: "test"}
+	rank := 0
+	addNode := func(ip, subnet string, role graph.Role, composite float64) {
+		rank++
+		n := graph.Node{
+			IP: ip, Subnet: subnet, FirstSeen: t0, LastSeen: t0.Add(time.Hour),
+			Scores: graph.ScoreSet{Composite: composite, Rank: rank},
+		}
+		if role != graph.RoleUnknown {
+			n.Roles = []graph.RoleAssertion{{Role: role, Confidence: 0.9, Evidence: []string{"synthetic"}}}
+		}
+		snap.Nodes = append(snap.Nodes, n)
+	}
+	for i := 0; i < 200; i++ {
+		subnet := fmt.Sprintf("10.%d.%d.0/24", i%20, i/20)
+		base := fmt.Sprintf("10.%d.%d", i%20, i/20)
+		addNode(base+".10", subnet, graph.RoleWebServer, 1.0/float64(rank+1))
+	}
+	for i := 0; i < 200; i++ {
+		subnet := fmt.Sprintf("10.%d.%d.0/24", i%20, i/20)
+		base := fmt.Sprintf("10.%d.%d", i%20, i/20)
+		addNode(base+".20", subnet, graph.RoleUnknown, 0.5)
+		addNode(base+".21", subnet, graph.RoleUnknown, 0.5)
+		addNode(base+".30", subnet, graph.RoleUnknown, 0.05)
+	}
+	top := "10.0.0.10"
+	for _, n := range snap.Nodes {
+		if n.IP == top {
+			continue
+		}
+		snap.Edges = append(snap.Edges, graph.Edge{
+			Src: n.IP, Dst: top, Port: 443, ConnCount: 100,
+			FirstSeen: t0, LastSeen: t0.Add(time.Hour),
+		})
+	}
+	return snap
+}
+
+func hasOverviewFinding(findings []string) bool {
+	for _, f := range findings {
+		if strings.Contains(f, "overview") {
+			return true
+		}
+	}
+	return false
+}
+
+func TestBuildLargeSnapshotProducesBriefingOverview(t *testing.T) {
+	mm := mapview.Build(largeFixture(), mapview.Options{})
+	if got := mm.Elements(); got > config.MapTargetElements {
+		t.Fatalf("overview has %d elements, target <= %d", got, config.MapTargetElements)
+	}
+	if !hasOverviewFinding(mm.Findings) {
+		t.Fatal("overview does not explain that the map was condensed")
+	}
+}
+
+func TestOverviewRetainsTopRanksAndAggregatesRest(t *testing.T) {
+	snap := largeFixture()
+	mm := mapview.Build(snap, mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("large unfocused map must build in overview mode")
+	}
+	if got := len(mm.Groups); got > config.MapOverviewMaxGroups {
+		t.Errorf("overview has %d groups, cap %d", got, config.MapOverviewMaxGroups)
+	}
+	rankByIP := map[string]int{}
+	for _, n := range snap.Nodes {
+		rankByIP[n.IP] = n.Scores.Rank
+	}
+	visible := map[string]bool{}
+	aggregated := 0
+	for _, n := range mm.Nodes {
+		visible[n.ID] = true
+		aggregated += n.AggCount
+	}
+	for _, n := range snap.Nodes {
+		if n.Scores.Rank <= config.MapOverviewTopNodes && !visible[n.IP] {
+			t.Errorf("rank-%d host %s missing from overview", n.Scores.Rank, n.IP)
+		}
+	}
+	for id := range visible {
+		if r, ok := rankByIP[id]; ok && r > config.MapOverviewTopNodes {
+			t.Errorf("rank-%d host %s should be aggregated, not individually visible", r, id)
+		}
+	}
+	if want := len(snap.Nodes) - config.MapOverviewTopNodes; aggregated != want {
+		t.Errorf("aggregate counts sum to %d, want %d omitted hosts", aggregated, want)
+	}
+	// Small maps keep the detailed pipeline untouched.
+	if small := mapview.Build(fixture(t), mapview.Options{}); small.Overview {
+		t.Error("small map must not switch to overview mode")
+	}
+	// Focus keeps the detailed pipeline even on the large snapshot.
+	if focused := mapview.Build(snap, mapview.Options{Focus: "10.0.0.0/24"}); focused.Overview {
+		t.Error("focused map must not switch to overview mode")
+	}
+}
+
+func TestOverviewGatewayBudget(t *testing.T) {
+	snap := largeFixture()
+	for i := 0; i < 40; i++ {
+		snap.Meta.L2Gateways = append(snap.Meta.L2Gateways, graph.L2Gateway{
+			MAC: fmt.Sprintf("aa:bb:cc:dd:ee:%02x", i), Sensor: "s1", IPCount: int64(10 + i),
+		})
+	}
+	mm := mapview.Build(snap, mapview.Options{})
+	var gws []mapview.MapNode
+	for _, n := range mm.Nodes {
+		if n.Gateway {
+			gws = append(gws, n)
+		}
+	}
+	if len(gws) == 0 || len(gws) > config.MapOverviewMaxGroups {
+		t.Fatalf("overview retained %d gateways, want 1..%d strongest", len(gws), config.MapOverviewMaxGroups)
+	}
+	// The strongest candidate (highest IPCount) must be among the retained.
+	found := false
+	for _, gw := range gws {
+		if gw.ID == "gw:aa:bb:cc:dd:ee:27" { // i=39, IPCount 49
+			found = true
+		}
+	}
+	if !found {
+		t.Error("strongest L2 gateway candidate was dropped")
+	}
+}
+
+func TestOverviewDriftMarkedNodesRetained(t *testing.T) {
+	snap := largeFixture()
+	// 10.5.3.20 is a mid-score unknown ranked far below the top-node budget.
+	d := snapshot.Diff{AppearedNodes: []graph.Node{{IP: "10.5.3.20", Subnet: "10.5.3.0/24"}}}
+	mm := mapview.BuildDrift(snap, d, mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("expected overview mode")
+	}
+	found := false
+	for _, n := range mm.Nodes {
+		if n.ID == "10.5.3.20" && n.Drift == "new" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("drift-marked low-rank node must be individually retained in overview")
+	}
+}
+
+func TestOverviewReconcileSkipsGhostsKeepsFindings(t *testing.T) {
+	snap := largeFixture()
+	assets := []reconcile.Asset{
+		{IP: "10.0.0.10", Hostname: "web01", Role: "web server"},
+		{IP: "10.0.200.99", Hostname: "old-nas", Role: "file server"}, // silent
+	}
+	res := reconcile.Compare(snap, assets)
+	mm := mapview.BuildReconcile(snap, res, assets, mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("expected overview mode")
+	}
+	for _, n := range mm.Nodes {
+		if strings.HasPrefix(n.ID, "asset:") {
+			t.Errorf("overview must not ghost individual silent assets, found %s", n.ID)
+		}
+	}
+	silentFinding, markedFinding := false, false
+	for _, f := range mm.Findings {
+		if strings.Contains(f, "documented assets produced no observed traffic") {
+			silentFinding = true
+		}
+		if strings.Contains(f, "flagged") {
+			markedFinding = true
+		}
+	}
+	if !silentFinding {
+		t.Errorf("silent-asset finding missing: %v", mm.Findings)
+	}
+	// Nearly every observed host is undocumented — far more marked nodes
+	// than the top-node budget. The overview must say some were omitted.
+	if !markedFinding {
+		t.Errorf("expected a finding about flagged nodes omitted from the overview: %v", mm.Findings)
+	}
+	if got := len(mm.Nodes); got > config.MapOverviewTopNodes+2*config.MapOverviewMaxGroups {
+		t.Errorf("overview node count %d exceeds retained+aggregates+gateways bound", got)
+	}
 }
 
 func TestBuildGroupsAndSparseCollapse(t *testing.T) {

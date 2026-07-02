@@ -66,7 +66,9 @@ const (
 	MapMinConns           = 5    // §8.5 noise floor default
 	ClientAggMaxComposite = 0.15 // §8.5 clients below this composite aggregate
 	MapTargetElements     = 60   // §8.5 readability target
-	MapMaxElements        = 120  // above this, warn to use --focus
+	MapMaxElements        = 120  // above this, unfocused maps condense to an overview
+	MapOverviewTopNodes   = 20   // overview mode: individually retained top-ranked hosts
+	MapOverviewMaxGroups  = 8    // overview mode: max subnet groups after coarsening
 )
 
 // Drift detection (DEFILADE_PLAN.md Phase 2).

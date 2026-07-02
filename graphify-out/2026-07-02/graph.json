@@ -4,13 +4,23 @@
   "graph": {},
   "nodes": [
     {
+      "label": "assets.go",
+      "file_type": "code",
+      "source_file": "assets.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "assets",
+      "community": 155,
+      "norm_label": "assets.go"
+    },
+    {
       "label": "analyzecmd.go",
       "file_type": "code",
       "source_file": "cmd/defilade/analyzecmd.go",
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd",
-      "community": 145,
+      "community": 149,
       "norm_label": "analyzecmd.go"
     },
     {
@@ -20,7 +30,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "defilade_analysisartifact",
-      "community": 145,
+      "community": 149,
       "norm_label": "analysisartifact"
     },
     {
@@ -30,7 +40,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_time",
-      "community": 145,
+      "community": 149,
       "norm_label": "time"
     },
     {
@@ -40,7 +50,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_result",
-      "community": 145,
+      "community": 149,
       "norm_label": "result"
     },
     {
@@ -50,7 +60,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_newanalyzecmd",
-      "community": 141,
+      "community": 149,
       "norm_label": "newanalyzecmd()"
     },
     {
@@ -60,7 +70,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_go_command",
-      "community": 141,
+      "community": 149,
       "norm_label": "command"
     },
     {
@@ -70,7 +80,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_test",
-      "community": 141,
+      "community": 149,
       "norm_label": "analyzecmd_test.go"
     },
     {
@@ -80,7 +90,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_test_testanalyzecommandwritesprotectedartifact",
-      "community": 141,
+      "community": 149,
       "norm_label": "testanalyzecommandwritesprotectedartifact()"
     },
     {
@@ -90,7 +100,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_analyzecmd_test_go_t",
-      "community": 141,
+      "community": 149,
       "norm_label": "t"
     },
     {
@@ -250,7 +260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_main",
-      "community": 141,
+      "community": 15,
       "norm_label": "main.go"
     },
     {
@@ -260,7 +270,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "cmd_defilade_main_main",
-      "community": 141,
+      "community": 15,
       "norm_label": "main()"
     },
     {
@@ -382,6 +392,86 @@
       "id": "cmd_defilade_mapcmd_test_savemaptestsnapshot",
       "community": 40,
       "norm_label": "savemaptestsnapshot()"
+    },
+    {
+      "label": "progress.go",
+      "file_type": "code",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress",
+      "community": 154,
+      "norm_label": "progress.go"
+    },
+    {
+      "label": "startSpinner()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_startspinner",
+      "community": 154,
+      "norm_label": "startspinner()"
+    },
+    {
+      "label": "Writer",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_go_writer",
+      "community": 154,
+      "norm_label": "writer"
+    },
+    {
+      "label": "Duration",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_go_duration",
+      "community": 154,
+      "norm_label": "duration"
+    },
+    {
+      "label": "isTerminal()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_isterminal",
+      "community": 154,
+      "norm_label": "isterminal()"
+    },
+    {
+      "label": "progress_test.go",
+      "file_type": "code",
+      "source_file": "cmd/defilade/progress_test.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_test",
+      "community": 154,
+      "norm_label": "progress_test.go"
+    },
+    {
+      "label": "TestSpinnerWritesAndClears()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/progress_test.go",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_test_testspinnerwritesandclears",
+      "community": 154,
+      "norm_label": "testspinnerwritesandclears()"
+    },
+    {
+      "label": "T",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "cmd_defilade_progress_test_go_t",
+      "community": 154,
+      "norm_label": "t"
     },
     {
       "label": "reconcilecmd.go",
@@ -520,7 +610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cmd_defilade_root",
-      "community": 141,
+      "community": 15,
       "norm_label": "root.go"
     },
     {
@@ -540,7 +630,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "cmd_defilade_root_newrootcmd",
-      "community": 141,
+      "community": 15,
       "norm_label": "newrootcmd()"
     },
     {
@@ -550,14 +640,14 @@
       "source_location": "",
       "_origin": "ast",
       "id": "cmd_defilade_root_go_command",
-      "community": 141,
+      "community": 15,
       "norm_label": "command"
     },
     {
       "label": ".clientConfig()",
       "file_type": "code",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L59",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "defilade_globalopts_clientconfig",
       "community": 15,
@@ -587,10 +677,10 @@
       "label": ".fieldMap()",
       "file_type": "code",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L84",
+      "source_location": "L85",
       "_origin": "ast",
       "id": "defilade_globalopts_fieldmap",
-      "community": 14,
+      "community": 135,
       "norm_label": ".fieldmap()"
     },
     {
@@ -647,7 +737,7 @@
       "label": "topRoleLabel()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L153",
+      "source_location": "L157",
       "_origin": "ast",
       "id": "cmd_defilade_scan_toprolelabel",
       "community": 9,
@@ -657,7 +747,7 @@
       "label": "scopeOrAll()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L160",
+      "source_location": "L164",
       "_origin": "ast",
       "id": "cmd_defilade_scan_scopeorall",
       "community": 9,
@@ -667,7 +757,7 @@
       "label": "attachTemporal()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "cmd_defilade_scan_attachtemporal",
       "community": 9,
@@ -717,7 +807,7 @@
       "label": "zeroCoverage()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L198",
+      "source_location": "L202",
       "_origin": "ast",
       "id": "cmd_defilade_scan_zerocoverage",
       "community": 9,
@@ -727,7 +817,7 @@
       "label": "writeReport()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L215",
+      "source_location": "L219",
       "_origin": "ast",
       "id": "cmd_defilade_scan_writereport",
       "community": 9,
@@ -737,7 +827,7 @@
       "label": "writeBriefingMap()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L233",
+      "source_location": "L237",
       "_origin": "ast",
       "id": "cmd_defilade_scan_writebriefingmap",
       "community": 9,
@@ -747,7 +837,7 @@
       "label": "cidrContains()",
       "file_type": "code",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L252",
+      "source_location": "L256",
       "_origin": "ast",
       "id": "cmd_defilade_scan_cidrcontains",
       "community": 9,
@@ -792,6 +882,116 @@
       "id": "cmd_defilade_testconnection_runtestconnection",
       "community": 15,
       "norm_label": "runtestconnection()"
+    },
+    {
+      "label": "viewcmd.go",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd",
+      "community": 2,
+      "norm_label": "viewcmd.go"
+    },
+    {
+      "label": "browserIndexEntry",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "defilade_browserindexentry",
+      "community": 2,
+      "norm_label": "browserindexentry"
+    },
+    {
+      "label": "newViewCmd()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_newviewcmd",
+      "community": 2,
+      "norm_label": "newviewcmd()"
+    },
+    {
+      "label": "Command",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_go_command",
+      "community": 2,
+      "norm_label": "command"
+    },
+    {
+      "label": "writeBrowserIndex()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_writebrowserindex",
+      "community": 2,
+      "norm_label": "writebrowserindex()"
+    },
+    {
+      "label": "browserCommand()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L136",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_browsercommand",
+      "community": 2,
+      "norm_label": "browsercommand()"
+    },
+    {
+      "label": "viewcmd_test.go",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_test",
+      "community": 2,
+      "norm_label": "viewcmd_test.go"
+    },
+    {
+      "label": "TestWriteBrowserIndex()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_test_testwritebrowserindex",
+      "community": 2,
+      "norm_label": "testwritebrowserindex()"
+    },
+    {
+      "label": "T",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_test_go_t",
+      "community": 2,
+      "norm_label": "t"
+    },
+    {
+      "label": "TestBrowserCommandLinuxUsesGIO()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_test_testbrowsercommandlinuxusesgio",
+      "community": 2,
+      "norm_label": "testbrowsercommandlinuxusesgio()"
+    },
+    {
+      "label": "TestBrowserCommandReportsMissingLauncher()",
+      "file_type": "code",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L73",
+      "_origin": "ast",
+      "id": "cmd_defilade_viewcmd_test_testbrowsercommandreportsmissinglauncher",
+      "community": 2,
+      "norm_label": "testbrowsercommandreportsmissinglauncher()"
     },
     {
       "label": "github.com/BushidoCyb3r/defilade",
@@ -926,6 +1126,16 @@
       "norm_label": "edgeid()"
     },
     {
+      "label": "Edge",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_assist_client_go_edge",
+      "community": 140,
+      "norm_label": "edge"
+    },
+    {
       "label": "validateCitations()",
       "file_type": "code",
       "source_file": "internal/assist/client.go",
@@ -999,7 +1209,7 @@
       "label": "ClassLabel()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L90",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "internal_config_defaults_classlabel",
       "community": 23,
@@ -1009,7 +1219,7 @@
       "label": "ServiceClass",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L145",
+      "source_location": "L146",
       "_origin": "ast",
       "id": "config_serviceclass",
       "community": 23,
@@ -1019,7 +1229,7 @@
       "label": "ClassForPort()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L170",
+      "source_location": "L171",
       "_origin": "ast",
       "id": "internal_config_defaults_classforport",
       "community": 23,
@@ -1029,17 +1239,17 @@
       "label": "ServiceName()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L173",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "internal_config_defaults_servicename",
-      "community": 14,
+      "community": 145,
       "norm_label": "servicename()"
     },
     {
       "label": "IsCriticalDependency()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L211",
+      "source_location": "L212",
       "_origin": "ast",
       "id": "internal_config_defaults_iscriticaldependency",
       "community": 23,
@@ -1049,7 +1259,7 @@
       "label": "IsAuthEdge()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L220",
+      "source_location": "L221",
       "_origin": "ast",
       "id": "internal_config_defaults_isauthedge",
       "community": 23,
@@ -1059,7 +1269,7 @@
       "label": "IsAdminPort()",
       "file_type": "code",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L226",
+      "source_location": "L227",
       "_origin": "ast",
       "id": "internal_config_defaults_isadminport",
       "community": 23,
@@ -1412,7 +1622,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "internal_escli_client_test_testquerybuildersproducevalidjson",
-      "community": 14,
+      "community": 57,
       "norm_label": "testquerybuildersproducevalidjson()"
     },
     {
@@ -1432,7 +1642,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_conn",
-      "community": 14,
+      "community": 145,
       "norm_label": "conn.go"
     },
     {
@@ -1442,7 +1652,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "internal_escli_conn_edgeaggquery",
-      "community": 14,
+      "community": 145,
       "norm_label": "edgeaggquery()"
     },
     {
@@ -1452,7 +1662,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_conn_go_duration",
-      "community": 14,
+      "community": 145,
       "norm_label": "duration"
     },
     {
@@ -1462,7 +1672,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "internal_escli_conn_source",
-      "community": 14,
+      "community": 145,
       "norm_label": "source()"
     },
     {
@@ -1472,7 +1682,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "internal_escli_conn_scopefilter",
-      "community": 14,
+      "community": 145,
       "norm_label": "scopefilter()"
     },
     {
@@ -1482,7 +1692,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "internal_escli_conn_go_escli_client",
-      "community": 14,
+      "community": 145,
       "norm_label": "client"
     },
     {
@@ -1492,7 +1702,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "escli_client_fetchedges",
-      "community": 14,
+      "community": 145,
       "norm_label": ".fetchedges()"
     },
     {
@@ -1502,8 +1712,18 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_conn_go_context",
-      "community": 14,
+      "community": 145,
       "norm_label": "context"
+    },
+    {
+      "label": "Edge",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_escli_conn_go_edge",
+      "community": 145,
+      "norm_label": "edge"
     },
     {
       "label": "parseEdgePage()",
@@ -1512,7 +1732,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "internal_escli_conn_parseedgepage",
-      "community": 14,
+      "community": 145,
       "norm_label": "parseedgepage()"
     },
     {
@@ -1522,7 +1742,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_conn_go_rawmessage",
-      "community": 14,
+      "community": 145,
       "norm_label": "rawmessage"
     },
     {
@@ -1532,7 +1752,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "internal_escli_conn_epochmillis",
-      "community": 14,
+      "community": 145,
       "norm_label": "epochmillis()"
     },
     {
@@ -1542,7 +1762,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_conn_go_time",
-      "community": 14,
+      "community": 145,
       "norm_label": "time"
     },
     {
@@ -1612,7 +1832,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_discover",
-      "community": 14,
+      "community": 57,
       "norm_label": "discover.go"
     },
     {
@@ -1622,7 +1842,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "internal_escli_discover_datasetcountsquery",
-      "community": 14,
+      "community": 57,
       "norm_label": "datasetcountsquery()"
     },
     {
@@ -1632,7 +1852,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_discover_go_duration",
-      "community": 14,
+      "community": 57,
       "norm_label": "duration"
     },
     {
@@ -1642,7 +1862,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "internal_escli_discover_sensorsquery",
-      "community": 14,
+      "community": 57,
       "norm_label": "sensorsquery()"
     },
     {
@@ -1652,7 +1872,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "internal_escli_discover_maccoveragequery",
-      "community": 14,
+      "community": 57,
       "norm_label": "maccoveragequery()"
     },
     {
@@ -1662,7 +1882,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "internal_escli_discover_haswriteprivilegesquery",
-      "community": 14,
+      "community": 57,
       "norm_label": "haswriteprivilegesquery()"
     },
     {
@@ -1672,7 +1892,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "internal_escli_discover_rangefilter",
-      "community": 14,
+      "community": 57,
       "norm_label": "rangefilter()"
     },
     {
@@ -1682,7 +1902,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "internal_escli_discover_marshal",
-      "community": 14,
+      "community": 57,
       "norm_label": "marshal()"
     },
     {
@@ -1692,7 +1912,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "escli_datasetcount",
-      "community": 14,
+      "community": 57,
       "norm_label": "datasetcount"
     },
     {
@@ -1702,7 +1922,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "internal_escli_discover_go_escli_client",
-      "community": 14,
+      "community": 57,
       "norm_label": "client"
     },
     {
@@ -1712,7 +1932,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "escli_client_datasetcounts",
-      "community": 14,
+      "community": 57,
       "norm_label": ".datasetcounts()"
     },
     {
@@ -1722,7 +1942,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_discover_go_context",
-      "community": 14,
+      "community": 57,
       "norm_label": "context"
     },
     {
@@ -1732,7 +1952,7 @@
       "source_location": "L146",
       "_origin": "ast",
       "id": "escli_client_sensors",
-      "community": 14,
+      "community": 57,
       "norm_label": ".sensors()"
     },
     {
@@ -1742,7 +1962,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "escli_maccoverage",
-      "community": 14,
+      "community": 57,
       "norm_label": "maccoverage"
     },
     {
@@ -1752,7 +1972,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "escli_client_maccoverage",
-      "community": 14,
+      "community": 57,
       "norm_label": ".maccoverage()"
     },
     {
@@ -1762,7 +1982,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "escli_termsbucket",
-      "community": 14,
+      "community": 57,
       "norm_label": "termsbucket"
     },
     {
@@ -1772,7 +1992,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "internal_escli_discover_hitstotal",
-      "community": 14,
+      "community": 57,
       "norm_label": "hitstotal()"
     },
     {
@@ -1782,7 +2002,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_discover_go_rawmessage",
-      "community": 14,
+      "community": 57,
       "norm_label": "rawmessage"
     },
     {
@@ -1792,7 +2012,7 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "internal_escli_discover_aggregations",
-      "community": 14,
+      "community": 57,
       "norm_label": "aggregations()"
     },
     {
@@ -1802,7 +2022,7 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "internal_escli_discover_termsbuckets",
-      "community": 14,
+      "community": 57,
       "norm_label": "termsbuckets()"
     },
     {
@@ -1812,7 +2032,7 @@
       "source_location": "L252",
       "_origin": "ast",
       "id": "internal_escli_discover_filteraggcount",
-      "community": 14,
+      "community": 57,
       "norm_label": "filteraggcount()"
     },
     {
@@ -1822,7 +2042,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_fieldmap",
-      "community": 14,
+      "community": 135,
       "norm_label": "fieldmap.go"
     },
     {
@@ -1832,7 +2052,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "escli_fieldmap",
-      "community": 14,
+      "community": 135,
       "norm_label": "fieldmap"
     },
     {
@@ -1842,7 +2062,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "escli_datasetcandidates",
-      "community": 14,
+      "community": 135,
       "norm_label": "datasetcandidates"
     },
     {
@@ -1862,7 +2082,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_loadfieldmap",
-      "community": 14,
+      "community": 135,
       "norm_label": "loadfieldmap()"
     },
     {
@@ -1872,7 +2092,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_merge",
-      "community": 14,
+      "community": 135,
       "norm_label": "merge()"
     },
     {
@@ -1882,7 +2102,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_mergelist",
-      "community": 14,
+      "community": 135,
       "norm_label": "mergelist()"
     },
     {
@@ -1892,7 +2112,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "escli_fieldmap_coreconnfields",
-      "community": 14,
+      "community": 135,
       "norm_label": ".coreconnfields()"
     },
     {
@@ -1902,7 +2122,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "escli_fieldmap_l2fields",
-      "community": 14,
+      "community": 135,
       "norm_label": ".l2fields()"
     },
     {
@@ -1912,7 +2132,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_test",
-      "community": 14,
+      "community": 135,
       "norm_label": "fieldmap_test.go"
     },
     {
@@ -1922,7 +2142,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_test_testdefaultfieldmapcomplete",
-      "community": 14,
+      "community": 135,
       "norm_label": "testdefaultfieldmapcomplete()"
     },
     {
@@ -1932,7 +2152,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_test_go_t",
-      "community": 14,
+      "community": 135,
       "norm_label": "t"
     },
     {
@@ -1942,7 +2162,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_test_testloadfieldmapnopathreturnsdefaults",
-      "community": 14,
+      "community": 135,
       "norm_label": "testloadfieldmapnopathreturnsdefaults()"
     },
     {
@@ -1952,7 +2172,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_test_testloadfieldmapoverridemergesoverdefaults",
-      "community": 14,
+      "community": 135,
       "norm_label": "testloadfieldmapoverridemergesoverdefaults()"
     },
     {
@@ -1962,8 +2182,38 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "internal_escli_fieldmap_test_testloadfieldmapmissingfile",
-      "community": 14,
+      "community": 135,
       "norm_label": "testloadfieldmapmissingfile()"
+    },
+    {
+      "label": "fuzz_test.go",
+      "file_type": "code",
+      "source_file": "internal/escli/fuzz_test.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_escli_fuzz_test",
+      "community": 135,
+      "norm_label": "fuzz_test.go"
+    },
+    {
+      "label": "FuzzLoadFieldMap()",
+      "file_type": "code",
+      "source_file": "internal/escli/fuzz_test.go",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "internal_escli_fuzz_test_fuzzloadfieldmap",
+      "community": 135,
+      "norm_label": "fuzzloadfieldmap()"
+    },
+    {
+      "label": "F",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_escli_fuzz_test_go_f",
+      "community": 135,
+      "norm_label": "f"
     },
     {
       "label": "l2.go",
@@ -1972,7 +2222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_l2",
-      "community": 14,
+      "community": 158,
       "norm_label": "l2.go"
     },
     {
@@ -1982,7 +2232,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "internal_escli_l2_gatewaycandidatesquery",
-      "community": 14,
+      "community": 158,
       "norm_label": "gatewaycandidatesquery()"
     },
     {
@@ -1992,7 +2242,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_l2_go_duration",
-      "community": 14,
+      "community": 158,
       "norm_label": "duration"
     },
     {
@@ -2002,7 +2252,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "internal_escli_l2_go_escli_client",
-      "community": 14,
+      "community": 158,
       "norm_label": "client"
     },
     {
@@ -2012,7 +2262,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "escli_client_fetchgatewaycandidates",
-      "community": 14,
+      "community": 158,
       "norm_label": ".fetchgatewaycandidates()"
     },
     {
@@ -2022,7 +2272,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_l2_go_context",
-      "community": 14,
+      "community": 158,
       "norm_label": "context"
     },
     {
@@ -2032,7 +2282,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_roles",
-      "community": 14,
+      "community": 157,
       "norm_label": "roles.go"
     },
     {
@@ -2042,7 +2292,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "internal_escli_roles_respondercardinalityquery",
-      "community": 14,
+      "community": 157,
       "norm_label": "respondercardinalityquery()"
     },
     {
@@ -2052,7 +2302,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_roles_go_duration",
-      "community": 14,
+      "community": 157,
       "norm_label": "duration"
     },
     {
@@ -2062,7 +2312,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "internal_escli_roles_go_escli_client",
-      "community": 14,
+      "community": 157,
       "norm_label": "client"
     },
     {
@@ -2072,7 +2322,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "escli_client_respondercardinality",
-      "community": 14,
+      "community": 157,
       "norm_label": ".respondercardinality()"
     },
     {
@@ -2082,7 +2332,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_roles_go_context",
-      "community": 14,
+      "community": 157,
       "norm_label": "context"
     },
     {
@@ -2092,7 +2342,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "escli_client_fetchevidence",
-      "community": 14,
+      "community": 157,
       "norm_label": ".fetchevidence()"
     },
     {
@@ -2102,7 +2352,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_escli_temporal",
-      "community": 14,
+      "community": 136,
       "norm_label": "temporal.go"
     },
     {
@@ -2112,7 +2362,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "internal_escli_temporal_temporalquery",
-      "community": 14,
+      "community": 136,
       "norm_label": "temporalquery()"
     },
     {
@@ -2122,7 +2372,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_temporal_go_duration",
-      "community": 14,
+      "community": 136,
       "norm_label": "duration"
     },
     {
@@ -2132,7 +2382,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "internal_escli_temporal_go_escli_client",
-      "community": 14,
+      "community": 136,
       "norm_label": "client"
     },
     {
@@ -2142,7 +2392,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "escli_client_fetchtemporal",
-      "community": 14,
+      "community": 136,
       "norm_label": ".fetchtemporal()"
     },
     {
@@ -2152,7 +2402,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_temporal_go_context",
-      "community": 14,
+      "community": 136,
       "norm_label": "context"
     },
     {
@@ -2162,7 +2412,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_escli_temporal_go_location",
-      "community": 14,
+      "community": 136,
       "norm_label": "location"
     },
     {
@@ -2172,7 +2422,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_graph_build",
-      "community": 57,
+      "community": 147,
       "norm_label": "build.go"
     },
     {
@@ -2182,8 +2432,18 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "internal_graph_build_go_graph_model",
-      "community": 57,
+      "community": 147,
       "norm_label": "model"
+    },
+    {
+      "label": "Edge",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_graph_build_go_edge",
+      "community": 147,
+      "norm_label": "edge"
     },
     {
       "label": "WeightedDirectedGraph",
@@ -2192,7 +2452,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "weighteddirectedgraph",
-      "community": 57,
+      "community": 147,
       "norm_label": "weighteddirectedgraph"
     },
     {
@@ -2202,7 +2462,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "internal_graph_build_build",
-      "community": 57,
+      "community": 147,
       "norm_label": "build()"
     },
     {
@@ -2212,7 +2472,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "graph_model_node",
-      "community": 57,
+      "community": 147,
       "norm_label": ".node()"
     },
     {
@@ -2222,7 +2482,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_graph_build_go_time",
-      "community": 57,
+      "community": 147,
       "norm_label": "time"
     },
     {
@@ -2232,7 +2492,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "graph_model_directed",
-      "community": 57,
+      "community": 147,
       "norm_label": ".directed()"
     },
     {
@@ -2242,7 +2502,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "graph_model_id",
-      "community": 57,
+      "community": 147,
       "norm_label": ".id()"
     },
     {
@@ -2252,7 +2512,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "graph_model_ip",
-      "community": 57,
+      "community": 147,
       "norm_label": ".ip()"
     },
     {
@@ -2262,7 +2522,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "graph_model_sortednodes",
-      "community": 57,
+      "community": 147,
       "norm_label": ".sortednodes()"
     },
     {
@@ -2272,7 +2532,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "graph_model_snapshot",
-      "community": 57,
+      "community": 147,
       "norm_label": ".snapshot()"
     },
     {
@@ -2282,7 +2542,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "internal_graph_build_subnet",
-      "community": 57,
+      "community": 147,
       "norm_label": "subnet()"
     },
     {
@@ -2292,7 +2552,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "internal_graph_build_mergestrings",
-      "community": 57,
+      "community": 147,
       "norm_label": "mergestrings()"
     },
     {
@@ -2402,7 +2662,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_graph_pipeline_test",
-      "community": 137,
+      "community": 151,
       "norm_label": "pipeline_test.go"
     },
     {
@@ -2412,8 +2672,18 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "internal_graph_pipeline_test_synthetic",
-      "community": 137,
+      "community": 151,
       "norm_label": "synthetic()"
+    },
+    {
+      "label": "Edge",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_graph_pipeline_test_go_edge",
+      "community": 151,
+      "norm_label": "edge"
     },
     {
       "label": "hasRole()",
@@ -2422,7 +2692,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "internal_graph_pipeline_test_hasrole",
-      "community": 137,
+      "community": 151,
       "norm_label": "hasrole()"
     },
     {
@@ -2432,7 +2702,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "internal_graph_pipeline_test_testpipelineknownterrainrankscorrectly",
-      "community": 137,
+      "community": 151,
       "norm_label": "testpipelineknownterrainrankscorrectly()"
     },
     {
@@ -2442,7 +2712,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_graph_pipeline_test_go_t",
-      "community": 137,
+      "community": 151,
       "norm_label": "t"
     },
     {
@@ -2452,7 +2722,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "internal_graph_pipeline_test_keys",
-      "community": 137,
+      "community": 151,
       "norm_label": "keys()"
     },
     {
@@ -2532,7 +2802,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_graph_types",
-      "community": 138,
+      "community": 35,
       "norm_label": "types.go"
     },
     {
@@ -2562,7 +2832,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "graph_temporalclass",
-      "community": 138,
+      "community": 35,
       "norm_label": "temporalclass"
     },
     {
@@ -2572,7 +2842,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "graph_temporalprofile",
-      "community": 138,
+      "community": 35,
       "norm_label": "temporalprofile"
     },
     {
@@ -2582,7 +2852,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "graph_edge",
-      "community": 138,
+      "community": 35,
       "norm_label": "edge"
     },
     {
@@ -2592,7 +2862,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_graph_types_go_time",
-      "community": 138,
+      "community": 35,
       "norm_label": "time"
     },
     {
@@ -2602,7 +2872,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "graph_scoreset",
-      "community": 138,
+      "community": 35,
       "norm_label": "scoreset"
     },
     {
@@ -2612,7 +2882,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "graph_node",
-      "community": 138,
+      "community": 35,
       "norm_label": "node"
     },
     {
@@ -2632,7 +2902,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "graph_l2gateway",
-      "community": 14,
+      "community": 35,
       "norm_label": "l2gateway"
     },
     {
@@ -2642,7 +2912,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "graph_snapshotmeta",
-      "community": 138,
+      "community": 35,
       "norm_label": "snapshotmeta"
     },
     {
@@ -2652,7 +2922,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "graph_snapshot",
-      "community": 138,
+      "community": 35,
       "norm_label": "snapshot"
     },
     {
@@ -2772,7 +3042,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "internal_mapview_mapview_builddrift",
-      "community": 138,
+      "community": 22,
       "norm_label": "builddrift()"
     },
     {
@@ -2822,7 +3092,7 @@
       "source_location": "L284",
       "_origin": "ast",
       "id": "internal_mapview_mapview_toprole",
-      "community": 22,
+      "community": 35,
       "norm_label": "toprole()"
     },
     {
@@ -2832,7 +3102,7 @@
       "source_location": "L291",
       "_origin": "ast",
       "id": "internal_mapview_mapview_nodelabel",
-      "community": 138,
+      "community": 35,
       "norm_label": "nodelabel()"
     },
     {
@@ -2842,7 +3112,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "internal_mapview_mapview_evidence",
-      "community": 138,
+      "community": 35,
       "norm_label": "evidence()"
     },
     {
@@ -2852,7 +3122,7 @@
       "source_location": "L306",
       "_origin": "ast",
       "id": "internal_mapview_mapview_tierof",
-      "community": 22,
+      "community": 35,
       "norm_label": "tierof()"
     },
     {
@@ -2896,6 +3166,16 @@
       "norm_label": ".bundleedges()"
     },
     {
+      "label": "Edge",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_mapview_mapview_go_edge",
+      "community": 35,
+      "norm_label": "edge"
+    },
+    {
       "label": ".findings()",
       "file_type": "code",
       "source_file": "internal/mapview/mapview.go",
@@ -2932,7 +3212,7 @@
       "source_location": "L512",
       "_origin": "ast",
       "id": "internal_mapview_mapview_filterfocus",
-      "community": 138,
+      "community": 35,
       "norm_label": "filterfocus()"
     },
     {
@@ -2942,7 +3222,7 @@
       "source_location": "L529",
       "_origin": "ast",
       "id": "internal_mapview_mapview_filterfocusedges",
-      "community": 138,
+      "community": 35,
       "norm_label": "filterfocusedges()"
     },
     {
@@ -3184,6 +3464,36 @@
       "id": "internal_reconcile_compare_go_prefix",
       "community": 5,
       "norm_label": "prefix"
+    },
+    {
+      "label": "fuzz_test.go",
+      "file_type": "code",
+      "source_file": "internal/reconcile/fuzz_test.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_reconcile_fuzz_test",
+      "community": 5,
+      "norm_label": "fuzz_test.go"
+    },
+    {
+      "label": "FuzzParseCSV()",
+      "file_type": "code",
+      "source_file": "internal/reconcile/fuzz_test.go",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "internal_reconcile_fuzz_test_fuzzparsecsv",
+      "community": 5,
+      "norm_label": "fuzzparsecsv()"
+    },
+    {
+      "label": "F",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_reconcile_fuzz_test_go_f",
+      "community": 5,
+      "norm_label": "f"
     },
     {
       "label": "ingest.go",
@@ -3752,7 +4062,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_report_report",
-      "community": 7,
+      "community": 35,
       "norm_label": "report.go"
     },
     {
@@ -3762,7 +4072,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "internal_report_report_json",
-      "community": 7,
+      "community": 35,
       "norm_label": "json()"
     },
     {
@@ -3772,7 +4082,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_report_report_go_writer",
-      "community": 7,
+      "community": 35,
       "norm_label": "writer"
     },
     {
@@ -3782,7 +4092,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "internal_report_report_toprole",
-      "community": 7,
+      "community": 35,
       "norm_label": "toprole()"
     },
     {
@@ -3936,13 +4246,113 @@
       "norm_label": "xmlesc()"
     },
     {
+      "label": "sampled.go",
+      "file_type": "code",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_score_sampled",
+      "community": 2,
+      "norm_label": "sampled.go"
+    },
+    {
+      "label": "sampledBetweenness()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "internal_score_sampled_sampledbetweenness",
+      "community": 2,
+      "norm_label": "sampledbetweenness()"
+    },
+    {
+      "label": "Directed",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "directed",
+      "community": 2,
+      "norm_label": "directed"
+    },
+    {
+      "label": "brandesFrom()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "internal_score_sampled_brandesfrom",
+      "community": 2,
+      "norm_label": "brandesfrom()"
+    },
+    {
+      "label": "sampled_test.go",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test",
+      "community": 2,
+      "norm_label": "sampled_test.go"
+    },
+    {
+      "label": "chainGraph()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_chaingraph",
+      "community": 2,
+      "norm_label": "chaingraph()"
+    },
+    {
+      "label": "Model",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_go_model",
+      "community": 2,
+      "norm_label": "model"
+    },
+    {
+      "label": "TestSampledBetweennessMatchesExactWithAllPivots()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "community": 2,
+      "norm_label": "testsampledbetweennessmatchesexactwithallpivots()"
+    },
+    {
+      "label": "T",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_go_t",
+      "community": 2,
+      "norm_label": "t"
+    },
+    {
+      "label": "TestSampledBetweennessDeterministicAndSeparatesChokeFromLeaf()",
+      "file_type": "code",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "community": 2,
+      "norm_label": "testsampledbetweennessdeterministicandseparateschokefromleaf()"
+    },
+    {
       "label": "score.go",
       "file_type": "code",
       "source_file": "internal/score/score.go",
       "source_location": "L1",
       "_origin": "ast",
       "id": "internal_score_score",
-      "community": 135,
+      "community": 150,
       "norm_label": "score.go"
     },
     {
@@ -3952,7 +4362,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "score_result",
-      "community": 135,
+      "community": 150,
       "norm_label": "result"
     },
     {
@@ -3962,7 +4372,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "internal_score_score_score",
-      "community": 135,
+      "community": 150,
       "norm_label": "score()"
     },
     {
@@ -3972,7 +4382,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "internal_score_score_go_model",
-      "community": 135,
+      "community": 150,
       "norm_label": "model"
     },
     {
@@ -3982,7 +4392,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "internal_score_score_criticalindegree",
-      "community": 135,
+      "community": 150,
       "norm_label": "criticalindegree()"
     },
     {
@@ -3992,7 +4402,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "internal_score_score_subnetspread",
-      "community": 135,
+      "community": 150,
       "norm_label": "subnetspread()"
     },
     {
@@ -4002,7 +4412,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "internal_score_score_distinctsrcperdst",
-      "community": 135,
+      "community": 150,
       "norm_label": "distinctsrcperdst()"
     },
     {
@@ -4012,7 +4422,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "internal_score_score_minmax",
-      "community": 135,
+      "community": 150,
       "norm_label": "minmax()"
     },
     {
@@ -4064,6 +4474,16 @@
       "id": "snapshot_diff",
       "community": 138,
       "norm_label": "diff"
+    },
+    {
+      "label": "Edge",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "internal_snapshot_diff_go_edge",
+      "community": 138,
+      "norm_label": "edge"
     },
     {
       "label": "Compare()",
@@ -4132,7 +4552,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "internal_snapshot_diff_abs",
-      "community": 138,
+      "community": 2,
       "norm_label": "abs()"
     },
     {
@@ -4232,7 +4652,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "internal_snapshot_store_load",
-      "community": 141,
+      "community": 149,
       "norm_label": "load()"
     },
     {
@@ -4304,6 +4724,156 @@
       "id": "internal_snapshot_store_test_go_t",
       "community": 43,
       "norm_label": "t"
+    },
+    {
+      "label": "main.go",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "testdata_fakees_main",
+      "community": 137,
+      "norm_label": "main.go"
+    },
+    {
+      "label": "edge",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "fakees_edge",
+      "community": 137,
+      "norm_label": "edge"
+    },
+    {
+      "label": "fixtureEdges()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_fixtureedges",
+      "community": 137,
+      "norm_label": "fixtureedges()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L50",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_main",
+      "community": 137,
+      "norm_label": "main()"
+    },
+    {
+      "label": "route()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_route",
+      "community": 137,
+      "norm_label": "route()"
+    },
+    {
+      "label": "ResponseWriter",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "responsewriter",
+      "community": 137,
+      "norm_label": "responsewriter"
+    },
+    {
+      "label": "Request",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "request",
+      "community": 137,
+      "norm_label": "request"
+    },
+    {
+      "label": "reply()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L82",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_reply",
+      "community": 137,
+      "norm_label": "reply()"
+    },
+    {
+      "label": "fieldCaps()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L87",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_fieldcaps",
+      "community": 137,
+      "norm_label": "fieldcaps()"
+    },
+    {
+      "label": "search()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L101",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_search",
+      "community": 137,
+      "norm_label": "search()"
+    },
+    {
+      "label": "wrap()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L129",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_wrap",
+      "community": 137,
+      "norm_label": "wrap()"
+    },
+    {
+      "label": "edgesPage()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L134",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_edgespage",
+      "community": 137,
+      "norm_label": "edgespage()"
+    },
+    {
+      "label": "responders()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L157",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_responders",
+      "community": 137,
+      "norm_label": "responders()"
+    },
+    {
+      "label": "hist()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L186",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_hist",
+      "community": 137,
+      "norm_label": "hist()"
+    },
+    {
+      "label": "llm()",
+      "file_type": "code",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L203",
+      "_origin": "ast",
+      "id": "testdata_fakees_main_llm",
+      "community": 137,
+      "norm_label": "llm()"
     },
     {
       "label": "cose-base.js",
@@ -6332,7 +6902,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_insertselfedges",
-      "community": 26,
+      "community": 152,
       "norm_label": "insertselfedges()"
     },
     {
@@ -6342,7 +6912,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_positionselfedges",
-      "community": 50,
+      "community": 6,
       "norm_label": "positionselfedges()"
     },
     {
@@ -6362,7 +6932,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "web_dagre_min_canonicalize",
-      "community": 32,
+      "community": 26,
       "norm_label": "canonicalize()"
     },
     {
@@ -6392,7 +6962,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "web_dagre_min_sumweights",
-      "community": 6,
+      "community": 139,
       "norm_label": "sumweights()"
     },
     {
@@ -6482,7 +7052,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_order",
-      "community": 35,
+      "community": 152,
       "norm_label": "order()"
     },
     {
@@ -6492,7 +7062,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_buildlayergraphs",
-      "community": 35,
+      "community": 152,
       "norm_label": "buildlayergraphs()"
     },
     {
@@ -6502,7 +7072,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_sweeplayergraphs",
-      "community": 35,
+      "community": 152,
       "norm_label": "sweeplayergraphs()"
     },
     {
@@ -6512,7 +7082,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "web_dagre_min_assignorder",
-      "community": 35,
+      "community": 152,
       "norm_label": "assignorder()"
     },
     {
@@ -6532,7 +7102,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_resolveconflicts",
-      "community": 1,
+      "community": 50,
       "norm_label": "resolveconflicts()"
     },
     {
@@ -6542,7 +7112,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_doresolveconflicts",
-      "community": 1,
+      "community": 50,
       "norm_label": "doresolveconflicts()"
     },
     {
@@ -6562,7 +7132,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_sortsubgraph",
-      "community": 1,
+      "community": 50,
       "norm_label": "sortsubgraph()"
     },
     {
@@ -6572,7 +7142,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_expandsubgraphs",
-      "community": 1,
+      "community": 50,
       "norm_label": "expandsubgraphs()"
     },
     {
@@ -6582,7 +7152,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_mergebarycenters",
-      "community": 1,
+      "community": 50,
       "norm_label": "mergebarycenters()"
     },
     {
@@ -6592,7 +7162,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_sort",
-      "community": 1,
+      "community": 50,
       "norm_label": "sort()"
     },
     {
@@ -6602,7 +7172,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_consumeunsortable",
-      "community": 1,
+      "community": 50,
       "norm_label": "consumeunsortable()"
     },
     {
@@ -6612,7 +7182,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_comparewithbias",
-      "community": 1,
+      "community": 50,
       "norm_label": "comparewithbias()"
     },
     {
@@ -6622,7 +7192,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "web_dagre_min_parentdummychains",
-      "community": 6,
+      "community": 32,
       "norm_label": "parentdummychains()"
     },
     {
@@ -6692,7 +7262,7 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "web_dagre_min_hasconflict",
-      "community": 1,
+      "community": 148,
       "norm_label": "hasconflict()"
     },
     {
@@ -6702,7 +7272,7 @@
       "source_location": "L296",
       "_origin": "ast",
       "id": "web_dagre_min_verticalalignment",
-      "community": 1,
+      "community": 148,
       "norm_label": "verticalalignment()"
     },
     {
@@ -6712,7 +7282,7 @@
       "source_location": "L300",
       "_origin": "ast",
       "id": "web_dagre_min_horizontalcompaction",
-      "community": 1,
+      "community": 148,
       "norm_label": "horizontalcompaction()"
     },
     {
@@ -6722,7 +7292,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "web_dagre_min_buildblockgraph",
-      "community": 1,
+      "community": 148,
       "norm_label": "buildblockgraph()"
     },
     {
@@ -6732,7 +7302,7 @@
       "source_location": "L315",
       "_origin": "ast",
       "id": "web_dagre_min_findsmallestwidthalignment",
-      "community": 139,
+      "community": 1,
       "norm_label": "findsmallestwidthalignment()"
     },
     {
@@ -6772,7 +7342,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "web_dagre_min_sep",
-      "community": 1,
+      "community": 148,
       "norm_label": "sep()"
     },
     {
@@ -6782,7 +7352,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "web_dagre_min_width",
-      "community": 139,
+      "community": 1,
       "norm_label": "width()"
     },
     {
@@ -6832,7 +7402,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "web_dagre_min_findminslackedge",
-      "community": 139,
+      "community": 1,
       "norm_label": "findminslackedge()"
     },
     {
@@ -6852,7 +7422,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "web_dagre_min_rank",
-      "community": 35,
+      "community": 152,
       "norm_label": "rank()"
     },
     {
@@ -6872,7 +7442,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "web_dagre_min_networksimplexranker",
-      "community": 35,
+      "community": 152,
       "norm_label": "networksimplexranker()"
     },
     {
@@ -6912,7 +7482,7 @@
       "source_location": "L420",
       "_origin": "ast",
       "id": "web_dagre_min_calccutvalue",
-      "community": 10,
+      "community": 6,
       "norm_label": "calccutvalue()"
     },
     {
@@ -6982,7 +7552,7 @@
       "source_location": "L438",
       "_origin": "ast",
       "id": "web_dagre_min_istreeedge",
-      "community": 10,
+      "community": 6,
       "norm_label": "istreeedge()"
     },
     {
@@ -7082,7 +7652,7 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "web_dagre_min_buildlayermatrix",
-      "community": 35,
+      "community": 152,
       "norm_label": "buildlayermatrix()"
     },
     {
@@ -7092,7 +7662,7 @@
       "source_location": "L498",
       "_origin": "ast",
       "id": "web_dagre_min_normalizeranks",
-      "community": 1,
+      "community": 148,
       "norm_label": "normalizeranks()"
     },
     {
@@ -7112,7 +7682,7 @@
       "source_location": "L500",
       "_origin": "ast",
       "id": "web_dagre_min_maxrank",
-      "community": 35,
+      "community": 152,
       "norm_label": "maxrank()"
     },
     {
@@ -7122,7 +7692,7 @@
       "source_location": "L505",
       "_origin": "ast",
       "id": "web_dagre_min_partition",
-      "community": 1,
+      "community": 50,
       "norm_label": "partition()"
     },
     {
@@ -7162,7 +7732,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_dodfs",
-      "community": 1,
+      "community": 148,
       "norm_label": "dodfs()"
     },
     {
@@ -7192,7 +7762,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_rundijkstra",
-      "community": 1,
+      "community": 24,
       "norm_label": "rundijkstra()"
     },
     {
@@ -7202,7 +7772,7 @@
       "source_location": "L547",
       "_origin": "ast",
       "id": "web_dagre_min_findcycles",
-      "community": 50,
+      "community": 32,
       "norm_label": "findcycles()"
     },
     {
@@ -7352,7 +7922,7 @@
       "source_location": "L585",
       "_origin": "ast",
       "id": "web_dagre_min_priorityqueue_add",
-      "community": 1,
+      "community": 24,
       "norm_label": ".add()"
     },
     {
@@ -7542,7 +8112,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_hasnode",
-      "community": 26,
+      "community": 32,
       "norm_label": ".hasnode()"
     },
     {
@@ -7552,7 +8122,7 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removenode",
-      "community": 50,
+      "community": 6,
       "norm_label": ".removenode()"
     },
     {
@@ -7572,7 +8142,7 @@
       "source_location": "L635",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removefromparentschildlist",
-      "community": 50,
+      "community": 6,
       "norm_label": "._removefromparentschildlist()"
     },
     {
@@ -7712,7 +8282,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_hasedge",
-      "community": 50,
+      "community": 6,
       "norm_label": ".hasedge()"
     },
     {
@@ -7722,7 +8292,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_graph_removeedge",
-      "community": 50,
+      "community": 6,
       "norm_label": ".removeedge()"
     },
     {
@@ -7772,7 +8342,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_decrementorremoveentry",
-      "community": 50,
+      "community": 1,
       "norm_label": "decrementorremoveentry()"
     },
     {
@@ -7782,7 +8352,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeargstoid",
-      "community": 50,
+      "community": 6,
       "norm_label": "edgeargstoid()"
     },
     {
@@ -7802,7 +8372,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "web_dagre_min_edgeobjtoid",
-      "community": 50,
+      "community": 6,
       "norm_label": "edgeobjtoid()"
     },
     {
@@ -7882,7 +8452,7 @@
       "source_location": "L690",
       "_origin": "ast",
       "id": "web_dagre_min_setcache",
-      "community": 1,
+      "community": 24,
       "norm_label": "setcache()"
     },
     {
@@ -7962,7 +8532,7 @@
       "source_location": "L782",
       "_origin": "ast",
       "id": "web_dagre_min_arraymap",
-      "community": 33,
+      "community": 139,
       "norm_label": "arraymap()"
     },
     {
@@ -8082,7 +8652,7 @@
       "source_location": "L928",
       "_origin": "ast",
       "id": "web_dagre_min_baseextremum",
-      "community": 139,
+      "community": 1,
       "norm_label": "baseextremum()"
     },
     {
@@ -8142,7 +8712,7 @@
       "source_location": "L999",
       "_origin": "ast",
       "id": "web_dagre_min_basegetallkeys",
-      "community": 59,
+      "community": 1,
       "norm_label": "basegetallkeys()"
     },
     {
@@ -8162,7 +8732,7 @@
       "source_location": "L1018",
       "_origin": "ast",
       "id": "web_dagre_min_basegt",
-      "community": 139,
+      "community": 1,
       "norm_label": "basegt()"
     },
     {
@@ -8172,7 +8742,7 @@
       "source_location": "L1029",
       "_origin": "ast",
       "id": "web_dagre_min_basehas",
-      "community": 1,
+      "community": 148,
       "norm_label": "basehas()"
     },
     {
@@ -8262,7 +8832,7 @@
       "source_location": "L1131",
       "_origin": "ast",
       "id": "web_dagre_min_baseisnative",
-      "community": 44,
+      "community": 1,
       "norm_label": "baseisnative()"
     },
     {
@@ -8302,7 +8872,7 @@
       "source_location": "L1167",
       "_origin": "ast",
       "id": "web_dagre_min_basekeys",
-      "community": 147,
+      "community": 134,
       "norm_label": "basekeys()"
     },
     {
@@ -8322,7 +8892,7 @@
       "source_location": "L1186",
       "_origin": "ast",
       "id": "web_dagre_min_baselt",
-      "community": 139,
+      "community": 1,
       "norm_label": "baselt()"
     },
     {
@@ -8332,7 +8902,7 @@
       "source_location": "L1194",
       "_origin": "ast",
       "id": "web_dagre_min_basemap",
-      "community": 36,
+      "community": 63,
       "norm_label": "basemap()"
     },
     {
@@ -8452,7 +9022,7 @@
       "source_location": "L1315",
       "_origin": "ast",
       "id": "web_dagre_min_baserest",
-      "community": 139,
+      "community": 1,
       "norm_label": "baserest()"
     },
     {
@@ -8472,7 +9042,7 @@
       "source_location": "L1344",
       "_origin": "ast",
       "id": "web_dagre_min_basesortby",
-      "community": 1,
+      "community": 63,
       "norm_label": "basesortby()"
     },
     {
@@ -8542,7 +9112,7 @@
       "source_location": "L1415",
       "_origin": "ast",
       "id": "web_dagre_min_cachehas",
-      "community": 1,
+      "community": 59,
       "norm_label": "cachehas()"
     },
     {
@@ -8692,7 +9262,7 @@
       "source_location": "L1555",
       "_origin": "ast",
       "id": "web_dagre_min_createassigner",
-      "community": 134,
+      "community": 1,
       "norm_label": "createassigner()"
     },
     {
@@ -8782,7 +9352,7 @@
       "source_location": "L1684",
       "_origin": "ast",
       "id": "web_dagre_min_getallkeys",
-      "community": 59,
+      "community": 1,
       "norm_label": "getallkeys()"
     },
     {
@@ -8792,7 +9362,7 @@
       "source_location": "L1692",
       "_origin": "ast",
       "id": "web_dagre_min_getallkeysin",
-      "community": 59,
+      "community": 1,
       "norm_label": "getallkeysin()"
     },
     {
@@ -8822,7 +9392,7 @@
       "source_location": "L1715",
       "_origin": "ast",
       "id": "web_dagre_min_getnative",
-      "community": 44,
+      "community": 1,
       "norm_label": "getnative()"
     },
     {
@@ -8842,7 +9412,7 @@
       "source_location": "L1769",
       "_origin": "ast",
       "id": "web_dagre_min_getvalue",
-      "community": 44,
+      "community": 1,
       "norm_label": "getvalue()"
     },
     {
@@ -8882,7 +9452,7 @@
       "source_location": "L1807",
       "_origin": "ast",
       "id": "web_dagre_min_hashdelete",
-      "community": 1,
+      "community": 148,
       "norm_label": "hashdelete()"
     },
     {
@@ -8912,7 +9482,7 @@
       "source_location": "L1841",
       "_origin": "ast",
       "id": "web_dagre_min_hashset",
-      "community": 1,
+      "community": 148,
       "norm_label": "hashset()"
     },
     {
@@ -8942,7 +9512,7 @@
       "source_location": "L1873",
       "_origin": "ast",
       "id": "web_dagre_min_initcloneobject",
-      "community": 147,
+      "community": 134,
       "norm_label": "initcloneobject()"
     },
     {
@@ -9002,7 +9572,7 @@
       "source_location": "L1927",
       "_origin": "ast",
       "id": "web_dagre_min_ismasked",
-      "community": 44,
+      "community": 1,
       "norm_label": "ismasked()"
     },
     {
@@ -9012,7 +9582,7 @@
       "source_location": "L1936",
       "_origin": "ast",
       "id": "web_dagre_min_isprototype",
-      "community": 147,
+      "community": 134,
       "norm_label": "isprototype()"
     },
     {
@@ -9332,7 +9902,7 @@
       "source_location": "L2270",
       "_origin": "ast",
       "id": "web_dagre_min_tosource",
-      "community": 44,
+      "community": 1,
       "norm_label": "tosource()"
     },
     {
@@ -9352,7 +9922,7 @@
       "source_location": "L2309",
       "_origin": "ast",
       "id": "web_dagre_min_clone",
-      "community": 50,
+      "community": 11,
       "norm_label": "clone()"
     },
     {
@@ -9362,7 +9932,7 @@
       "source_location": "L2328",
       "_origin": "ast",
       "id": "web_dagre_min_clonedeep",
-      "community": 35,
+      "community": 11,
       "norm_label": "clonedeep()"
     },
     {
@@ -9412,7 +9982,7 @@
       "source_location": "L2527",
       "_origin": "ast",
       "id": "web_dagre_min_flatten",
-      "community": 1,
+      "community": 50,
       "norm_label": "flatten()"
     },
     {
@@ -9452,7 +10022,7 @@
       "source_location": "L2637",
       "_origin": "ast",
       "id": "web_dagre_min_has",
-      "community": 1,
+      "community": 148,
       "norm_label": "has()"
     },
     {
@@ -9472,7 +10042,7 @@
       "source_location": "L2680",
       "_origin": "ast",
       "id": "web_dagre_min_identity",
-      "community": 139,
+      "community": 1,
       "norm_label": "identity()"
     },
     {
@@ -9502,7 +10072,7 @@
       "source_location": "L2833",
       "_origin": "ast",
       "id": "web_dagre_min_isempty",
-      "community": 147,
+      "community": 134,
       "norm_label": "isempty()"
     },
     {
@@ -9612,7 +10182,7 @@
       "source_location": "L3140",
       "_origin": "ast",
       "id": "web_dagre_min_last",
-      "community": 1,
+      "community": 50,
       "norm_label": "last()"
     },
     {
@@ -9642,7 +10212,7 @@
       "source_location": "L3228",
       "_origin": "ast",
       "id": "web_dagre_min_max",
-      "community": 139,
+      "community": 1,
       "norm_label": "max()"
     },
     {
@@ -9662,7 +10232,7 @@
       "source_location": "L3324",
       "_origin": "ast",
       "id": "web_dagre_min_min",
-      "community": 139,
+      "community": 1,
       "norm_label": "min()"
     },
     {
@@ -9672,7 +10242,7 @@
       "source_location": "L3347",
       "_origin": "ast",
       "id": "web_dagre_min_minby",
-      "community": 139,
+      "community": 1,
       "norm_label": "minby()"
     },
     {
@@ -9972,7 +10542,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "web_layout_base_ledge_getotherend",
-      "community": 21,
+      "community": 28,
       "norm_label": ".getotherend()"
     },
     {
@@ -9982,7 +10552,7 @@
       "source_location": "L229",
       "_origin": "ast",
       "id": "web_layout_base_ledge_getotherendingraph",
-      "community": 21,
+      "community": 28,
       "norm_label": ".getotherendingraph()"
     },
     {
@@ -10042,7 +10612,7 @@
       "source_location": "L342",
       "_origin": "ast",
       "id": "web_layout_base_lnode_getchild",
-      "community": 16,
+      "community": 28,
       "norm_label": ".getchild()"
     },
     {
@@ -10282,7 +10852,7 @@
       "source_location": "L540",
       "_origin": "ast",
       "id": "web_layout_base_lnode_scatter",
-      "community": 16,
+      "community": 28,
       "norm_label": ".scatter()"
     },
     {
@@ -10772,7 +11342,7 @@
       "source_location": "L1420",
       "_origin": "ast",
       "id": "web_layout_base_lgraphmanager_getroot",
-      "community": 16,
+      "community": 28,
       "norm_label": ".getroot()"
     },
     {
@@ -11262,7 +11832,7 @@
       "source_location": "L2679",
       "_origin": "ast",
       "id": "web_layout_base_layout_getallnodestoapplygravitation",
-      "community": 25,
+      "community": 16,
       "norm_label": ".getallnodestoapplygravitation()"
     },
     {
@@ -11382,7 +11952,7 @@
       "source_location": "L2893",
       "_origin": "ast",
       "id": "web_layout_base_layout_positionnodesrandomly",
-      "community": 16,
+      "community": 28,
       "norm_label": ".positionnodesrandomly()"
     },
     {
@@ -11392,7 +11962,7 @@
       "source_location": "L2926",
       "_origin": "ast",
       "id": "web_layout_base_layout_getflatforest",
-      "community": 16,
+      "community": 28,
       "norm_label": ".getflatforest()"
     },
     {
@@ -11722,7 +12292,7 @@
       "source_location": "L3522",
       "_origin": "ast",
       "id": "web_layout_base_fdlayout_calcgravitationalforces",
-      "community": 25,
+      "community": 16,
       "norm_label": ".calcgravitationalforces()"
     },
     {
@@ -12766,10 +13336,20 @@
       "norm_label": "current status"
     },
     {
+      "label": "Pre-push test evidence (2026-07-02 session)",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "agents_pre_push_test_evidence_2026_07_02_session",
+      "community": 49,
+      "norm_label": "pre-push test evidence (2026-07-02 session)"
+    },
+    {
       "label": "Build/test",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L56",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "agents_build_test",
       "community": 49,
@@ -12779,7 +13359,7 @@
       "label": "Docs that matter",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L65",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "agents_docs_that_matter",
       "community": 49,
@@ -12789,7 +13369,7 @@
       "label": "graphify",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L72",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "agents_graphify",
       "community": 49,
@@ -12829,7 +13409,7 @@
       "label": "Hard constraints",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L61",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "readme_hard_constraints",
       "community": 39,
@@ -12839,7 +13419,7 @@
       "label": "Limitations (read before trusting the output)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L70",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "readme_limitations_read_before_trusting_the_output",
       "community": 39,
@@ -12849,7 +13429,7 @@
       "label": "Artifact handling",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L80",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "readme_artifact_handling",
       "community": 39,
@@ -12859,7 +13439,7 @@
       "label": "Repository layout",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L87",
+      "source_location": "L88",
       "_origin": "ast",
       "id": "readme_repository_layout",
       "community": 39,
@@ -13134,6 +13714,126 @@
       "id": "docs_superpowers_specs_2026_07_01_codex_status_line_design_codex_status_line",
       "community": 144,
       "norm_label": "codex status line"
+    },
+    {
+      "label": "2026-07-02-report-browser-index-design.md",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_report_browser_index_design",
+      "community": 153,
+      "norm_label": "2026-07-02-report-browser-index-design.md"
+    },
+    {
+      "label": "Report Browser Index Design",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_report_browser_index_design_report_browser_index_design",
+      "community": 153,
+      "norm_label": "report browser index design"
+    },
+    {
+      "label": "Goal",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_report_browser_index_design_goal",
+      "community": 153,
+      "norm_label": "goal"
+    },
+    {
+      "label": "Behavior",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_report_browser_index_design_behavior",
+      "community": 153,
+      "norm_label": "behavior"
+    },
+    {
+      "label": "Scope",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_report_browser_index_design_scope",
+      "community": 153,
+      "norm_label": "scope"
+    },
+    {
+      "label": "Verification",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_report_browser_index_design_verification",
+      "community": 153,
+      "norm_label": "verification"
+    },
+    {
+      "label": "2026-07-02-scan-spinner-design.md",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_scan_spinner_design",
+      "community": 161,
+      "norm_label": "2026-07-02-scan-spinner-design.md"
+    },
+    {
+      "label": "Scan Spinner Design",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_scan_spinner_design_scan_spinner_design",
+      "community": 161,
+      "norm_label": "scan spinner design"
+    },
+    {
+      "label": "Goal",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_scan_spinner_design_goal",
+      "community": 161,
+      "norm_label": "goal"
+    },
+    {
+      "label": "Behavior",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_scan_spinner_design_behavior",
+      "community": 161,
+      "norm_label": "behavior"
+    },
+    {
+      "label": "Implementation",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_scan_spinner_design_implementation",
+      "community": 161,
+      "norm_label": "implementation"
+    },
+    {
+      "label": "Verification",
+      "file_type": "document",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "docs_superpowers_specs_2026_07_02_scan_spinner_design_verification",
+      "community": 161,
+      "norm_label": "verification"
     },
     {
       "label": "map.svg",
@@ -15330,6 +16030,113 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "cmd_defilade_progress",
+      "target": "cmd_defilade_progress_isterminal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "cmd_defilade_progress",
+      "target": "cmd_defilade_progress_startspinner",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L10",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_progress_startspinner",
+      "target": "cmd_defilade_progress_go_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L10",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_progress_startspinner",
+      "target": "cmd_defilade_progress_go_writer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/progress_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "cmd_defilade_progress_test_testspinnerwritesandclears",
+      "target": "cmd_defilade_progress_startspinner"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/scan.go",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "cmd_defilade_scan_runscan",
+      "target": "cmd_defilade_progress_startspinner"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress.go",
+      "source_location": "L42",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_progress_isterminal",
+      "target": "cmd_defilade_progress_go_writer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/scan.go",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "cmd_defilade_scan_runscan",
+      "target": "cmd_defilade_progress_isterminal"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress_test.go",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "cmd_defilade_progress_test",
+      "target": "cmd_defilade_progress_test_testspinnerwritesandclears",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/progress_test.go",
+      "source_location": "L9",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_progress_test_testspinnerwritesandclears",
+      "target": "cmd_defilade_progress_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/reconcilecmd.go",
       "source_location": "L17",
       "weight": 1.0,
@@ -15718,7 +16525,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "defilade_globalopts",
       "target": "defilade_globalopts_clientconfig",
@@ -15728,7 +16535,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0,
       "source": "defilade_globalopts",
       "target": "defilade_globalopts_fieldmap",
@@ -15768,10 +16575,21 @@
       "target": "cmd_defilade_testconnection_newtestconnectioncmd"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/root.go",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "cmd_defilade_root_newrootcmd",
+      "target": "cmd_defilade_viewcmd_newviewcmd"
+    },
+    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0,
       "context": "return_type",
       "source": "defilade_globalopts_clientconfig",
@@ -15782,7 +16600,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "defilade_globalopts_clientconfig",
@@ -15793,7 +16611,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0,
       "context": "return_type",
       "source": "defilade_globalopts_fieldmap",
@@ -15806,7 +16624,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "cmd/defilade/root.go",
-      "source_location": "L85",
+      "source_location": "L86",
       "weight": 1.0,
       "source": "defilade_globalopts_fieldmap",
       "target": "internal_escli_fieldmap_loadfieldmap"
@@ -15815,7 +16633,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_attachtemporal",
@@ -15825,7 +16643,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L252",
+      "source_location": "L256",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_cidrcontains",
@@ -15855,7 +16673,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L160",
+      "source_location": "L164",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_scopeorall",
@@ -15865,7 +16683,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L153",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_toprolelabel",
@@ -15875,7 +16693,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L233",
+      "source_location": "L237",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_writebriefingmap",
@@ -15885,7 +16703,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L215",
+      "source_location": "L219",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_writereport",
@@ -15895,7 +16713,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L198",
+      "source_location": "L202",
       "weight": 1.0,
       "source": "cmd_defilade_scan",
       "target": "cmd_defilade_scan_zerocoverage",
@@ -15939,7 +16757,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L99",
+      "source_location": "L103",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "cmd_defilade_scan_attachtemporal",
@@ -15972,7 +16790,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L67",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "cmd_defilade_scan_scopeorall",
@@ -15983,7 +16801,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L147",
+      "source_location": "L151",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "cmd_defilade_scan_toprolelabel",
@@ -15994,7 +16812,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L137",
+      "source_location": "L141",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "cmd_defilade_scan_writebriefingmap",
@@ -16005,7 +16823,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L131",
+      "source_location": "L135",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "cmd_defilade_scan_writereport",
@@ -16016,7 +16834,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L121",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "cmd_defilade_scan_zerocoverage",
@@ -16027,7 +16845,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L115",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "graph_snapshot",
@@ -16039,7 +16857,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "internal_escli_client_new"
@@ -16050,7 +16868,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L87",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "internal_score_score_score"
@@ -16061,7 +16879,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L125",
+      "source_location": "L129",
       "weight": 1.0,
       "source": "cmd_defilade_scan_runscan",
       "target": "internal_snapshot_store_save"
@@ -16070,7 +16888,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_attachtemporal",
@@ -16081,7 +16899,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L153",
+      "source_location": "L157",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_toprolelabel",
@@ -16092,7 +16910,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_attachtemporal",
@@ -16103,7 +16921,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_attachtemporal",
@@ -16114,7 +16932,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_attachtemporal",
@@ -16125,7 +16943,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_attachtemporal",
@@ -16136,7 +16954,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_attachtemporal",
@@ -16147,7 +16965,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L198",
+      "source_location": "L202",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_zerocoverage",
@@ -16159,7 +16977,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L203",
+      "source_location": "L207",
       "weight": 1.0,
       "source": "cmd_defilade_scan_zerocoverage",
       "target": "cmd_defilade_scan_cidrcontains",
@@ -16169,7 +16987,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L215",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_writereport",
@@ -16182,7 +17000,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L227",
+      "source_location": "L231",
       "weight": 1.0,
       "source": "cmd_defilade_scan_writereport",
       "target": "internal_report_html_html"
@@ -16191,7 +17009,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L233",
+      "source_location": "L237",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "cmd_defilade_scan_writebriefingmap",
@@ -16204,7 +17022,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "cmd/defilade/scan.go",
-      "source_location": "L246",
+      "source_location": "L250",
       "weight": 1.0,
       "source": "cmd_defilade_scan_writebriefingmap",
       "target": "internal_report_maphtml_htmlmap"
@@ -16271,6 +17089,230 @@
       "source_location": "L40",
       "weight": 1.0,
       "source": "cmd_defilade_testconnection_runtestconnection",
+      "target": "internal_escli_client_new"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd",
+      "target": "cmd_defilade_viewcmd_browsercommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd",
+      "target": "cmd_defilade_viewcmd_newviewcmd",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd",
+      "target": "cmd_defilade_viewcmd_writebrowserindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd",
+      "target": "defilade_browserindexentry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_newviewcmd",
+      "target": "cmd_defilade_viewcmd_browsercommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_newviewcmd",
+      "target": "cmd_defilade_viewcmd_go_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_newviewcmd",
+      "target": "cmd_defilade_viewcmd_writebrowserindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_newviewcmd",
+      "target": "internal_snapshot_diff_abs"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test_testwritebrowserindex",
+      "target": "cmd_defilade_viewcmd_writebrowserindex"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_writebrowserindex",
+      "target": "internal_escli_client_new"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd.go",
+      "source_location": "L161",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_browsercommand",
+      "target": "internal_escli_client_new"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test_testbrowsercommandlinuxusesgio",
+      "target": "cmd_defilade_viewcmd_browsercommand"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test_testbrowsercommandreportsmissinglauncher",
+      "target": "cmd_defilade_viewcmd_browsercommand"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test",
+      "target": "cmd_defilade_viewcmd_test_testbrowsercommandlinuxusesgio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test",
+      "target": "cmd_defilade_viewcmd_test_testbrowsercommandreportsmissinglauncher",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test",
+      "target": "cmd_defilade_viewcmd_test_testwritebrowserindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_viewcmd_test_testwritebrowserindex",
+      "target": "cmd_defilade_viewcmd_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L57",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_viewcmd_test_testbrowsercommandlinuxusesgio",
+      "target": "cmd_defilade_viewcmd_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L73",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "cmd_defilade_viewcmd_test_testbrowsercommandreportsmissinglauncher",
+      "target": "cmd_defilade_viewcmd_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test_testbrowsercommandlinuxusesgio",
+      "target": "internal_escli_client_new"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cmd/defilade/viewcmd_test.go",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "cmd_defilade_viewcmd_test_testbrowsercommandreportsmissinglauncher",
       "target": "internal_escli_client_new"
     },
     {
@@ -16623,7 +17665,7 @@
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_assist_client_edgeid",
-      "target": "graph_edge",
+      "target": "internal_assist_client_go_edge",
       "confidence_score": 1.0
     },
     {
@@ -16726,7 +17768,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "config_serviceclass",
@@ -16736,7 +17778,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_classforport",
@@ -16746,7 +17788,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_classlabel",
@@ -16756,7 +17798,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_isadminport",
@@ -16766,7 +17808,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L220",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_isauthedge",
@@ -16776,7 +17818,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L211",
+      "source_location": "L212",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_iscriticaldependency",
@@ -16786,7 +17828,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L173",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "internal_config_defaults",
       "target": "internal_config_defaults_servicename",
@@ -16796,7 +17838,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "internal_config_defaults_classlabel",
@@ -16840,7 +17882,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0,
       "context": "return_type",
       "source": "internal_config_defaults_classforport",
@@ -16874,7 +17916,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "internal_config_defaults_isadminport",
       "target": "internal_config_defaults_classforport",
@@ -16885,7 +17927,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L221",
+      "source_location": "L222",
       "weight": 1.0,
       "source": "internal_config_defaults_isauthedge",
       "target": "internal_config_defaults_classforport",
@@ -16896,7 +17938,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "internal/config/defaults.go",
-      "source_location": "L212",
+      "source_location": "L213",
       "weight": 1.0,
       "source": "internal_config_defaults_iscriticaldependency",
       "target": "internal_config_defaults_classforport",
@@ -18262,9 +19304,9 @@
       "source_file": "internal/escli/conn.go",
       "source_location": "L78",
       "weight": 1.0,
-      "context": "return_type",
+      "context": "parameter_type",
       "source": "escli_client_fetchedges",
-      "target": "graph_edge",
+      "target": "internal_escli_conn_go_context",
       "confidence_score": 1.0
     },
     {
@@ -18273,9 +19315,9 @@
       "source_file": "internal/escli/conn.go",
       "source_location": "L78",
       "weight": 1.0,
-      "context": "parameter_type",
+      "context": "return_type",
       "source": "escli_client_fetchedges",
-      "target": "internal_escli_conn_go_context",
+      "target": "internal_escli_conn_go_edge",
       "confidence_score": 1.0
     },
     {
@@ -18308,7 +19350,7 @@
       "weight": 1.0,
       "context": "return_type",
       "source": "internal_escli_conn_parseedgepage",
-      "target": "graph_edge",
+      "target": "internal_escli_conn_go_edge",
       "confidence_score": 1.0
     },
     {
@@ -18911,6 +19953,28 @@
       "target": "internal_escli_discover_marshal"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_fieldcaps",
+      "target": "internal_escli_discover_marshal"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L211",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_llm",
+      "target": "internal_escli_discover_marshal"
+    },
+    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/escli/discover.go",
@@ -19483,6 +20547,17 @@
       "target": "internal_escli_fieldmap_loadfieldmap"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/escli/fuzz_test.go",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "internal_escli_fuzz_test_fuzzloadfieldmap",
+      "target": "internal_escli_fieldmap_loadfieldmap"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "internal/escli/fieldmap_test.go",
@@ -19564,6 +20639,27 @@
       "context": "parameter_type",
       "source": "internal_escli_fieldmap_test_testloadfieldmapoverridemergesoverdefaults",
       "target": "internal_escli_fieldmap_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/escli/fuzz_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "internal_escli_fuzz_test",
+      "target": "internal_escli_fuzz_test_fuzzloadfieldmap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/escli/fuzz_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_escli_fuzz_test_fuzzloadfieldmap",
+      "target": "internal_escli_fuzz_test_go_f",
       "confidence_score": 1.0
     },
     {
@@ -19919,17 +21015,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "internal/graph/build.go",
-      "source_location": "L17",
-      "weight": 1.0,
-      "context": "field",
-      "source": "internal_graph_build_go_graph_model",
-      "target": "graph_edge",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "internal/graph/build.go",
@@ -20004,6 +21089,17 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/graph/build.go",
+      "source_location": "L17",
+      "weight": 1.0,
+      "context": "field",
+      "source": "internal_graph_build_go_graph_model",
+      "target": "internal_graph_build_go_edge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/graph/build.go",
       "source_location": "L19",
       "weight": 1.0,
       "context": "field",
@@ -20015,22 +21111,22 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/graph/build.go",
-      "source_location": "L83",
+      "source_location": "L29",
       "weight": 1.0,
-      "context": "return_type",
-      "source": "graph_model_directed",
-      "target": "weighteddirectedgraph",
+      "context": "parameter_type",
+      "source": "internal_graph_build_build",
+      "target": "internal_graph_build_go_edge",
       "confidence_score": 1.0
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "internal/graph/build.go",
-      "source_location": "L29",
+      "source_location": "L83",
       "weight": 1.0,
-      "context": "parameter_type",
-      "source": "internal_graph_build_build",
-      "target": "graph_edge",
+      "context": "return_type",
+      "source": "graph_model_directed",
+      "target": "weighteddirectedgraph",
       "confidence_score": 1.0
     },
     {
@@ -20436,7 +21532,7 @@
       "weight": 1.0,
       "context": "return_type",
       "source": "internal_graph_pipeline_test_synthetic",
-      "target": "graph_edge",
+      "target": "internal_graph_pipeline_test_go_edge",
       "confidence_score": 1.0
     },
     {
@@ -20872,61 +21968,6 @@
       "weight": 1.0,
       "context": "field",
       "source": "graph_snapshot",
-      "target": "graph_edge",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "internal/mapview/mapview.go",
-      "source_location": "L529",
-      "weight": 1.0,
-      "context": "return_type",
-      "source": "internal_mapview_mapview_filterfocusedges",
-      "target": "graph_edge",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "internal/snapshot/diff.go",
-      "source_location": "L108",
-      "weight": 1.0,
-      "context": "return_type",
-      "source": "internal_snapshot_diff_edgesbykey",
-      "target": "graph_edge",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "internal/snapshot/diff.go",
-      "source_location": "L138",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "internal_snapshot_diff_sortedges",
-      "target": "graph_edge",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "internal/mapview/mapview.go",
-      "source_location": "L420",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "mapview_model_bundleedges",
-      "target": "graph_edge",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "internal/snapshot/diff.go",
-      "source_location": "L39",
-      "weight": 1.0,
-      "context": "field",
-      "source": "snapshot_diff",
       "target": "graph_edge",
       "confidence_score": 1.0
     },
@@ -22235,6 +23276,28 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/mapview.go",
+      "source_location": "L420",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "mapview_model_bundleedges",
+      "target": "internal_mapview_mapview_go_edge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/mapview/mapview.go",
+      "source_location": "L529",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "internal_mapview_mapview_filterfocusedges",
+      "target": "internal_mapview_mapview_go_edge",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -22895,6 +23958,38 @@
       "source": "internal_reconcile_compare_inany",
       "target": "internal_reconcile_compare_go_prefix",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/reconcile/fuzz_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "internal_reconcile_fuzz_test",
+      "target": "internal_reconcile_fuzz_test_fuzzparsecsv",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/reconcile/fuzz_test.go",
+      "source_location": "L11",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_reconcile_fuzz_test_fuzzparsecsv",
+      "target": "internal_reconcile_fuzz_test_go_f",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/reconcile/fuzz_test.go",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "internal_reconcile_fuzz_test_fuzzparsecsv",
+      "target": "internal_reconcile_ingest_parsecsv"
     },
     {
       "relation": "contains",
@@ -24133,6 +25228,188 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "internal_score_sampled",
+      "target": "internal_score_sampled_brandesfrom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "internal_score_sampled",
+      "target": "internal_score_sampled_sampledbetweenness",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L16",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_sampledbetweenness",
+      "target": "directed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "internal_score_sampled_sampledbetweenness",
+      "target": "internal_score_sampled_brandesfrom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "target": "internal_score_sampled_sampledbetweenness"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_score_sampled_sampledbetweenness"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/score.go",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "internal_score_score_score",
+      "target": "internal_score_sampled_sampledbetweenness"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled.go",
+      "source_location": "L45",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_brandesfrom",
+      "target": "directed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test",
+      "target": "internal_score_sampled_test_chaingraph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test",
+      "target": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test",
+      "target": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L15",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "internal_score_sampled_test_chaingraph",
+      "target": "internal_score_sampled_test_go_model",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "target": "internal_score_sampled_test_chaingraph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_score_sampled_test_chaingraph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L29",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_score_sampled_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "internal_score_sampled_test_testsampledbetweennessmatchesexactwithallpivots",
+      "target": "internal_snapshot_diff_abs"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/score/sampled_test.go",
+      "source_location": "L43",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_score_sampled_test_testsampledbetweennessdeterministicandseparateschokefromleaf",
+      "target": "internal_score_sampled_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "internal/score/score.go",
       "source_location": "L83",
       "weight": 1.0,
@@ -24451,6 +25728,39 @@
       "context": "return_type",
       "source": "internal_snapshot_diff_compare",
       "target": "snapshot_diff",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/snapshot/diff.go",
+      "source_location": "L39",
+      "weight": 1.0,
+      "context": "field",
+      "source": "snapshot_diff",
+      "target": "internal_snapshot_diff_go_edge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/snapshot/diff.go",
+      "source_location": "L108",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "internal_snapshot_diff_edgesbykey",
+      "target": "internal_snapshot_diff_go_edge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "internal/snapshot/diff.go",
+      "source_location": "L138",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "internal_snapshot_diff_sortedges",
+      "target": "internal_snapshot_diff_go_edge",
       "confidence_score": 1.0
     },
     {
@@ -24804,6 +26114,423 @@
       "context": "parameter_type",
       "source": "internal_snapshot_store_test_testsaveloadroundtripandpermissions",
       "target": "internal_snapshot_store_test_go_t",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "fakees_edge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L134",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_edgespage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_fieldcaps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_fixtureedges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_hist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L203",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_reply",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L157",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_responders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_route",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_search",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L129",
+      "weight": 1.0,
+      "source": "testdata_fakees_main",
+      "target": "testdata_fakees_main_wrap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L24",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "testdata_fakees_main_fixtureedges",
+      "target": "fakees_edge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_edgespage",
+      "target": "testdata_fakees_main_fixtureedges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L59",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_route",
+      "target": "request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L59",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_route",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_route",
+      "target": "testdata_fakees_main_fieldcaps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_route",
+      "target": "testdata_fakees_main_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_route",
+      "target": "testdata_fakees_main_reply",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_route",
+      "target": "testdata_fakees_main_search",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L134",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_edgespage",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L87",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_fieldcaps",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L186",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_hist",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L203",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_llm",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L82",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_reply",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L157",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_responders",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L101",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_search",
+      "target": "responsewriter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L87",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "testdata_fakees_main_fieldcaps",
+      "target": "request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_edgespage",
+      "target": "testdata_fakees_main_reply",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_hist",
+      "target": "testdata_fakees_main_reply",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L182",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_responders",
+      "target": "testdata_fakees_main_reply",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_search",
+      "target": "testdata_fakees_main_reply",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L104",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_search",
+      "target": "testdata_fakees_main_edgespage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_search",
+      "target": "testdata_fakees_main_hist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_search",
+      "target": "testdata_fakees_main_responders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_search",
+      "target": "testdata_fakees_main_wrap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_edgespage",
+      "target": "testdata_fakees_main_wrap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_hist",
+      "target": "testdata_fakees_main_wrap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "testdata/fakees/main.go",
+      "source_location": "L182",
+      "weight": 1.0,
+      "source": "testdata_fakees_main_responders",
+      "target": "testdata_fakees_main_wrap",
       "confidence_score": 1.0
     },
     {
@@ -47326,7 +49053,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L56",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "agents_defilade_instructions_for_codex",
       "target": "agents_build_test",
@@ -47346,7 +49073,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L65",
+      "source_location": "L86",
       "weight": 1.0,
       "source": "agents_defilade_instructions_for_codex",
       "target": "agents_docs_that_matter",
@@ -47356,7 +49083,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L72",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "agents_defilade_instructions_for_codex",
       "target": "agents_graphify",
@@ -47370,6 +49097,16 @@
       "weight": 1.0,
       "source": "agents_defilade_instructions_for_codex",
       "target": "agents_hard_constraints_from_defilade_plan_md_do_not_violate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "agents_defilade_instructions_for_codex",
+      "target": "agents_pre_push_test_evidence_2026_07_02_session",
       "confidence_score": 1.0
     },
     {
@@ -47406,7 +49143,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L80",
+      "source_location": "L81",
       "weight": 1.0,
       "source": "readme_defilade",
       "target": "readme_artifact_handling",
@@ -47416,7 +49153,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "readme_defilade",
       "target": "readme_hard_constraints",
@@ -47426,7 +49163,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L70",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "readme_defilade",
       "target": "readme_limitations_read_before_trusting_the_output",
@@ -47436,7 +49173,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L87",
+      "source_location": "L88",
       "weight": 1.0,
       "source": "readme_defilade",
       "target": "readme_repository_layout",
@@ -47663,6 +49400,106 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_report_browser_index_design",
+      "target": "docs_superpowers_specs_2026_07_02_report_browser_index_design_report_browser_index_design",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_report_browser_index_design_report_browser_index_design",
+      "target": "docs_superpowers_specs_2026_07_02_report_browser_index_design_behavior",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_report_browser_index_design_report_browser_index_design",
+      "target": "docs_superpowers_specs_2026_07_02_report_browser_index_design_goal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_report_browser_index_design_report_browser_index_design",
+      "target": "docs_superpowers_specs_2026_07_02_report_browser_index_design_scope",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-report-browser-index-design.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_report_browser_index_design_report_browser_index_design",
+      "target": "docs_superpowers_specs_2026_07_02_report_browser_index_design_verification",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_scan_spinner_design",
+      "target": "docs_superpowers_specs_2026_07_02_scan_spinner_design_scan_spinner_design",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_scan_spinner_design_scan_spinner_design",
+      "target": "docs_superpowers_specs_2026_07_02_scan_spinner_design_behavior",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_scan_spinner_design_scan_spinner_design",
+      "target": "docs_superpowers_specs_2026_07_02_scan_spinner_design_goal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_scan_spinner_design_scan_spinner_design",
+      "target": "docs_superpowers_specs_2026_07_02_scan_spinner_design_implementation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/specs/2026-07-02-scan-spinner-design.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "docs_superpowers_specs_2026_07_02_scan_spinner_design_scan_spinner_design",
+      "target": "docs_superpowers_specs_2026_07_02_scan_spinner_design_verification",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -47874,5 +49711,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8d619ddcae29b53549ef928b85f2a9abea72e6c5"
+  "built_at_commit": "3ca9c530b4b5eb212f9a3da2878bc35fbf33fb3d"
 }

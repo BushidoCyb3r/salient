@@ -13,7 +13,11 @@ Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs alrea
 > reports; `reconcile` diffs a documented asset list (CSV) against observed
 > reality. Optional model-assisted analysis is available only through the explicit
 > snapshot-only `analyze` command. `diff --map` and `reconcile --map` also write
-> interactive maps with changed or contradicted terrain highlighted. The default field map is still an *unverified assumption* about how
+> interactive maps with changed or contradicted terrain highlighted. Unfocused maps
+> above 120 elements auto-condense to a ~60-element briefing overview — only
+> top-ranked terrain and the strongest dependencies stay individually visible
+> (never a complete topology); use `--focus CIDR` to re-render any enclave in
+> full detail (see `docs/MAPS.md`). The default field map is still an *unverified assumption* about how
 > Security Onion maps Zeek fields to ECS — run `discover` against your grid and record
 > ground truth in `docs/FIELDMAP.md` before trusting a scan. Wrong field maps fail
 > loudly by design.

@@ -46,7 +46,42 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
 - Edges below `--min-conns` (default 5) are hidden on the map only — never
   removed from the snapshot or the analyst report.
 - `--focus CIDR` restricts the map to one enclave when the full grid exceeds
-  the readability target (~60 elements; a warning fires above 120).
+  the readability target (~60 elements).
+
+## Automatic overview mode (broad scopes)
+
+An unfocused map that exceeds 120 elements is automatically condensed into a
+**briefing overview** near the 60-element target instead of rendering an
+unreadable wall:
+
+- subnet groups coarsen (`/24` → `/20` → `/16` → `/12` → `/8`) until at most
+  8 groups remain; if even `/8` yields more, the largest groups stay and the
+  rest merge into one "other networks" box;
+- the top 20 hosts by score rank stay individually visible; **every other
+  host — including lower-ranked servers — collapses into one "N other hosts"
+  aggregate per group**;
+- at most one gateway per group survives (observed L2 candidates win by
+  distinct-IP count);
+- only the strongest bundled edges that fit the element budget remain, with
+  edges touching top-ranked terrain kept first. Drift/reconcile-flagged nodes
+  and edges are retained ahead of everything else and are never trimmed; if
+  flagged items alone exceed the budget, a finding says how many appear only
+  in the report.
+
+The overview is a briefing product, **not a complete topology**: it never
+shows every host or dependency. The snapshot itself is untouched — re-render
+any enclave in full detail:
+
+```sh
+./bin/defilade map \
+  --snapshot defilade-data/snapshots/<timestamp>.json.gz \
+  --focus 10.10.40.0/24 \
+  --format html
+```
+
+A finding on the map states the original and reduced element counts whenever
+overview reduction ran. `--focus` maps keep the old behavior: full detail,
+with a warning above 120 elements.
 
 ## Export formats
 

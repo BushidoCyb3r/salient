@@ -89,6 +89,7 @@ type Model struct {
 	Edges    []MapEdge          `json:"edges"`
 	Findings []string           `json:"findings"`
 	Meta     graph.SnapshotMeta `json:"meta"`
+	Overview bool               `json:"overview,omitempty"` // condensed briefing overview, not a complete topology
 }
 
 // Elements returns the visible-element count checked against §8.5 targets.
@@ -159,6 +160,14 @@ func BuildReconcile(current graph.Snapshot, r reconcile.Result, assets []reconci
 
 	m := build(current, opts, flags, nil)
 
+	if m.Overview {
+		// Overview groups are coarser than the /24s ghosts key on, and
+		// per-asset ghosts would blow the element budget anyway — the
+		// findings below carry the counts; --focus recovers ghost detail.
+		appendReconcileFindings(m, r, 0)
+		return m
+	}
+
 	groupSet := make(map[string]bool, len(m.Groups))
 	for _, g := range m.Groups {
 		groupSet[g.ID] = true
@@ -188,6 +197,11 @@ func BuildReconcile(current graph.Snapshot, r reconcile.Result, assets []reconci
 		sort.Slice(m.Nodes, func(i, j int) bool { return m.Nodes[i].ID < m.Nodes[j].ID })
 	}
 
+	appendReconcileFindings(m, r, ghosted)
+	return m
+}
+
+func appendReconcileFindings(m *Model, r reconcile.Result, ghosted int) {
 	if n := len(r.DocumentedSilent); n > 0 {
 		m.Findings = append(m.Findings, fmt.Sprintf("%d documented assets produced no observed traffic (%d shown ghosted; cross-check blind spots before calling them decommissioned)", n, ghosted))
 	}
@@ -197,7 +211,6 @@ func BuildReconcile(current graph.Snapshot, r reconcile.Result, assets []reconci
 	if n := len(r.RoleContradicted); n > 0 {
 		m.Findings = append(m.Findings, fmt.Sprintf("%d hosts contradict their documented role", n))
 	}
-	return m
 }
 
 // subnetOf derives the grouping CIDR for a bare IP (IPv4 only, like regroup).
@@ -265,6 +278,17 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 
 	m.Groups = groups
 	m.findings(snap, opts)
+	sortModel(m)
+
+	// §8.5: an unfocused map beyond the hard cap is unreadable — rebuild it
+	// as a condensed briefing overview. --focus keeps full detail.
+	if opts.Focus == "" && m.Elements() > config.MapMaxElements {
+		return buildOverview(snap, opts, nodeDrift, edgeDrift, m.Elements())
+	}
+	return m
+}
+
+func sortModel(m *Model) {
 	sort.Slice(m.Nodes, func(i, j int) bool { return m.Nodes[i].ID < m.Nodes[j].ID })
 	sort.Slice(m.Edges, func(i, j int) bool {
 		a, b := m.Edges[i], m.Edges[j]
@@ -276,7 +300,6 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		}
 		return a.Class < b.Class
 	})
-	return m
 }
 
 func groupID(cidr string) string { return "g:" + cidr }
