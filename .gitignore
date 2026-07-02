@@ -1,3 +1,5 @@
 bin/
 defilade-data/
 graphify-out/cache/
+.claude/
+docs/superpowers/plans/
