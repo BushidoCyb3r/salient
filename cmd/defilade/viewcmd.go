@@ -11,19 +11,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strings"
 
 	defilade "github.com/BushidoCyb3r/defilade"
 	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 	"github.com/spf13/cobra"
 )
-
-type browserIndexEntry struct {
-	Timestamp string
-	Report    string
-	Map       string
-}
 
 const browserIndexHTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -68,48 +62,13 @@ func newViewCmd() *cobra.Command {
 }
 
 func writeBrowserIndex(dataDir string, logo []byte) (string, error) {
-	entries := map[string]*browserIndexEntry{}
-	add := func(dir, kind string) error {
-		files, err := os.ReadDir(filepath.Join(dataDir, dir))
-		if os.IsNotExist(err) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		for _, file := range files {
-			if file.IsDir() || filepath.Ext(file.Name()) != ".html" {
-				continue
-			}
-			stamp := strings.TrimSuffix(file.Name(), ".html")
-			entry := entries[stamp]
-			if entry == nil {
-				entry = &browserIndexEntry{Timestamp: stamp}
-				entries[stamp] = entry
-			}
-			link := filepath.ToSlash(filepath.Join(dir, file.Name()))
-			if kind == "report" {
-				entry.Report = link
-			} else {
-				entry.Map = link
-			}
-		}
-		return nil
-	}
-	if err := add("reports", "report"); err != nil {
-		return "", fmt.Errorf("listing reports: %w", err)
-	}
-	if err := add("maps", "map"); err != nil {
-		return "", fmt.Errorf("listing maps: %w", err)
+	entries, err := snapshot.ScanArtifacts(dataDir)
+	if err != nil {
+		return "", err
 	}
 	if len(entries) == 0 {
 		return "", errors.New("no HTML reports or maps found — run `defilade scan` first")
 	}
-	ordered := make([]browserIndexEntry, 0, len(entries))
-	for _, entry := range entries {
-		ordered = append(ordered, *entry)
-	}
-	sort.Slice(ordered, func(i, j int) bool { return ordered[i].Timestamp > ordered[j].Timestamp })
 
 	if err := os.MkdirAll(dataDir, config.OutputDirMode); err != nil {
 		return "", err
@@ -125,8 +84,8 @@ func writeBrowserIndex(dataDir string, logo []byte) (string, error) {
 	}
 	data := struct {
 		Logo    string
-		Entries []browserIndexEntry
-	}{base64.StdEncoding.EncodeToString(logo), ordered}
+		Entries []snapshot.ArtifactEntry
+	}{base64.StdEncoding.EncodeToString(logo), entries}
 	if err := template.Must(template.New("index").Parse(browserIndexHTML)).Execute(io.Writer(f), data); err != nil {
 		return "", err
 	}
