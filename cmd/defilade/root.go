@@ -51,6 +51,7 @@ to the local filesystem. No agents, no scans, no changes to the SO stack.`,
 	root.AddCommand(newReconcileCmd())
 	root.AddCommand(newAnalyzeCmd())
 	root.AddCommand(newListCmd())
+	root.AddCommand(newViewCmd())
 	return root
 }
 

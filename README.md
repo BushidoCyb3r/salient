@@ -39,6 +39,7 @@ export DEFILADE_API_KEY="<base64 id:key — see docs/DEPLOYMENT.md for read-only
 
 # Re-render or export a stored snapshot
 ./bin/defilade list
+./bin/defilade view
 ./bin/defilade report --snapshot defilade-data/snapshots/<ts>.json.gz --format graphml
 ./bin/defilade map --snapshot defilade-data/snapshots/<ts>.json.gz --format svg > map.svg
 ./bin/defilade diff --from defilade-data/snapshots/<older>.json.gz \
