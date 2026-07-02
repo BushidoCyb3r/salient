@@ -160,10 +160,10 @@ func TestOverviewRetainsTopRanksAndAggregatesRest(t *testing.T) {
 	}
 }
 
-// TestOverviewInternetHeavySnapshot mirrors the real homelab scan: a small
-// internal network plus thousands of public peers pulled in by outbound
-// traffic, with multicast/broadcast noise ranked into the top 20.
-func TestOverviewInternetHeavySnapshot(t *testing.T) {
+// largeInternetFixture mirrors the real homelab scan: a small internal
+// network plus thousands of public peers pulled in by outbound traffic,
+// with multicast/broadcast noise ranked into the top 20.
+func largeInternetFixture() graph.Snapshot {
 	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
 	var snap graph.Snapshot
 	snap.Meta = graph.SnapshotMeta{Window: "336h", ClusterName: "test"}
@@ -201,7 +201,11 @@ func TestOverviewInternetHeavySnapshot(t *testing.T) {
 			FirstSeen: t0, LastSeen: t0.Add(time.Hour),
 		})
 	}
+	return snap
+}
 
+func TestOverviewInternetHeavySnapshot(t *testing.T) {
+	snap := largeInternetFixture()
 	mm := mapview.Build(snap, mapview.Options{})
 	if !mm.Overview {
 		t.Fatal("expected overview mode")
@@ -237,6 +241,46 @@ func TestOverviewInternetHeavySnapshot(t *testing.T) {
 	}
 	if got := mm.Elements(); got > config.MapTargetElements {
 		t.Errorf("overview has %d elements, target <= %d", got, config.MapTargetElements)
+	}
+}
+
+func TestFocusPrivatePublicKeywords(t *testing.T) {
+	snap := largeInternetFixture()
+
+	// private: internal terrain only, no external group or public nodes.
+	priv := mapview.Build(snap, mapview.Options{Focus: "private"})
+	for _, g := range priv.Groups {
+		if g.ID == "g:external" {
+			t.Error("--focus private must exclude the external group")
+		}
+	}
+	for _, n := range priv.Nodes {
+		if strings.HasPrefix(n.ID, "43.") || strings.HasPrefix(n.ID, "44.") {
+			t.Errorf("--focus private leaked public node %s", n.ID)
+		}
+	}
+	found := false
+	for _, n := range priv.Nodes {
+		if n.ID == "10.10.40.1" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("--focus private must keep internal terrain")
+	}
+
+	// public: no individual internal hosts; oversized result still condenses.
+	pub := mapview.Build(snap, mapview.Options{Focus: "public"})
+	for _, n := range pub.Nodes {
+		if strings.HasPrefix(n.ID, "10.") {
+			t.Errorf("--focus public leaked internal node %s", n.ID)
+		}
+	}
+	if !pub.Overview {
+		t.Error("oversized --focus public map must still condense to an overview")
+	}
+	if got := pub.Elements(); got > config.MapTargetElements {
+		t.Errorf("--focus public overview has %d elements, target <= %d", got, config.MapTargetElements)
 	}
 }
 

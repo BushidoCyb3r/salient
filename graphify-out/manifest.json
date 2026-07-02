@@ -15,8 +15,8 @@
     "semantic_hash": "b76cfe7b1947865e6c4d7786f6824abe"
   },
   "cmd/defilade/mapcmd.go": {
-    "mtime": 1782948448.9831069,
-    "ast_hash": "14e8d73067be1afc0361c09ada8b12c0",
+    "mtime": 1783018483.1062021,
+    "ast_hash": "e3ec659a242a053059b5280fadc7030a",
     "semantic_hash": ""
   },
   "cmd/defilade/reportcmd.go": {
@@ -125,18 +125,18 @@
     "semantic_hash": "452edbc16d4ba8baead75c5097ea917e"
   },
   "internal/graph/types.go": {
-    "mtime": 1782946449.0855036,
-    "ast_hash": "8bb022d01c65042e59b14feb3ea5aa4c",
-    "semantic_hash": "8bb022d01c65042e59b14feb3ea5aa4c"
+    "mtime": 1783018319.4275863,
+    "ast_hash": "3b93e87790fd22ab0e8bc8501a4eeb0a",
+    "semantic_hash": ""
   },
   "internal/mapview/mapview.go": {
-    "mtime": 1783016742.275639,
-    "ast_hash": "ece5eaa7ab9a78ed3eb554adfa2a3e97",
+    "mtime": 1783018415.5089478,
+    "ast_hash": "bbc7bbf47b36e88f6287068768823700",
     "semantic_hash": ""
   },
   "internal/mapview/mapview_test.go": {
-    "mtime": 1783017999.5233822,
-    "ast_hash": "740e9e492a2c5c8dd171e8367afbf68a",
+    "mtime": 1783018391.3278568,
+    "ast_hash": "01a197f0ef46cd37ae14de80b0d3c0c2",
     "semantic_hash": ""
   },
   "internal/report/graphml.go": {
@@ -185,8 +185,8 @@
     "semantic_hash": "f6d3ada6bf8668750551d1eb99b17b0f"
   },
   "internal/score/score.go": {
-    "mtime": 1782988784.7162697,
-    "ast_hash": "b8dc68af6343a38dc4fbc96f97f07c95",
+    "mtime": 1783018329.6476247,
+    "ast_hash": "a1a9d94bbf1ef19c54c8658c02065396",
     "semantic_hash": ""
   },
   "internal/snapshot/store.go": {
@@ -300,8 +300,8 @@
     "semantic_hash": "ad99cfb66cf8d147a930dd9788d92c59"
   },
   "docs/MAPS.md": {
-    "mtime": 1783018038.9655309,
-    "ast_hash": "54487a598a262b188436c2caecf5483a",
+    "mtime": 1783018526.165364,
+    "ast_hash": "1855ce3347b752cfe03fce4adb79fd4e",
     "semantic_hash": ""
   },
   "internal/report/testdata/map.svg": {
@@ -310,8 +310,8 @@
     "semantic_hash": "c13f9ca3ee54ebb16a25e52f4992ed67"
   },
   "cmd/defilade/mapcmd_test.go": {
-    "mtime": 1782948532.5164227,
-    "ast_hash": "690b9c3f4febc7fdf1a6e0e1ac203354",
+    "mtime": 1783018496.9532542,
+    "ast_hash": "51a1e568dfff9c7a24b2b623173c865f",
     "semantic_hash": ""
   },
   "cmd/defilade/diffcmd.go": {
@@ -485,13 +485,18 @@
     "semantic_hash": ""
   },
   "internal/mapview/overview.go": {
-    "mtime": 1783017938.726153,
-    "ast_hash": "5ff4a5eb68646c25848305ef696de1bf",
+    "mtime": 1783018510.3753047,
+    "ast_hash": "4d3124df7489d46d547a5212c4c0d296",
     "semantic_hash": ""
   },
   "internal/mapview/overview_test.go": {
     "mtime": 1783017947.0411842,
     "ast_hash": "891e9e3b244e86f623fc74c82562f5c8",
+    "semantic_hash": ""
+  },
+  "internal/score/score_test.go": {
+    "mtime": 1783018301.1195176,
+    "ast_hash": "5d1dcb58bff7bb230637598df2ede369",
     "semantic_hash": ""
   }
 }

@@ -4,7 +4,24 @@
 // a pure function of a Snapshot.
 package graph
 
-import "time"
+import (
+	"net/netip"
+	"time"
+)
+
+// TerrainAddr reports whether an IP can be terrain: a rankable, mappable
+// host. Multicast, broadcast, and unspecified addresses are traffic
+// artifacts (DHCP, mDNS, IGMP), not hosts, no matter how much traffic
+// converges on them.
+// ponytail: only the all-ones broadcast is caught; subnet-directed
+// broadcasts (x.x.x.255) need the subnet mask, add if they show up ranked.
+func TerrainAddr(ip string) bool {
+	a, err := netip.ParseAddr(ip)
+	if err != nil {
+		return false
+	}
+	return !a.IsMulticast() && !a.IsUnspecified() && ip != "255.255.255.255"
+}
 
 // Role is an inferred host function (DEFILADE_PLAN.md §7). Gateway is
 // synthesized later by the mapview package (Phase 1.5), not here.

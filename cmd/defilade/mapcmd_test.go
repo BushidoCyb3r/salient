@@ -64,6 +64,18 @@ func TestMapCommandRejectsInvalidFocus(t *testing.T) {
 	}
 }
 
+func TestMapCommandAcceptsFocusKeywords(t *testing.T) {
+	for _, kw := range []string{"private", "public"} {
+		cmd := newMapCmd()
+		cmd.SetOut(&bytes.Buffer{})
+		cmd.SetErr(&bytes.Buffer{})
+		cmd.SetArgs([]string{"--snapshot", saveMapTestSnapshot(t), "--focus", kw, "--format", "svg"})
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("--focus %s should be accepted, got %v", kw, err)
+		}
+	}
+}
+
 func TestMapCommandRejectsInvalidGroupPrefix(t *testing.T) {
 	cmd := newMapCmd()
 	cmd.SetOut(&bytes.Buffer{})

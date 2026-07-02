@@ -40,9 +40,25 @@ func Score(m *graph.Model) Result {
 	critIn := criticalInDegree(m) // distinct critical-service clients per IP
 	spread := subnetSpread(m)     // distinct client subnets per IP
 
+	// Broadcast/multicast destinations are not terrain: they take composite
+	// 0 and are excluded from normalization so the traffic converging on
+	// them can't compress real nodes' component scores.
+	var terrain []*graph.Node
+	for _, n := range nodes {
+		if graph.TerrainAddr(n.IP) {
+			terrain = append(terrain, n)
+		} else {
+			id, _ := m.ID(n.IP)
+			n.Scores.PageRank = pr[id]
+			n.Scores.Betweenness = bw[id]
+			n.Scores.DependencyInDegree = critIn[n.IP]
+			n.Scores.Composite = 0
+		}
+	}
+
 	// Collect raw component values for min-max normalization.
 	var prVals, bwVals, critVals, spreadVals []float64
-	for _, n := range nodes {
+	for _, n := range terrain {
 		id, _ := m.ID(n.IP)
 		prVals = append(prVals, pr[id])
 		bwVals = append(bwVals, bw[id])
@@ -54,7 +70,7 @@ func Score(m *graph.Model) Result {
 	normCrit := minMax(critVals)
 	normSpread := minMax(spreadVals)
 
-	for i, n := range nodes {
+	for i, n := range terrain {
 		id, _ := m.ID(n.IP)
 		n.Scores.PageRank = pr[id]
 		n.Scores.Betweenness = bw[id]

@@ -32,9 +32,9 @@ See docs/MAPS.md for what these maps do and don't show.`,
 			if path == "" {
 				return fmt.Errorf("--snapshot is required")
 			}
-			if focus != "" {
+			if focus != "" && !mapview.FocusKeyword(focus) {
 				if _, err := netip.ParsePrefix(focus); err != nil {
-					return fmt.Errorf("invalid --focus %q: %w", focus, err)
+					return fmt.Errorf("invalid --focus %q (CIDR, private, or public): %w", focus, err)
 				}
 			}
 			if groupPrefix < 1 || groupPrefix > 32 {
@@ -83,7 +83,7 @@ See docs/MAPS.md for what these maps do and don't show.`,
 	}
 	cmd.Flags().StringVar(&path, "snapshot", "", "snapshot .json.gz to render")
 	cmd.Flags().StringVar(&format, "format", "html", "html|svg|graphml")
-	cmd.Flags().StringVar(&focus, "focus", "", "restrict the map to one CIDR")
+	cmd.Flags().StringVar(&focus, "focus", "", "restrict the map to one CIDR, or 'private'/'public' address space")
 	cmd.Flags().IntVar(&groupPrefix, "group-prefix", config.GroupPrefixV4, "subnet grouping prefix")
 	cmd.Flags().Int64Var(&minConns, "min-conns", config.MapMinConns, "hide bundled edges below this connection count")
 	return cmd

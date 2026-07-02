@@ -40,34 +40,22 @@ func internalCIDR(cidr string) bool {
 	return err == nil && p.Addr().IsPrivate()
 }
 
-// terrainAddr reports whether an IP can be individually retained terrain.
-// Multicast, broadcast, and unspecified addresses are traffic artifacts,
-// not hosts, no matter how high the scorer ranked them.
-// ponytail: only the all-ones broadcast is caught; subnet-directed
-// broadcasts (x.x.x.255) need the subnet mask, add if they show up ranked.
-func terrainAddr(ip string) bool {
-	a, err := netip.ParseAddr(ip)
-	if err != nil {
-		return false
-	}
-	return !a.IsMulticast() && !a.IsUnspecified() && ip != "255.255.255.255"
-}
-
 // buildOverview rebuilds an oversized unfocused map as a condensed briefing
 // overview (§8.5): coarse groups, the top-ranked terrain kept individually,
 // everything else aggregated, and only the strongest bundled edges that fit
 // the element budget. The snapshot stays complete — --focus recovers detail.
 func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeDrift map[rawEdgeKey]string, detailedElements int) *Model {
 	m := &Model{Meta: snap.Meta, Overview: true}
+	nodes := filterFocus(snap.Nodes, opts.Focus)
 
 	// Retention first, so group selection can prioritize the CIDRs the
 	// terrain actually lives in: overlay-marked nodes ahead of everything,
 	// then valid positive rank, IP as the tie-breaker. Multicast/broadcast
 	// artifacts are never retainable no matter their rank.
-	byIP := make(map[string]*graph.Node, len(snap.Nodes))
-	idx := make([]int, 0, len(snap.Nodes))
-	for i := range snap.Nodes {
-		byIP[snap.Nodes[i].IP] = &snap.Nodes[i]
+	byIP := make(map[string]*graph.Node, len(nodes))
+	idx := make([]int, 0, len(nodes))
+	for i := range nodes {
+		byIP[nodes[i].IP] = &nodes[i]
 		idx = append(idx, i)
 	}
 	rankLess := func(a, b *graph.Node) bool {
@@ -81,7 +69,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		return a.IP < b.IP
 	}
 	sort.Slice(idx, func(i, j int) bool {
-		a, b := &snap.Nodes[idx[i]], &snap.Nodes[idx[j]]
+		a, b := &nodes[idx[i]], &nodes[idx[j]]
 		am, bm := nodeDrift[a.IP] != "", nodeDrift[b.IP] != ""
 		if am != bm {
 			return am
@@ -91,8 +79,8 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	retained := map[string]bool{}
 	omittedMarked := 0
 	for _, i := range idx {
-		n := &snap.Nodes[i]
-		if !terrainAddr(n.IP) || len(retained) >= config.MapOverviewTopNodes {
+		n := &nodes[i]
+		if !graph.TerrainAddr(n.IP) || len(retained) >= config.MapOverviewTopNodes {
 			if nodeDrift[n.IP] != "" {
 				omittedMarked++
 			}
@@ -106,7 +94,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// briefing shows the operator's terrain, not the internet's.
 	var internal []graph.Node
 	external := false
-	for _, n := range snap.Nodes {
+	for _, n := range nodes {
 		if internalCIDR(n.Subnet) {
 			internal = append(internal, n)
 		} else {
@@ -172,7 +160,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	}
 
 	for _, i := range idx {
-		n := &snap.Nodes[i]
+		n := &nodes[i]
 		if !retained[n.IP] {
 			continue
 		}
@@ -188,7 +176,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// ":clients" ID suffix is what bundleEdges routes invisible endpoints
 	// to, so aggregates reuse it even though the label says "other hosts".
 	aggCount := map[string]int{}
-	for _, n := range snap.Nodes {
+	for _, n := range nodes {
 		if !retained[n.IP] {
 			aggCount[resolve(n.Subnet)]++
 		}

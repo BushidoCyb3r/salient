@@ -46,7 +46,10 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
 - Edges below `--min-conns` (default 5) are hidden on the map only — never
   removed from the snapshot or the analyst report.
 - `--focus CIDR` restricts the map to one enclave when the full grid exceeds
-  the readability target (~60 elements).
+  the readability target (~60 elements). `--focus private` / `--focus public`
+  restrict to private (RFC1918) or non-private address space instead of one
+  CIDR; unlike a CIDR focus, these are scope filters and still condense to an
+  overview when oversized.
 
 ## Automatic overview mode (broad scopes)
 

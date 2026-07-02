@@ -281,8 +281,9 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 	sortModel(m)
 
 	// §8.5: an unfocused map beyond the hard cap is unreadable — rebuild it
-	// as a condensed briefing overview. --focus keeps full detail.
-	if opts.Focus == "" && m.Elements() > config.MapMaxElements {
+	// as a condensed briefing overview. CIDR --focus keeps full detail;
+	// keyword focus (private/public) is a scope filter and still condenses.
+	if (opts.Focus == "" || FocusKeyword(opts.Focus)) && m.Elements() > config.MapMaxElements {
 		return buildOverview(snap, opts, nodeDrift, edgeDrift, m.Elements())
 	}
 	return m
@@ -532,17 +533,37 @@ func cidrsOverlap(a netip.Prefix, bStr string) bool {
 	return a.Overlaps(b)
 }
 
+// FocusKeyword reports whether a --focus value is an address-space keyword
+// rather than a CIDR. Keyword-focused maps are scope filters, so they still
+// condense to an overview when oversized; CIDR focus always keeps detail.
+func FocusKeyword(focus string) bool {
+	switch focus {
+	case "private", "internal", "public", "external":
+		return true
+	}
+	return false
+}
+
 func filterFocus(nodes []graph.Node, focus string) []graph.Node {
 	if focus == "" {
 		return nodes
 	}
-	p, err := netip.ParsePrefix(focus)
-	if err != nil {
-		return nodes
+	keep := func(a netip.Addr) bool { return true }
+	switch focus {
+	case "private", "internal":
+		keep = func(a netip.Addr) bool { return a.IsPrivate() }
+	case "public", "external":
+		keep = func(a netip.Addr) bool { return !a.IsPrivate() }
+	default:
+		p, err := netip.ParsePrefix(focus)
+		if err != nil {
+			return nodes
+		}
+		keep = p.Contains
 	}
 	var out []graph.Node
 	for _, n := range nodes {
-		if a, err := netip.ParseAddr(n.IP); err == nil && p.Contains(a) {
+		if a, err := netip.ParseAddr(n.IP); err == nil && keep(a) {
 			out = append(out, n)
 		}
 	}
