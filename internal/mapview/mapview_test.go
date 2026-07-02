@@ -7,6 +7,7 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/score"
+	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
 // fixture builds a real scored snapshot: DC/DNS/file server in 10.0.1.0/24,
@@ -179,6 +180,50 @@ func TestElementsCountAndDeterminism(t *testing.T) {
 	for i := range a.Nodes {
 		if a.Nodes[i].ID != b.Nodes[i].ID {
 			t.Fatalf("Build node ordering is not deterministic at index %d: %s vs %s", i, a.Nodes[i].ID, b.Nodes[i].ID)
+		}
+	}
+}
+
+func TestBuildDriftAnnotatesNodesAndCriticalEdges(t *testing.T) {
+	from := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.0.1", Subnet: "10.0.0.0/24", Scores: graph.ScoreSet{Rank: 1}},
+			{IP: "10.0.0.2", Subnet: "10.0.0.0/24", Scores: graph.ScoreSet{Rank: 2}},
+			{IP: "10.0.0.3", Subnet: "10.0.0.0/24", Scores: graph.ScoreSet{Rank: 3}},
+		},
+		Edges: []graph.Edge{{Src: "10.0.0.3", Dst: "10.0.0.1", Port: 53, ConnCount: 1}},
+	}
+	to := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.0.1", Subnet: "10.0.0.0/24", Scores: graph.ScoreSet{Rank: 7}},
+			{IP: "10.0.0.2", Subnet: "10.0.0.0/24", Scores: graph.ScoreSet{Rank: 1}},
+			{IP: "10.0.0.4", Subnet: "10.0.0.0/24", Scores: graph.ScoreSet{Rank: 2}},
+		},
+		Edges: []graph.Edge{{Src: "10.0.0.4", Dst: "10.0.0.2", Port: 445, ConnCount: 1}},
+	}
+	d := snapshot.Compare(from, to, snapshot.DiffOptions{RankDelta: 5, TopN: 2})
+	m := mapview.BuildDrift(to, d, mapview.Options{})
+	wantNodes := map[string]string{"10.0.0.1": "rank-down", "10.0.0.3": "vanished", "10.0.0.4": "new"}
+	for _, n := range m.Nodes {
+		if want, ok := wantNodes[n.ID]; ok {
+			if n.Drift != want {
+				t.Errorf("node %s drift = %q, want %q", n.ID, n.Drift, want)
+			}
+			delete(wantNodes, n.ID)
+		}
+	}
+	if len(wantNodes) != 0 {
+		t.Fatalf("drift nodes missing from map: %v", wantNodes)
+	}
+	wantEdges := map[string]bool{"new": false, "vanished": false}
+	for _, e := range m.Edges {
+		if _, ok := wantEdges[e.Drift]; ok {
+			wantEdges[e.Drift] = true
+		}
+	}
+	for state, found := range wantEdges {
+		if !found {
+			t.Errorf("missing %s drift edge", state)
 		}
 	}
 }

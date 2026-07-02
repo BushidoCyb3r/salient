@@ -11,6 +11,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
 // Tier drives the top-to-bottom briefing layout (§8.3).
@@ -63,6 +64,7 @@ type MapNode struct {
 	Inferred  bool     `json:"inferred"` // gateway synthesized without L2 evidence
 	AggCount  int      `json:"agg_count,omitempty"`
 	Evidence  []string `json:"evidence,omitempty"`
+	Drift     string   `json:"drift,omitempty"` // new, vanished, rank-up, rank-down
 }
 
 // MapEdge is a (possibly bundled) visible edge.
@@ -75,6 +77,7 @@ type MapEdge struct {
 	Hosts int     `json:"hosts"` // distinct client hosts bundled
 	Conns int64   `json:"conns"`
 	Width float64 `json:"width"`
+	Drift string  `json:"drift,omitempty"` // new or vanished
 }
 
 // Model is everything a renderer needs.
@@ -91,6 +94,43 @@ func (m *Model) Elements() int { return len(m.Groups) + len(m.Nodes) + len(m.Edg
 
 // Build derives the briefing-map model from a snapshot.
 func Build(snap graph.Snapshot, opts Options) *Model {
+	return build(snap, opts, nil, nil)
+}
+
+type rawEdgeKey struct {
+	src, dst string
+	port     uint16
+}
+
+// BuildDrift overlays Phase 2 changes on the normal briefing-map pipeline.
+func BuildDrift(current graph.Snapshot, d snapshot.Diff, opts Options) *Model {
+	nodeDrift := make(map[string]string)
+	for _, n := range d.AppearedNodes {
+		nodeDrift[n.IP] = "new"
+	}
+	for _, n := range d.DisappearedNodes {
+		nodeDrift[n.IP] = "vanished"
+		current.Nodes = append(current.Nodes, n)
+	}
+	for _, change := range d.RankChanges {
+		state := "rank-down"
+		if change.Delta > 0 {
+			state = "rank-up"
+		}
+		nodeDrift[change.IP] = state
+	}
+	edgeDrift := make(map[rawEdgeKey]string)
+	for _, e := range d.NewEdgesToTop {
+		edgeDrift[rawEdgeKey{e.Src, e.Dst, e.Port}] = "new"
+	}
+	for _, e := range d.VanishedCriticalEdges {
+		edgeDrift[rawEdgeKey{e.Src, e.Dst, e.Port}] = "vanished"
+		current.Edges = append(current.Edges, e)
+	}
+	return build(current, opts, nodeDrift, edgeDrift)
+}
+
+func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeDrift map[rawEdgeKey]string) *Model {
 	opts = opts.withDefaults()
 	m := &Model{Meta: snap.Meta}
 
@@ -107,7 +147,8 @@ func Build(snap graph.Snapshot, opts Options) *Model {
 	for i := range nodes {
 		n := &nodes[i]
 		t := tierOf(n)
-		if t == TierClient && topRole(n) == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
+		drift := nodeDrift[n.IP]
+		if drift == "" && t == TierClient && topRole(n) == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
 			aggCount[resolve(n.Subnet)]++
 			continue
 		}
@@ -116,7 +157,7 @@ func Build(snap graph.Snapshot, opts Options) *Model {
 			ID: n.IP, Group: resolve(n.Subnet), Label: nodeLabel(n),
 			Role: string(topRole(n)), Tier: t,
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
-			Evidence: evidence(n),
+			Evidence: evidence(n), Drift: drift,
 		})
 	}
 	for gid, count := range aggCount {
@@ -132,7 +173,7 @@ func Build(snap graph.Snapshot, opts Options) *Model {
 
 	// Edge bundling + noise floor (§8.5.2/4). Edges from/to aggregated
 	// clients reroute to the meta-node; endpoints outside focus drop.
-	m.bundleEdges(filterFocusEdges(snap.Edges, byIP), visible, byIP, resolve, opts.MinConns)
+	m.bundleEdges(filterFocusEdges(snap.Edges, byIP), visible, byIP, resolve, opts.MinConns, edgeDrift)
 
 	m.Groups = groups
 	m.findings(snap, opts)
@@ -288,12 +329,13 @@ func (m *Model) addGateways(snap graph.Snapshot, groups []Group, byIP map[string
 // bundleEdges merges edges by (visible-src, visible-dst, service class),
 // where an invisible endpoint resolves to its group's client meta-node.
 // Bundles whose total conns fall below minConns are dropped (noise floor).
-func (m *Model) bundleEdges(edges []graph.Edge, visible map[string]bool, byIP map[string]*graph.Node, resolve func(string) string, minConns int64) {
+func (m *Model) bundleEdges(edges []graph.Edge, visible map[string]bool, byIP map[string]*graph.Node, resolve func(string) string, minConns int64, edgeDrift map[rawEdgeKey]string) {
 	type key struct{ src, dst, class string }
 	type acc struct {
 		hosts map[string]bool
 		conns int64
 		cls   config.ServiceClass
+		drift string
 	}
 	bundles := map[key]*acc{}
 	endpoint := func(ip string) string {
@@ -319,9 +361,16 @@ func (m *Model) bundleEdges(edges []graph.Edge, visible map[string]bool, byIP ma
 		}
 		b.hosts[e.Src] = true
 		b.conns += e.ConnCount
+		if drift := edgeDrift[rawEdgeKey{e.Src, e.Dst, e.Port}]; drift != "" {
+			if b.drift != "" && b.drift != drift {
+				b.drift = "changed"
+			} else {
+				b.drift = drift
+			}
+		}
 	}
 	for k, b := range bundles {
-		if b.conns < minConns {
+		if b.conns < minConns && b.drift == "" {
 			continue
 		}
 		label := k.class
@@ -332,7 +381,7 @@ func (m *Model) bundleEdges(edges []graph.Edge, visible map[string]bool, byIP ma
 			Src: k.src, Dst: k.dst, Class: k.class,
 			Color: config.MapPalette[b.cls], Label: label,
 			Hosts: len(b.hosts), Conns: b.conns,
-			Width: 1 + math.Log1p(float64(len(b.hosts))),
+			Width: 1 + math.Log1p(float64(len(b.hosts))), Drift: b.drift,
 		})
 	}
 }

@@ -76,3 +76,18 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
    yEd-specific styling from Defilade; style after import.
 
 Both apps are offline desktop tools, so this path stays air-gap safe.
+
+## Drift-highlighted maps
+
+```sh
+defilade diff --from older.json.gz --to newer.json.gz --format html --map
+```
+
+This writes the HTML drift report and a sibling `.diff.map.html` briefing map.
+New nodes and critical edges have green borders, vanished nodes and critical
+edges are ghosted, and significant rank changes have amber borders. The
+**drift highlights** layer toggle removes these visual overrides without
+hiding the underlying terrain.
+
+Vanished nodes and edges come from the older snapshot and remain visual
+context only; the newer snapshot stays the authoritative current state.

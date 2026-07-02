@@ -70,3 +70,19 @@ func TestHTMLMapSelfContainedAndHasEvidence(t *testing.T) {
 		t.Error("HTML map loads an external resource — must be fully self-contained")
 	}
 }
+
+func TestHTMLMapRendersDriftStylesAndToggle(t *testing.T) {
+	m := mapFixture()
+	m.Nodes[0].Drift = "new"
+	m.Nodes[1].Drift = "vanished"
+	m.Edges[0].Drift = "vanished"
+	var b bytes.Buffer
+	if err := HTMLMap(&b, m); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`drift-new`, `drift-vanished`, `id="l-drift"`, `rank jump`} {
+		if !strings.Contains(b.String(), want) {
+			t.Errorf("HTML drift map missing %q", want)
+		}
+	}
+}

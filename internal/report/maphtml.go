@@ -75,11 +75,15 @@ const mapHTML = `<!DOCTYPE html>
   <label><input type="checkbox" id="l-heat"> criticality heat</label>
   <label><input type="checkbox" id="l-cov"> sensor coverage</label>
   <label><input type="checkbox" id="l-lbl" checked> edge labels</label>
+  <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
  </div>
  <h2>Legend</h2>
  {{range .Legend}}<div class="lg"><i style="background:{{.Color}}"></i>{{.Label}}</div>{{end}}
  <div class="lg" style="margin-top:6px"><i style="background:none;border-top:2px dashed #888"></i>inferred gateway</div>
  <div class="lg"><i style="background:repeating-linear-gradient(45deg,#f6e8e8,#f6e8e8 3px,#c96a6a 3px,#c96a6a 5px)"></i>blind spot (no coverage)</div>
+ <div class="lg"><i style="background:#39a85b"></i>new</div>
+ <div class="lg"><i style="background:#a8adb5"></i>vanished (ghosted)</div>
+ <div class="lg"><i style="background:#d8a02e"></i>rank jump</div>
  {{if .Findings}}<h2>Findings</h2>{{range .Findings}}<div class="finding">{{.}}</div>{{end}}{{end}}
  <h2>Evidence</h2><div id="ev">click a node</div>
 </aside></div>
@@ -90,9 +94,11 @@ const model = {{.Model}};
 const els = [];
 for (const g of model.groups) els.push({data:{id:g.id, label:g.label, blind:g.blind_spot?1:0, covered:(g.sensors&&g.sensors.length)?1:0}, classes:'grp'+(g.blind_spot?' blind':'')});
 for (const n of model.nodes) els.push({data:{id:n.id, parent:n.group||undefined, label:n.label.split('\n')[0], role:n.role, tier:n.tier,
-  comp:n.composite||0, rank:n.rank||0, gw:n.gateway?1:0, inf:n.inferred?1:0, agg:n.agg_count||0, ev:(n.evidence||[]).join('\n')}});
+  comp:n.composite||0, rank:n.rank||0, gw:n.gateway?1:0, inf:n.inferred?1:0, agg:n.agg_count||0, drift:n.drift||'', ev:(n.evidence||[]).join('\n')},
+  classes:n.drift?'drift-'+n.drift:''});
 for (let i=0;i<model.edges.length;i++){const e=model.edges[i];
-  els.push({data:{id:'e'+i, source:e.src, target:e.dst, color:e.color, width:e.width, label:e.label}});}
+  els.push({data:{id:'e'+i, source:e.src, target:e.dst, color:e.color, width:e.width, label:e.label, drift:e.drift||''},
+    classes:e.drift?'drift-'+e.drift:''});}
 
 const tierColor = {core:'#fdeee6', service:'#eaf1fb', client:'#ffffff'};
 const tierBorder = {core:'#d95f30', service:'#3d7edb', client:'#8f97a5'};
@@ -107,9 +113,16 @@ const cy = cytoscape({container: document.getElementById('cy'), elements: els, w
   {selector:'node[gw=1]', style:{shape:'diamond',height:40}},
   {selector:'node[inf=1]', style:{'border-style':'dashed'}},
   {selector:'node[agg>0]', style:{shape:'round-rectangle','border-style':'double','border-width':3}},
+  {selector:'node.drift-new', style:{'border-color':'#238b45','border-width':4}},
+  {selector:'node.drift-vanished', style:{opacity:0.3,'border-style':'dashed','border-color':'#737983'}},
+  {selector:'node.drift-rank-up,node.drift-rank-down', style:{'border-color':'#d8a02e','border-width':4}},
   {selector:'edge', style:{'curve-style':'bezier','line-color':'data(color)','target-arrow-color':'data(color)',
     'target-arrow-shape':'triangle',width:'data(width)',label:'data(label)','font-size':9,color:'#555c68',
     'text-rotation':'autorotate','text-background-color':'#fcfcfd','text-background-opacity':0.85,opacity:0.8}},
+  {selector:'edge.drift-new', style:{'line-color':'#238b45','target-arrow-color':'#238b45','line-style':'solid',opacity:1}},
+  {selector:'edge.drift-vanished', style:{'line-color':'#737983','target-arrow-color':'#737983','line-style':'dashed',opacity:0.3}},
+  {selector:'node.drift-off', style:{opacity:1,'border-width':1.6,'border-style':'solid','border-color':ele=>tierBorder[ele.data('tier')]||'#8f97a5'}},
+  {selector:'edge.drift-off', style:{opacity:0.8,'line-style':'solid','line-color':'data(color)','target-arrow-color':'data(color)'}},
  ]});
 
 const layouts = {
@@ -134,10 +147,13 @@ document.getElementById('l-cov').onchange=function(){
  cy.nodes('.grp').forEach(g=>g.style('border-color', this.checked && !g.data('covered') ? '#c96a6a' : (g.hasClass('blind')?'#c96a6a':'#b9c0cc')));};
 document.getElementById('l-lbl').onchange=function(){
  cy.edges().style('text-opacity', this.checked?1:0);};
+document.getElementById('l-drift').onchange=function(){
+ cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed').toggleClass('drift-off',!this.checked);};
 
 cy.on('tap','node:childless',e=>{const n=e.target;
  document.getElementById('ev').textContent =
   n.data('label')+'\nrole: '+n.data('role')+(n.data('rank')?'\nrank: #'+n.data('rank'):'')+
-  '\ncomposite: '+(n.data('comp')||0).toFixed(2)+(n.data('ev')?'\n\n'+n.data('ev'):'\n\n(no role evidence)');});
+  '\ncomposite: '+(n.data('comp')||0).toFixed(2)+(n.data('drift')?'\ndrift: '+n.data('drift'):'')+
+  (n.data('ev')?'\n\n'+n.data('ev'):'\n\n(no role evidence)');});
 </script>
 </body></html>`

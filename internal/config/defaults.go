@@ -58,6 +58,12 @@ const (
 	MapMaxElements        = 120  // above this, warn to use --focus
 )
 
+// Drift detection (DEFILADE_PLAN.md Phase 2).
+const (
+	DriftRankDelta = 5
+	DriftTopN      = 20
+)
+
 // MapPalette is the fixed §8.5 service-class palette, identical in every
 // product and documented in docs/MAPS.md.
 var MapPalette = map[ServiceClass]string{
