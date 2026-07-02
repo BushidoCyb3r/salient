@@ -26,6 +26,7 @@ const (
 	svgHeader          = 78
 	svgLegendH         = 60
 	svgMargin          = 24
+	svgMaxRowWidth     = 1400 // groups wrap to a new row past this width — a slide-sized canvas, not an endless ribbon
 )
 
 type svgNode struct {
@@ -46,17 +47,19 @@ func SVGMap(w io.Writer, m *mapview.Model) error {
 	}
 
 	pos := map[string]svgNode{}
-	x := float64(svgMargin)
-	groupTop := float64(svgHeader + svgMargin)
+	rowTop := float64(svgHeader + svgMargin)
 	if len(floating) > 0 {
-		groupTop += svgNodeH + float64(svgGapY)
+		rowTop += svgNodeH + float64(svgGapY)
 	}
+	x := float64(svgMargin)
+	rowH := 0.0
+	maxWidth := float64(svgMargin)
 	type groupBox struct {
 		g          mapview.Group
 		x, y, w, h float64
 	}
 	var boxes []groupBox
-	maxBottom := groupTop
+	maxBottom := rowTop
 
 	for _, g := range m.Groups {
 		nodes := nodesByGroup[g.ID]
@@ -88,6 +91,16 @@ func SVGMap(w io.Writer, m *mapview.Model) error {
 		}
 		bw := float64(cols)*(svgNodeW+svgGapX) - svgGapX + 2*svgGroupPad
 		bh := float64(rows)*(svgNodeH+svgGapY) - svgGapY + 2*svgGroupPad + 20
+
+		// Wrap to a new row once the row-width budget is exceeded — a
+		// broad-scope overview has many groups; an endless single-row
+		// ribbon is unreadable on a screen or a slide.
+		if x+bw > svgMaxRowWidth && x > svgMargin {
+			x = svgMargin
+			rowTop += rowH + svgGroupGap
+			rowH = 0
+		}
+
 		row := 0
 		for _, t := range tiers {
 			if len(t) == 0 {
@@ -97,21 +110,27 @@ func SVGMap(w io.Writer, m *mapview.Model) error {
 				pos[n.ID] = svgNode{
 					MapNode: n,
 					x:       x + svgGroupPad + float64(i)*(svgNodeW+svgGapX),
-					y:       groupTop + 20 + svgGroupPad + float64(row)*(svgNodeH+svgGapY),
+					y:       rowTop + 20 + svgGroupPad + float64(row)*(svgNodeH+svgGapY),
 				}
 			}
 			row++
 		}
-		boxes = append(boxes, groupBox{g: g, x: x, y: groupTop, w: bw, h: bh})
-		if groupTop+bh > maxBottom {
-			maxBottom = groupTop + bh
+		boxes = append(boxes, groupBox{g: g, x: x, y: rowTop, w: bw, h: bh})
+		if rowTop+bh > maxBottom {
+			maxBottom = rowTop + bh
+		}
+		if bh > rowH {
+			rowH = bh
 		}
 		x += bw + svgGroupGap
+		if x > maxWidth {
+			maxWidth = x
+		}
 	}
 	for i, n := range floating {
 		pos[n.ID] = svgNode{MapNode: n, x: float64(svgMargin) + float64(i)*(svgNodeW+svgGapX), y: float64(svgHeader + svgMargin)}
 	}
-	width := x
+	width := maxWidth
 	if width < 900 {
 		width = 900
 	}

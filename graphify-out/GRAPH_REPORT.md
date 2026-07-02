@@ -1,16 +1,16 @@
 # Graph Report - Defilade  (2026-07-02)
 
 ## Corpus Check
-- 96 files · ~169,946 words
+- 96 files · ~170,208 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1514 nodes · 3354 edges · 155 communities (60 shown, 95 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 338 edges (avg confidence: 0.72)
+- 1515 nodes · 3357 edges · 158 communities (63 shown, 95 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 339 edges (avg confidence: 0.72)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `08a0d63c`
+- Built from commit: `95262c7e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -159,14 +159,17 @@
 - [[_COMMUNITY_assocIndexOf|assocIndexOf]]
 - [[_COMMUNITY_globalOpts|globalOpts]]
 - [[_COMMUNITY_newMapCmd|newMapCmd]]
+- [[_COMMUNITY_order|order]]
 - [[_COMMUNITY_Optional model-assisted analysis|Optional model-assisted analysis]]
 - [[_COMMUNITY_isEmpty|isEmpty]]
 - [[_COMMUNITY_.removeEdge|.removeEdge]]
+- [[_COMMUNITY_baseOrderBy|baseOrderBy]]
 - [[_COMMUNITY_initCloneByTag|initCloneByTag]]
+- [[_COMMUNITY_isIterateeCall|isIterateeCall]]
+- [[_COMMUNITY_HTML|HTML]]
 - [[_COMMUNITY_GraphML|GraphML]]
 - [[_COMMUNITY_startSpinner|startSpinner]]
 - [[_COMMUNITY_DriftHTML|DriftHTML]]
-- [[_COMMUNITY_initCloneByTag|initCloneByTag]]
 - [[_COMMUNITY_Scan Spinner Design|Scan Spinner Design]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -182,8 +185,8 @@
 10. `FieldMap` - 24 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `newAnalyzeCmd()` --calls--> `Load()`  [INFERRED]
-  cmd/defilade/analyzecmd.go → internal/snapshot/store.go
+- `newAnalyzeCmd()` --calls--> `Analyze()`  [INFERRED]
+  cmd/defilade/analyzecmd.go → internal/assist/client.go
 - `newDiffCmd()` --calls--> `BuildDrift()`  [INFERRED]
   cmd/defilade/diffcmd.go → internal/mapview/mapview.go
 - `newDiffCmd()` --calls--> `DriftHTML()`  [INFERRED]
@@ -196,19 +199,19 @@
 ## Import Cycles
 - None detected.
 
-## Communities (155 total, 95 thin omitted)
+## Communities (158 total, 95 thin omitted)
 
 ### Community 0 - "Cytoscape.Min"
 Cohesion: 0.06
 Nodes (63): a(), Ao(), b(), Ba(), bc(), bl(), cs(), d() (+55 more)
 
 ### Community 1 - "Dagre.Min"
-Cohesion: 0.03
-Nodes (65): apply(), arrayIncludes(), arrayMap(), arrayPush(), assocIndexOf(), baseExtremum(), baseFindIndex(), baseFlatten() (+57 more)
+Cohesion: 0.04
+Nodes (57): apply(), arrayIncludes(), arrayPush(), assocIndexOf(), baseFindIndex(), baseFlatten(), baseGetAllKeys(), baseGt() (+49 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.26
-Nodes (8): ClusterInfo, IndexInfo, WritePrivilegeCheck, apiError(), Context, Client, RawMessage, Reader
+Cohesion: 0.21
+Nodes (11): ClusterInfo, Config, IndexInfo, WritePrivilegeCheck, apiError(), Context, Duration, Client (+3 more)
 
 ### Community 4 - "Graphify Skill"
 Cohesion: 0.08
@@ -220,11 +223,11 @@ Nodes (37): Role, Compare(), contains(), Prefix, inAny(), NormalizeRole(), uniqu
 
 ### Community 6 - "Dagre.Min"
 Cohesion: 0.15
-Nodes (44): adjust(), asNonCompoundGraph(), assignNodeIntersects(), assignOrder(), assignRankMinMax(), buildLayerGraphs(), buildLayerMatrix(), buildState() (+36 more)
+Nodes (42): addDummyNode(), adjust(), asNonCompoundGraph(), assignCutValue(), assignNodeIntersects(), assignRankMinMax(), buildBlockGraph(), calcCutValue() (+34 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.27
-Nodes (11): Model, T, mapFixture(), TestGraphMLMapGolden(), TestHTMLMapRendersDriftStylesAndToggle(), TestHTMLMapSelfContainedAndHasEvidence(), TestSVGMapGolden(), Model (+3 more)
+Cohesion: 0.25
+Nodes (12): Model, T, mapFixture(), TestGraphMLMapGolden(), TestHTMLMapRendersDriftStylesAndToggle(), TestHTMLMapSelfContainedAndHasEvidence(), TestSVGMapGolden(), TestSVGMapWrapsManyGroups() (+4 more)
 
 ### Community 9 - "Dagre.Min"
 Cohesion: 0.23
@@ -232,11 +235,11 @@ Nodes (15): attachTemporal(), cidrContains(), Client, Command, Context, Duration
 
 ### Community 10 - "Dagre.Min"
 Cohesion: 0.07
-Nodes (38): ServiceClass, Directed, degree, Evidence, RoleAssertion, RoleEvidence, ClassForPort(), ClassLabel() (+30 more)
+Nodes (39): ServiceClass, Directed, degree, Evidence, RoleAssertion, RoleEvidence, ClassForPort(), ClassLabel() (+31 more)
 
 ### Community 11 - "Dagre.Min"
-Cohesion: 0.15
-Nodes (22): arrayEach(), arrayLikeKeys(), assignMergeValue(), assignValue(), baseAssign(), baseAssignIn(), baseAssignValue(), baseClone() (+14 more)
+Cohesion: 0.16
+Nodes (22): arrayEach(), assignMergeValue(), assignValue(), baseAssign(), baseAssignIn(), baseAssignValue(), baseClone(), baseKeysIn() (+14 more)
 
 ### Community 13 - "References Update"
 Cohesion: 0.50
@@ -247,7 +250,7 @@ Cohesion: 0.14
 Nodes (33): DatasetCandidates, Client, T, jsonHandler(), newMockES(), TestCheckWritePrivilegesIndeterminateWhenSecurityAPIDenied(), TestCheckWritePrivilegesWarnsOnWritableKey(), TestDatasetCounts() (+25 more)
 
 ### Community 15 - "Layout Base"
-Cohesion: 0.21
+Cohesion: 0.19
 Nodes (10): Command, Duration, newDiscoverCmd(), runDiscover(), Command, newTestConnectionCmd(), runTestConnection(), Config (+2 more)
 
 ### Community 18 - "Testdata Map"
@@ -267,24 +270,24 @@ Cohesion: 0.26
 Nodes (7): Build(), Edge, Model, Time, mergeStrings(), Subnet(), WeightedDirectedGraph
 
 ### Community 26 - "Graph Types"
-Cohesion: 0.10
-Nodes (34): addBorderNode(), addBorderSegments(), addDummyNode(), addSubgraphConstraints(), baseHas(), buildBlockGraph(), buildLayerGraph(), buildLayoutGraph() (+26 more)
+Cohesion: 0.17
+Nodes (21): addBorderNode(), addSubgraphConstraints(), buildLayerGraph(), buildLayerGraphs(), buildLayerMatrix(), buildLayoutGraph(), buildState(), canonicalize() (+13 more)
 
 ### Community 32 - "Escli Temporal"
-Cohesion: 0.11
-Nodes (20): baseZipObject(), clone(), compareWithBias(), consumeUnsortable(), crossCount(), doResolveConflicts(), expandSubgraphs(), flatten() (+12 more)
+Cohesion: 0.20
+Nodes (5): clone(), findOtherInnerSegmentNode(), Graph(), write(), writeEdges()
 
 ### Community 33 - "Dagre.Min"
-Cohesion: 0.18
-Nodes (17): baseGet(), baseHasIn(), basePick(), basePickBy(), baseProperty(), basePropertyDeep(), baseSet(), castPath() (+9 more)
+Cohesion: 0.19
+Nodes (16): arrayLikeKeys(), baseGet(), baseHasIn(), basePick(), basePickBy(), baseProperty(), basePropertyDeep(), baseSet() (+8 more)
 
 ### Community 35 - "Graph Build"
 Cohesion: 0.16
 Nodes (16): filterFocus(), filterFocusEdges(), Edge, nodeLabel(), regroup(), buildOverview(), Model, internalCIDR() (+8 more)
 
 ### Community 36 - "Dagre.Min"
-Cohesion: 0.13
-Nodes (18): baseGetTag(), baseIsArguments(), baseIsMap(), baseIsSet(), baseIsTypedArray(), createBaseEach(), getRawTag(), hasUnicode() (+10 more)
+Cohesion: 0.11
+Nodes (24): baseGetTag(), baseIsArguments(), baseIsMap(), baseIsSet(), baseIsTypedArray(), baseKeys(), createBaseEach(), getRawTag() (+16 more)
 
 ### Community 38 - "Mapview Mapview Test"
 Cohesion: 0.26
@@ -303,12 +306,12 @@ Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
 ### Community 43 - "Dagre.Min"
-Cohesion: 0.31
-Nodes (11): appendIndex(), Time, indexPath(), List(), Load(), readIndex(), Save(), SnapshotsDir() (+3 more)
+Cohesion: 0.33
+Nodes (10): appendIndex(), Time, indexPath(), List(), readIndex(), Save(), SnapshotsDir(), T (+2 more)
 
 ### Community 44 - "Dagre.Min"
-Cohesion: 0.15
-Nodes (15): baseIsNative(), baseRange(), constant(), createRange(), getNative(), getValue(), isFunction(), isIterateeCall() (+7 more)
+Cohesion: 0.16
+Nodes (9): DagreLayout(), _typeof(), baseIsNative(), constant(), getNative(), getValue(), isFunction(), isMasked() (+1 more)
 
 ### Community 46 - "References Exports"
 Cohesion: 0.22
@@ -319,8 +322,8 @@ Cohesion: 0.22
 Nodes (8): Build/test, Current status, Defilade — instructions for Codex, Docs that matter, graphify, Hard constraints (from DEFILADE_PLAN.md — do not violate), Pre-push test evidence (2026-07-02 session), What this project is
 
 ### Community 50 - "Score Score"
-Cohesion: 0.19
-Nodes (10): doGreedyFAS(), feasibleTree(), findMinSlackEdge(), greedyFAS(), isAcyclic(), longestPath(), slack(), tightTree() (+2 more)
+Cohesion: 0.14
+Nodes (18): addBorderSegments(), components(), createRootNode(), dfs(), dfsFAS(), doGreedyFAS(), feasibleTree(), findMinSlackEdge() (+10 more)
 
 ### Community 52 - "Docs Fieldmap"
 Cohesion: 0.33
@@ -339,8 +342,8 @@ Cohesion: 0.33
 Nodes (7): esc(), Writer, GraphML(), writeData(), Model, Writer, GraphMLMap()
 
 ### Community 60 - "Dagre.Min"
-Cohesion: 0.40
-Nodes (3): filterOutLinks(), List(), unlink()
+Cohesion: 0.33
+Nodes (4): assignBucket(), filterOutLinks(), List(), unlink()
 
 ### Community 62 - "Docs Deployment"
 Cohesion: 0.40
@@ -367,8 +370,8 @@ Cohesion: 0.67
 Nodes (6): fixture(), T, golden(), TestGraphMLGolden(), TestHTMLRendersEvidenceAndBlindSpots(), TestJSONGolden()
 
 ### Community 136 - "ClassifyTemporal"
-Cohesion: 0.40
-Nodes (6): baseKeys(), baseKeysIn(), initCloneObject(), isEmpty(), isPrototype(), nativeKeysIn()
+Cohesion: 0.14
+Nodes (14): baseHas(), cacheHas(), doDfs(), edgeArgsToId(), edgeObjToId(), findCycles(), has(), hasConflict() (+6 more)
 
 ### Community 137 - "TestPipelineKnownTerrainRanksCorrectly"
 Cohesion: 0.37
@@ -383,12 +386,12 @@ Cohesion: 0.47
 Nodes (6): cloneArrayBuffer(), cloneDataView(), cloneRegExp(), cloneSymbol(), cloneTypedArray(), initCloneByTag()
 
 ### Community 140 - "feasibleTree"
-Cohesion: 0.14
-Nodes (17): assignCutValue(), calcCutValue(), decrementOrRemoveEntry(), dfsAssignLowLim(), edgeArgsToId(), edgeObjToId(), enterEdge(), exchangeEdges() (+9 more)
+Cohesion: 0.21
+Nodes (12): baseExtremum(), baseLt(), dfsAssignLowLim(), enterEdge(), exchangeEdges(), initCutValues(), initLowLimValues(), isDescendant() (+4 more)
 
 ### Community 141 - "ClassForPort"
-Cohesion: 0.20
-Nodes (8): main(), Command, newListCmd(), newReportCmd(), Command, newRootCmd(), Writer, HTML()
+Cohesion: 0.13
+Nodes (14): Command, Result, Time, newAnalyzeCmd(), T, TestAnalyzeCommandWritesProtectedArtifact(), main(), Command (+6 more)
 
 ### Community 142 - "assocIndexOf"
 Cohesion: 0.38
@@ -397,6 +400,10 @@ Nodes (8): Command, newDiffCmd(), T, Time, saveDiffSnapshot(), TestDiffCommandWr
 ### Community 143 - "globalOpts"
 Cohesion: 0.42
 Nodes (7): Command, newReconcileCmd(), T, TestReconcileCommandJSON(), TestReconcileCommandMapRequiresHTML(), TestReconcileCommandWritesProtectedHTMLAndMap(), writeAssets()
+
+### Community 145 - "order"
+Cohesion: 0.15
+Nodes (12): assignOrder(), barycenter(), baseZipObject(), cloneDeep(), crossCount(), floydWarshall(), order(), predecessorWeights() (+4 more)
 
 ### Community 146 - "Optional model-assisted analysis"
 Cohesion: 0.33
@@ -407,12 +414,20 @@ Cohesion: 0.19
 Nodes (13): Edge, Node, ScoreSet, Snapshot, SnapshotMeta, TemporalClass, TemporalProfile, Time (+5 more)
 
 ### Community 148 - ".removeEdge"
-Cohesion: 0.11
-Nodes (18): alignCoordinates(), assignBucket(), balance(), barycenter(), baseForOwn(), findOtherInnerSegmentNode(), findType1Conflicts(), findType2Conflicts() (+10 more)
+Cohesion: 0.13
+Nodes (20): alignCoordinates(), balance(), baseForOwn(), baseIteratee(), baseValues(), castFunction(), createFind(), filter() (+12 more)
+
+### Community 149 - "baseOrderBy"
+Cohesion: 0.25
+Nodes (9): arrayMap(), baseMap(), baseOrderBy(), baseToString(), baseUnary(), compareAscending(), compareMultiple(), isSymbol() (+1 more)
 
 ### Community 150 - "initCloneByTag"
-Cohesion: 0.11
-Nodes (25): Config, edgePayload, Finding, nodePayload, Result, Command, Result, Time (+17 more)
+Cohesion: 0.19
+Nodes (18): Config, edgePayload, Finding, nodePayload, Result, HandlerFunc, Analyze(), edgeID() (+10 more)
+
+### Community 151 - "isIterateeCall"
+Cohesion: 0.33
+Nodes (6): baseRange(), createAssigner(), createRange(), isIterateeCall(), toFinite(), toNumber()
 
 ### Community 153 - "GraphML"
 Cohesion: 0.33
@@ -423,8 +438,8 @@ Cohesion: 0.29
 Nodes (6): Duration, Writer, isTerminal(), startSpinner(), T, TestSpinnerWritesAndClears()
 
 ### Community 156 - "DriftHTML"
-Cohesion: 0.22
-Nodes (13): browserCommand(), Command, newViewCmd(), T, TestBrowserCommandLinuxUsesGIO(), TestBrowserCommandReportsMissingLauncher(), TestWriteBrowserIndex(), writeBrowserIndex() (+5 more)
+Cohesion: 0.29
+Nodes (9): browserCommand(), Command, newViewCmd(), T, TestBrowserCommandLinuxUsesGIO(), TestBrowserCommandReportsMissingLauncher(), TestWriteBrowserIndex(), writeBrowserIndex() (+1 more)
 
 ### Community 161 - "Scan Spinner Design"
 Cohesion: 0.33
@@ -438,11 +453,11 @@ Nodes (5): Behavior, Goal, Implementation, Scan Spinner Design, Verification
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Snapshot` connect `isEmpty` to `Graph Build`, `Dagre.Min`, `Mapview Mapview Test`, `Score`, `Dagre.Min`, `cytoscape-dagre.js`, `Dagre.Min`, `ClassForPort`, `initCloneByTag`, `Mapview Mapview`, `Dagre.Min`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **Why does `runScan()` connect `Dagre.Min` to `Dagre.Min`, `Dagre.Min`, `Layout Base`, `isEmpty`, `startSpinner`, `DriftHTML`?**
+- **Why does `Snapshot` connect `isEmpty` to `Graph Build`, `Dagre.Min`, `Mapview Mapview Test`, `Score`, `Dagre.Min`, `cytoscape-dagre.js`, `Dagre.Min`, `ClassForPort`, `initCloneByTag`, `Mapview Mapview`, `HTML`, `Dagre.Min`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `runScan()` connect `Dagre.Min` to `Community 2`, `Dagre.Min`, `Dagre.Min`, `Layout Base`, `isEmpty`, `startSpinner`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `r()` connect `Cytoscape.Min` to `Dagre.Min`?**
+- **Why does `marshal()` connect `Model` to `TestPipelineKnownTerrainRanksCorrectly`, `initCloneByTag`, `Community 7`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Are the 17 inferred relationships involving `Build()` (e.g. with `buildOverview()` and `BuildDrift()`) actually correct?**
   _`Build()` has 17 INFERRED edges - model-reasoned connections that need verification._
@@ -451,4 +466,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `Cytoscape.Min` be split into smaller, more focused modules?**
   _Cohesion score 0.06495589414595028 - nodes in this community are weakly interconnected._
 - **Should `Dagre.Min` be split into smaller, more focused modules?**
-  _Cohesion score 0.0335946248600224 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03581929965249933 - nodes in this community are weakly interconnected._

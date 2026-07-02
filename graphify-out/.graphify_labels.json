@@ -144,14 +144,17 @@
   "142": "assocIndexOf",
   "143": "globalOpts",
   "144": "newMapCmd",
+  "145": "order",
   "146": "Optional model-assisted analysis",
   "147": "isEmpty",
   "148": ".removeEdge",
+  "149": "baseOrderBy",
   "150": "initCloneByTag",
+  "151": "isIterateeCall",
+  "152": "HTML",
   "153": "GraphML",
   "154": "startSpinner",
   "155": "ReconcileHTML",
   "156": "DriftHTML",
-  "160": "initCloneByTag",
   "161": "Scan Spinner Design"
 }

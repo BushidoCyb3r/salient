@@ -2,6 +2,9 @@ package report
 
 import (
 	"bytes"
+	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -42,6 +45,34 @@ func TestSVGMapGolden(t *testing.T) {
 		t.Fatal(err)
 	}
 	golden(t, "map.svg", b.Bytes())
+}
+
+// TestSVGMapWrapsManyGroups reproduces the real overview map's SVG: six
+// subnet groups in a single row blew the canvas out to 3000+px wide, a
+// horizontal ribbon nobody can read on a slide or a screen. Groups beyond
+// a row-width budget must wrap to a new row instead of extending width
+// forever.
+func TestSVGMapWrapsManyGroups(t *testing.T) {
+	m := &mapview.Model{Meta: graph.SnapshotMeta{ClusterName: "wraptest"}}
+	for i := 0; i < 8; i++ {
+		gid := fmt.Sprintf("g:10.%d.0.0/16", i)
+		m.Groups = append(m.Groups, mapview.Group{ID: gid, CIDR: fmt.Sprintf("10.%d.0.0/16", i), Label: fmt.Sprintf("group-%d", i)})
+		m.Nodes = append(m.Nodes, mapview.MapNode{ID: fmt.Sprintf("10.%d.0.1", i), Group: gid, Label: fmt.Sprintf("host-%d", i), Tier: mapview.TierService})
+	}
+	var b bytes.Buffer
+	if err := SVGMap(&b, m); err != nil {
+		t.Fatal(err)
+	}
+	svg := b.String()
+	wRe := regexp.MustCompile(`width="(\d+)"`)
+	match := wRe.FindStringSubmatch(svg)
+	if match == nil {
+		t.Fatal("no width attribute found")
+	}
+	width, _ := strconv.Atoi(match[1])
+	if width > 1600 {
+		t.Errorf("svg width = %d, 8 groups must wrap instead of extending one endless row", width)
+	}
 }
 
 func TestGraphMLMapGolden(t *testing.T) {

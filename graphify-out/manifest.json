@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "internal/report/map_golden_test.go": {
-    "mtime": 1782986359.6447637,
-    "ast_hash": "f60e98f2b10852a4a216f57e9ae0624f",
+    "mtime": 1783019004.5361638,
+    "ast_hash": "52cf7df9cfd915ce28cf8d0826b719bc",
     "semantic_hash": ""
   },
   "internal/report/mapgraphml.go": {
@@ -175,9 +175,9 @@
     "semantic_hash": "87fdfa847726c55a816beaa4c97bd628"
   },
   "internal/report/svg.go": {
-    "mtime": 1782946449.0855036,
-    "ast_hash": "5b1730e22682d6a304e2890692fd1955",
-    "semantic_hash": "5b1730e22682d6a304e2890692fd1955"
+    "mtime": 1783019030.4452612,
+    "ast_hash": "cf22991ac04fc95236bcfe1c4fe8d657",
+    "semantic_hash": ""
   },
   "internal/report/testdata/report.json": {
     "mtime": 1782946817.4659197,
