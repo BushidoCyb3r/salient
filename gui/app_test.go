@@ -65,6 +65,17 @@ func TestLegend(t *testing.T) {
 	if got[0].Label != config.ClassLabel(config.ClassAuth) || got[0].Color == "" {
 		t.Fatalf("Legend()[0] = %#v", got[0])
 	}
+	raw, err := json.Marshal(got[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var keys map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &keys); err != nil {
+		t.Fatal(err)
+	}
+	if keys["Label"] == nil || keys["Color"] == nil || keys["label"] != nil || keys["color"] != nil {
+		t.Fatalf("LegendItem JSON keys = %v, want Label and Color", keys)
+	}
 }
 
 func writeSnapshot(t *testing.T, path string, snap graph.Snapshot) {
@@ -74,6 +85,10 @@ func writeSnapshot(t *testing.T, path string, snap graph.Snapshot) {
 		t.Fatal(err)
 	}
 	gz := gzip.NewWriter(f)
+	t.Cleanup(func() {
+		_ = gz.Close()
+		_ = f.Close()
+	})
 	if err := json.NewEncoder(gz).Encode(snap); err != nil {
 		t.Fatal(err)
 	}

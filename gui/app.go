@@ -44,8 +44,8 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 }
 
 type LegendItem struct {
-	Label string `json:"label"`
-	Color string `json:"color"`
+	Label string
+	Color string
 }
 
 func (a *App) Legend() []LegendItem {
