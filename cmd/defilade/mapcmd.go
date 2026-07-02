@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/netip"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -31,6 +32,17 @@ See docs/MAPS.md for what these maps do and don't show.`,
 			if path == "" {
 				return fmt.Errorf("--snapshot is required")
 			}
+			if focus != "" {
+				if _, err := netip.ParsePrefix(focus); err != nil {
+					return fmt.Errorf("invalid --focus %q: %w", focus, err)
+				}
+			}
+			if groupPrefix < 1 || groupPrefix > 32 {
+				return fmt.Errorf("--group-prefix must be between 1 and 32")
+			}
+			if minConns < 0 {
+				return fmt.Errorf("--min-conns must not be negative")
+			}
 			snap, err := snapshot.Load(path)
 			if err != nil {
 				return err
@@ -39,14 +51,18 @@ See docs/MAPS.md for what these maps do and don't show.`,
 				GroupPrefix: groupPrefix, MinConns: minConns, Focus: focus,
 			})
 			for _, f := range mm.Findings {
-				fmt.Fprintf(os.Stderr, "%sfinding:%s %s\n", ansiYellow, ansiReset, f)
+				fmt.Fprintf(cmd.ErrOrStderr(), "%sfinding:%s %s\n", ansiYellow, ansiReset, f)
 			}
 			w := cmd.OutOrStdout()
 			switch format {
 			case "svg":
-				return report.SVGMap(w, mm)
+				if err := report.SVGMap(w, mm); err != nil {
+					return err
+				}
 			case "graphml":
-				return report.GraphMLMap(w, mm)
+				if err := report.GraphMLMap(w, mm); err != nil {
+					return err
+				}
 			case "html":
 				out := path + ".map.html"
 				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
@@ -58,10 +74,11 @@ See docs/MAPS.md for what these maps do and don't show.`,
 					return err
 				}
 				fmt.Fprintln(w, out)
-				return nil
 			default:
 				return fmt.Errorf("unknown --format %q (html|svg|graphml)", format)
 			}
+			fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this map describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
+			return nil
 		},
 	}
 	cmd.Flags().StringVar(&path, "snapshot", "", "snapshot .json.gz to render")
