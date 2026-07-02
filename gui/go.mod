@@ -3,7 +3,7 @@ module github.com/BushidoCyb3r/defilade/gui
 go 1.26.4
 
 require (
-	github.com/BushidoCyb3r/defilade v0.0.0
+	github.com/BushidoCyb3r/defilade v0.0.0-00010101000000-000000000000
 	github.com/wailsapp/wails/v2 v2.12.0
 )
 
