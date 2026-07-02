@@ -47,7 +47,13 @@ and current status: `README.md` in this repo.
   HTML + JSON reports, `reconcile --map` flagged briefing maps with
   asset-doc segment names enriching group labels. Handing the report to a
   real supported unit's staff remains the acceptance check.
-- Next is **Phase 4 hardening** and/or live-grid validation of Phases 0-3.
+- **Phase 4** (hardening) — implemented: sampled betweenness above the 2k
+  exact limit (deterministic Brandes-Pich, flagged in the report), GitHub
+  Actions CI, cross-build memory guard. Layout-position persistence skipped
+  as the plan's nice-to-have.
+- All plan phases are implemented. Remaining work is validation, not code:
+  live-grid field-map verification and end-to-end exercise, yEd/draw.io
+  round-trip, cold-reader map test, handing reconcile output to a real unit.
 - Every field name in `internal/escli/fieldmap.go` is still `// UNVERIFIED`
   until `discover` has been run against a real homelab grid and
   `docs/FIELDMAP.md` filled in. Don't build Phase 2+ features assuming the
