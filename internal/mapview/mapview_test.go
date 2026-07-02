@@ -6,6 +6,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/defilade/internal/reconcile"
 	"github.com/BushidoCyb3r/defilade/internal/score"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
@@ -225,5 +226,52 @@ func TestBuildDriftAnnotatesNodesAndCriticalEdges(t *testing.T) {
 		if !found {
 			t.Errorf("missing %s drift edge", state)
 		}
+	}
+}
+
+func TestBuildReconcileFlagsGhostsAndLabels(t *testing.T) {
+	snap := fixture(t)
+	assets := []reconcile.Asset{
+		{IP: "10.0.1.10", Hostname: "dc01", Role: "Domain Controller", Segment: "Server VLAN"},
+		{IP: "10.0.1.11", Role: "file server"},                      // contradicted (observed DNS)
+		{IP: "10.0.1.99", Hostname: "old-nas", Role: "file server"}, // silent, group exists -> ghost
+		{IP: "10.0.99.7", Role: "database"},                         // silent, in blind-spot group -> ghost in hatched box
+		{IP: "10.0.50.7", Role: "database"},                         // silent, no group at all -> findings only
+	}
+	res := reconcile.Compare(snap, assets)
+	mm := mapview.BuildReconcile(snap, res, assets, mapview.Options{})
+
+	byID := map[string]mapview.MapNode{}
+	for _, n := range mm.Nodes {
+		byID[n.ID] = n
+	}
+	if byID["10.0.1.11"].Drift != "contradicted" {
+		t.Errorf("dns node drift = %q, want contradicted", byID["10.0.1.11"].Drift)
+	}
+	ghost, ok := byID["asset:10.0.1.99"]
+	if !ok || ghost.Drift != "silent" || ghost.Group != "g:10.0.1.0/24" {
+		t.Errorf("ghost node = %+v", ghost)
+	}
+	if blindGhost, ok := byID["asset:10.0.99.7"]; !ok || blindGhost.Group != "g:10.0.99.0/24" {
+		t.Errorf("blind-spot ghost = %+v, want it inside the hatched group", blindGhost)
+	}
+	if _, ok := byID["asset:10.0.50.7"]; ok {
+		t.Error("silent asset without any group must not be ghosted")
+	}
+	// every undocumented workstation must be flagged, not aggregated
+	if byID["10.0.2.30"].Drift != "undocumented" {
+		t.Errorf("workstation drift = %q, want undocumented", byID["10.0.2.30"].Drift)
+	}
+	var serverGroup mapview.Group
+	for _, g := range mm.Groups {
+		if g.CIDR == "10.0.1.0/24" {
+			serverGroup = g
+		}
+	}
+	if serverGroup.Label != "10.0.1.0/24 — Server VLAN" {
+		t.Errorf("group label = %q, want segment enrichment", serverGroup.Label)
+	}
+	if len(mm.Findings) < 3 {
+		t.Errorf("findings = %v, want silent/undocumented/contradicted counts", mm.Findings)
 	}
 }

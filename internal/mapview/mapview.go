@@ -11,6 +11,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/defilade/internal/reconcile"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
@@ -25,9 +26,10 @@ const (
 
 // Options tune map derivation; zero values take config defaults.
 type Options struct {
-	GroupPrefix int    // subnet grouping prefix (default /24)
-	MinConns    int64  // §8.5 noise floor for briefing edges
-	Focus       string // optional CIDR: keep only groups intersecting it
+	GroupPrefix int               // subnet grouping prefix (default /24)
+	MinConns    int64             // §8.5 noise floor for briefing edges
+	Focus       string            // optional CIDR: keep only groups intersecting it
+	GroupLabels map[string]string // CIDR → human name (§8.2 asset-doc enrichment)
 }
 
 func (o Options) withDefaults() Options {
@@ -130,12 +132,98 @@ func BuildDrift(current graph.Snapshot, d snapshot.Diff, opts Options) *Model {
 	return build(current, opts, nodeDrift, edgeDrift)
 }
 
+// BuildReconcile overlays Phase 3 doc-vs-reality flags: undocumented hosts
+// red-outlined, role contradictions badged, documented-but-silent assets
+// ghosted into their subnet group. Asset segment names enrich group labels.
+// ponytail: reuses the Drift flag channel for reconcile states — one string
+// field drives all map highlight classes; split into a second field if the
+// two overlay kinds ever need to coexist on one map.
+func BuildReconcile(current graph.Snapshot, r reconcile.Result, assets []reconcile.Asset, opts Options) *Model {
+	opts = opts.withDefaults()
+	flags := make(map[string]string)
+	for _, n := range r.ObservedUndocumented {
+		flags[n.IP] = "undocumented"
+	}
+	for _, c := range r.RoleContradicted {
+		flags[c.IP] = "contradicted"
+	}
+	if opts.GroupLabels == nil {
+		opts.GroupLabels = map[string]string{}
+	}
+	for _, a := range assets {
+		cidr := subnetOf(a.IP, opts.GroupPrefix)
+		if a.Segment != "" && cidr != "" && opts.GroupLabels[cidr] == "" {
+			opts.GroupLabels[cidr] = a.Segment
+		}
+	}
+
+	m := build(current, opts, flags, nil)
+
+	groupSet := make(map[string]bool, len(m.Groups))
+	for _, g := range m.Groups {
+		groupSet[g.ID] = true
+	}
+	ghosted := 0
+	for _, s := range r.DocumentedSilent {
+		gid := groupID(subnetOf(s.IP, opts.GroupPrefix))
+		if !groupSet[gid] {
+			continue // no observed subnet to place it in; the findings list covers it
+		}
+		label := s.IP
+		if s.Hostname != "" {
+			label = s.Hostname + "\n" + s.IP
+		}
+		note := "documented but silent in the observation window"
+		if s.InBlindSpot {
+			note += " — inside a possible sensor blind spot; verify coverage before calling it decommissioned"
+		}
+		m.Nodes = append(m.Nodes, MapNode{
+			ID: "asset:" + s.IP, Group: gid, Label: label,
+			Role: "Documented", Tier: TierClient, Drift: "silent",
+			Evidence: []string{note},
+		})
+		ghosted++
+	}
+	if ghosted > 0 {
+		sort.Slice(m.Nodes, func(i, j int) bool { return m.Nodes[i].ID < m.Nodes[j].ID })
+	}
+
+	if n := len(r.DocumentedSilent); n > 0 {
+		m.Findings = append(m.Findings, fmt.Sprintf("%d documented assets produced no observed traffic (%d shown ghosted; cross-check blind spots before calling them decommissioned)", n, ghosted))
+	}
+	if n := len(r.ObservedUndocumented); n > 0 {
+		m.Findings = append(m.Findings, fmt.Sprintf("%d observed hosts are not in the asset list", n))
+	}
+	if n := len(r.RoleContradicted); n > 0 {
+		m.Findings = append(m.Findings, fmt.Sprintf("%d hosts contradict their documented role", n))
+	}
+	return m
+}
+
+// subnetOf derives the grouping CIDR for a bare IP (IPv4 only, like regroup).
+func subnetOf(ip string, prefix int) string {
+	a, err := netip.ParseAddr(ip)
+	if err != nil || a.Is6() {
+		return ""
+	}
+	p, err := a.Prefix(prefix)
+	if err != nil {
+		return ""
+	}
+	return p.String()
+}
+
 func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeDrift map[rawEdgeKey]string) *Model {
 	opts = opts.withDefaults()
 	m := &Model{Meta: snap.Meta}
 
 	nodes := filterFocus(snap.Nodes, opts.Focus)
 	groups, resolve := groupNodes(nodes, opts.GroupPrefix)
+	for i := range groups {
+		if lbl := opts.GroupLabels[groups[i].CIDR]; lbl != "" && groups[i].CIDR != "" {
+			groups[i].Label = groups[i].CIDR + " — " + lbl
+		}
+	}
 	byIP := make(map[string]*graph.Node, len(nodes))
 	for i := range nodes {
 		byIP[nodes[i].IP] = &nodes[i]

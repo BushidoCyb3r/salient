@@ -91,3 +91,21 @@ hiding the underlying terrain.
 
 Vanished nodes and edges come from the older snapshot and remain visual
 context only; the newer snapshot stays the authoritative current state.
+
+## Reconciliation-flagged maps
+
+```sh
+defilade reconcile --snapshot snap.json.gz --assets assets.csv --format html --map
+```
+
+This writes the doc-vs-reality report and a sibling `.reconcile.map.html`
+briefing map. Observed-but-undocumented hosts get red borders, hosts
+contradicting their documented role get amber double borders, and
+documented-but-silent assets are ghosted into their subnet group — including
+inside hatched blind-spot boxes, where "silent" may just mean "unobserved".
+Asset-list VLAN/segment names enrich the subnet-group labels.
+
+The asset CSV is parsed forgivingly: header names are autodetected
+(ip/address, host/name, role/function, vlan/segment/site), quoting is lazy,
+and rows without a parseable IP are skipped with a warning instead of
+failing the run.

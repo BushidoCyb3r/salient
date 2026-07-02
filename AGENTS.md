@@ -42,8 +42,12 @@ and current status: `README.md` in this repo.
   explicit `--allow-network-data-egress` acknowledgement.
 - The working tree also contains expected Graphify integration/output. Inspect
   `git status` before editing and do not discard or overwrite unrelated changes.
-- Next implementation phase is **Phase 3 reconciliation** unless live-grid
-  validation is available first.
+- **Phase 3** (reconciliation) — implemented: forgiving CSV asset-list
+  ingest, documented-silent/observed-undocumented/role-contradicted lists,
+  HTML + JSON reports, `reconcile --map` flagged briefing maps with
+  asset-doc segment names enriching group labels. Handing the report to a
+  real supported unit's staff remains the acceptance check.
+- Next is **Phase 4 hardening** and/or live-grid validation of Phases 0-3.
 - Every field name in `internal/escli/fieldmap.go` is still `// UNVERIFIED`
   until `discover` has been run against a real homelab grid and
   `docs/FIELDMAP.md` filled in. Don't build Phase 2+ features assuming the

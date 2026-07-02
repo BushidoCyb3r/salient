@@ -82,8 +82,9 @@ const mapHTML = `<!DOCTYPE html>
  <div class="lg" style="margin-top:6px"><i style="background:none;border-top:2px dashed #888"></i>inferred gateway</div>
  <div class="lg"><i style="background:repeating-linear-gradient(45deg,#f6e8e8,#f6e8e8 3px,#c96a6a 3px,#c96a6a 5px)"></i>blind spot (no coverage)</div>
  <div class="lg"><i style="background:#39a85b"></i>new</div>
- <div class="lg"><i style="background:#a8adb5"></i>vanished (ghosted)</div>
- <div class="lg"><i style="background:#d8a02e"></i>rank jump</div>
+ <div class="lg"><i style="background:#a8adb5"></i>vanished / silent (ghosted)</div>
+ <div class="lg"><i style="background:#d8a02e"></i>rank jump / role contradicted</div>
+ <div class="lg"><i style="background:#c0392b"></i>undocumented</div>
  {{if .Findings}}<h2>Findings</h2>{{range .Findings}}<div class="finding">{{.}}</div>{{end}}{{end}}
  <h2>Evidence</h2><div id="ev">click a node</div>
 </aside></div>
@@ -116,6 +117,9 @@ const cy = cytoscape({container: document.getElementById('cy'), elements: els, w
   {selector:'node.drift-new', style:{'border-color':'#238b45','border-width':4}},
   {selector:'node.drift-vanished', style:{opacity:0.3,'border-style':'dashed','border-color':'#737983'}},
   {selector:'node.drift-rank-up,node.drift-rank-down', style:{'border-color':'#d8a02e','border-width':4}},
+  {selector:'node.drift-undocumented', style:{'border-color':'#c0392b','border-width':4}},
+  {selector:'node.drift-silent', style:{opacity:0.35,'border-style':'dashed','border-color':'#737983'}},
+  {selector:'node.drift-contradicted', style:{'border-color':'#d8a02e','border-width':4,'border-style':'double'}},
   {selector:'edge', style:{'curve-style':'bezier','line-color':'data(color)','target-arrow-color':'data(color)',
     'target-arrow-shape':'triangle',width:'data(width)',label:'data(label)','font-size':9,color:'#555c68',
     'text-rotation':'autorotate','text-background-color':'#fcfcfd','text-background-opacity':0.85,opacity:0.8}},
@@ -148,7 +152,7 @@ document.getElementById('l-cov').onchange=function(){
 document.getElementById('l-lbl').onchange=function(){
  cy.edges().style('text-opacity', this.checked?1:0);};
 document.getElementById('l-drift').onchange=function(){
- cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed').toggleClass('drift-off',!this.checked);};
+ cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed,.drift-undocumented,.drift-silent,.drift-contradicted').toggleClass('drift-off',!this.checked);};
 
 cy.on('tap','node:childless',e=>{const n=e.target;
  document.getElementById('ev').textContent =

@@ -6,16 +6,17 @@
 
 Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs already aggregated on a Security Onion manager and produces a typed dependency graph, a ranked key-cyber-terrain report with evidence attached to every ranking, briefing-ready network maps, drift detection between snapshots, and a doc-vs-reality reconciliation report. Primary use case: CPT/hunt-team terrain familiarization in the first 72 hours on an unfamiliar network.
 
-> **Project status: Phase 2 implemented; live-grid validation pending.** `scan` aggregates the window
+> **Project status: Phase 3 implemented; live-grid validation pending.** `scan` aggregates the window
 > server-side, builds and scores the dependency graph, and writes a snapshot,
 > analyst report, and briefing map. Stored snapshots can also be rendered offline as
 > HTML, SVG, or GraphML; `diff` compares snapshots and emits HTML or JSON drift
-> reports. Optional model-assisted analysis is available only through the explicit
-> snapshot-only `analyze` command. `diff --map` also writes an interactive map with
-> new, vanished, and rank-changing terrain highlighted. The default field map is still an *unverified assumption* about how
+> reports; `reconcile` diffs a documented asset list (CSV) against observed
+> reality. Optional model-assisted analysis is available only through the explicit
+> snapshot-only `analyze` command. `diff --map` and `reconcile --map` also write
+> interactive maps with changed or contradicted terrain highlighted. The default field map is still an *unverified assumption* about how
 > Security Onion maps Zeek fields to ECS — run `discover` against your grid and record
 > ground truth in `docs/FIELDMAP.md` before trusting a scan. Wrong field maps fail
-> loudly by design. Reconciliation is not built yet.
+> loudly by design.
 
 ## 60-second quickstart
 
@@ -42,6 +43,10 @@ export DEFILADE_API_KEY="<base64 id:key — see docs/DEPLOYMENT.md for read-only
 ./bin/defilade map --snapshot defilade-data/snapshots/<ts>.json.gz --format svg > map.svg
 ./bin/defilade diff --from defilade-data/snapshots/<older>.json.gz \
     --to defilade-data/snapshots/<newer>.json.gz --format html --map
+
+# Reconcile the supported unit's asset list against observed reality
+./bin/defilade reconcile --snapshot defilade-data/snapshots/<ts>.json.gz \
+    --assets unit-assets.csv --format html --map
 
 # Optional: analyze a stored snapshot with a local compatible endpoint
 ./bin/defilade analyze --snapshot defilade-data/snapshots/<ts>.json.gz \
@@ -84,10 +89,11 @@ of the network it describes.
 See `DEFILADE_PLAN.md` for the full architecture and phased plan. Current tree:
 
 ```
-cmd/defilade/          CLI (cobra): test-connection, discover, scan, report, map, diff, analyze, list
+cmd/defilade/          CLI (cobra): test-connection, discover, scan, report, map, diff, reconcile, analyze, list
 internal/config/       every tunable default — no magic numbers inline
 internal/escli/        read-only ES client, FieldMap, query builders
 internal/mapview/      subnet grouping, gateway inference, map simplification
+internal/reconcile/    asset-list ingest and doc-vs-reality comparison
 internal/report/       analyst reports and HTML/SVG/GraphML map renderers
 docs/DEPLOYMENT.md     read-only API key + so-firewall allow-list steps
 docs/FIELDMAP.md       field-map verification worksheet (Phase 0 output)
