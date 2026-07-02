@@ -10,8 +10,9 @@ import (
 // Environment variable names. Auth material goes through the environment,
 // never shell history.
 const (
-	EnvESURL  = "DEFILADE_ES_URL"
-	EnvAPIKey = "DEFILADE_API_KEY"
+	EnvESURL        = "DEFILADE_ES_URL"
+	EnvAPIKey       = "DEFILADE_API_KEY"
+	EnvAssistAPIKey = "DEFILADE_AI_API_KEY"
 )
 
 // Elasticsearch client defaults.
@@ -35,6 +36,15 @@ const (
 	OutputDirMode  = 0o700
 	OutputFileMode = 0o600
 	DataDirName    = "defilade-data"
+)
+
+// Optional snapshot analysis. This path is never used unless the operator
+// explicitly invokes `analyze`.
+const (
+	AssistMaxNodes         = 100
+	AssistMaxEdges         = 500
+	AssistMaxResponseBytes = 4 << 20
+	AssistTimeout          = 90 * time.Second
 )
 
 // Scan defaults.
