@@ -3,15 +3,19 @@ PKG     := ./cmd/defilade
 GO      ?= go
 WAILS   ?= wails
 LDFLAGS := -s -w
-GUI_TAGS := $(if $(filter linux,$(shell $(GO) env GOOS)),-tags webkit2_41)
+GOOS    ?= $(shell $(GO) env GOOS)
+GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
 
-.PHONY: build gui test lint cross clean integration
+.PHONY: build gui gui-test test lint cross clean integration
 
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
 
 gui:
 	cd gui && $(WAILS) build $(GUI_TAGS)
+
+gui-test:
+	cd gui && $(GO) test ./...
 
 test:
 	$(GO) test -race ./...
@@ -36,4 +40,4 @@ integration: build
 		./bin/$(BINARY) discover $(if $(CA_CERT),--ca-cert $(CA_CERT))
 
 clean:
-	rm -rf bin
+	rm -rf bin gui/build/bin
