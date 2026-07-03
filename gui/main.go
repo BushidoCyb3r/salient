@@ -19,6 +19,11 @@ func main() {
 	app := NewApp()
 
 	appMenu := menu.NewMenu()
+	// Without an Edit menu, macOS has no menu item bound to Cmd+C/Cmd+V/etc,
+	// so keyboard paste into the connect form's inputs silently does
+	// nothing. EditMenu() wires the standard Cut/Copy/Paste/Select All/
+	// Undo/Redo roles to the OS's native handlers.
+	appMenu.Append(menu.EditMenu())
 	fileMenu := appMenu.AddSubmenu("File")
 	fileMenu.AddText("Open Snapshot...", keys.CmdOrCtrl("o"), func(_ *menu.CallbackData) {
 		path, err := runtime.OpenFileDialog(app.ctx, runtime.OpenDialogOptions{
