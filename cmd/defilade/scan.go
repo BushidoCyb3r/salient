@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -42,7 +41,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 	out := cmd.OutOrStdout()
 	errOut := cmd.ErrOrStderr()
 
-	cfg, err := opts.clientConfig(os.Stderr)
+	cfg, err := opts.clientConfig(cmd.ErrOrStderr())
 	if err != nil {
 		return err
 	}

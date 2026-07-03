@@ -3,7 +3,9 @@
 **Status: UNVERIFIED.** Every value in `internal/escli/fieldmap.go` is an assumption.
 Run `defilade discover` and `defilade test-connection` against the homelab grid,
 record ground truth here, then update the default `FieldMap` and delete the
-`// UNVERIFIED` markers. No Phase 1 query code before this table is filled in.
+`// UNVERIFIED` markers. The query code (Phases 1–4) is implemented against these
+assumed names; wrong names fail loudly (`ErrZeroBuckets`) rather than silently, so
+a scan is only trustworthy once this table is filled in and the defaults match.
 
 ## Verified mappings
 

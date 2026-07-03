@@ -54,6 +54,9 @@ func SensorsQuery(fm FieldMap, window time.Duration, termsSize int) (string, err
 func MACCoverageQuery(fm FieldMap, window time.Duration) (string, error) {
 	q := map[string]any{
 		"size": 0,
+		// ES caps hits.total at 10,000 by default; this total is the
+		// denominator of the coverage percentages, so it must be exact.
+		"track_total_hits": true,
 		"query": map[string]any{
 			"bool": map[string]any{
 				"filter": []any{

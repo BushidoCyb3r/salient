@@ -23,7 +23,15 @@ $('connform').addEventListener('submit', async (e) => {
     $('s-window').value = $('c-window').value.trim() || '336h';
     $('s-scope').value = $('c-scope').value.trim();
     $('s-tz').value = $('c-tz').value.trim() || 'Local';
-    $('clustername').innerHTML = '<span class="dot"></span>' + (info.ClusterName || 'connected');
+    // ClusterName comes from the grid's own response — textContent, never
+    // innerHTML: a hostile ES endpoint must not inject markup into a webview
+    // that has bound Go methods.
+    const cn = $('clustername');
+    cn.textContent = '';
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    cn.appendChild(dot);
+    cn.appendChild(document.createTextNode(info.ClusterName || 'connected'));
     document.body.classList.add('connected');
     await renderLegend();
     await refreshList(true);
@@ -324,6 +332,9 @@ function bindContextMenu() {
     ctxmenu.style.display = 'block';
   });
 }
+
+/* connection trust warnings (insecure TLS, writable key) */
+EventsOn('connect:warning', (msg) => logLine('warning: ' + msg, 'warn'));
 
 /* native File-menu events still work in the console */
 EventsOn('snapshot:open', openSnapshot);

@@ -44,7 +44,7 @@ var ErrZeroBuckets = errors.New(
 // mandatory red warning.
 func New(cfg Config) (*Client, error) {
 	if cfg.ESURL == "" {
-		return nil, errors.New("no Elasticsearch URL: set --es or " + "DEFILADE_ES_URL")
+		return nil, errors.New("no Elasticsearch URL provided")
 	}
 	if cfg.Timeout <= 0 {
 		cfg.Timeout = 90 * time.Second

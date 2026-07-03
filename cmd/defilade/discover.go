@@ -36,7 +36,7 @@ func runDiscover(cmd *cobra.Command, opts *globalOpts, window time.Duration) err
 	ctx := cmd.Context()
 	out := cmd.OutOrStdout()
 
-	cfg, err := opts.clientConfig(os.Stderr)
+	cfg, err := opts.clientConfig(cmd.ErrOrStderr())
 	if err != nil {
 		return err
 	}

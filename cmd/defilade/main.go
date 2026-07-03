@@ -1,8 +1,9 @@
 // Defilade — passive terrain-dependency analyzer for Security Onion grids.
 //
 // Read-only Elasticsearch client; the only writes are to the local
-// filesystem. Phase 0 ships `test-connection` and `discover` only: no graph
-// code is built until the field map is verified against a real grid.
+// filesystem. Subcommands: test-connection, discover, scan, report, map,
+// diff, reconcile, analyze, list, view (see internal/scan for the shared
+// scan pipeline, also driven by the desktop GUI).
 package main
 
 import (

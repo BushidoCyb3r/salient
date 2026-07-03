@@ -26,9 +26,6 @@ const (
 	DatasetTermsSize = 200
 	// SensorTermsSize caps the observer.name terms aggregation.
 	SensorTermsSize = 100
-	// MACSampleSize is how many conn docs the L2 probe samples when
-	// estimating MAC field coverage.
-	MACSampleSize = 1000
 )
 
 // Output handling (DEFILADE_PLAN.md §14): topology artifacts are sensitive.
@@ -53,6 +50,7 @@ const (
 	CompositePageSize       = 1000                // §6.1 composite agg page size
 	DefaultMaxEdges         = 500_000             // §6.1 --max-edges safety limit
 	ResponderTermsSize      = 2000                // role-evidence responder terms cap
+	RoleSampleHostsSize     = 3                   // example client IPs kept per responder for evidence strings
 	TopNTemporal            = 50                  // §6.1 second-pass temporal for top-N nodes
 	ExactBetweennessMax     = 2000                // §10 gonum exact ≤2k nodes
 	BetweennessSamplePivots = 256                 // Brandes–Pich pivots above the exact limit
@@ -63,6 +61,7 @@ const (
 	GroupPrefixV4         = 24   // §8.2 default subnet grouping prefix
 	SparseGroupMinHosts   = 2    // groups below this collapse into "sparse"
 	GatewayMACMinIPs      = 10   // §8.4 K: MAC answering for ≥K IPs = gateway
+	GatewayMACTermsSize   = 50   // §8.4 candidate responder MACs sampled per sensor
 	MapMinConns           = 5    // §8.5 noise floor default
 	ClientAggMaxComposite = 0.15 // §8.5 clients below this composite aggregate
 	MapTargetElements     = 60   // §8.5 readability target

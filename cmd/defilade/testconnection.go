@@ -29,7 +29,7 @@ func runTestConnection(cmd *cobra.Command, opts *globalOpts) error {
 	ctx := cmd.Context()
 	out := cmd.OutOrStdout()
 
-	cfg, err := opts.clientConfig(os.Stderr)
+	cfg, err := opts.clientConfig(cmd.ErrOrStderr())
 	if err != nil {
 		return err
 	}

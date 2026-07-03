@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -56,8 +57,8 @@ to the local filesystem. No agents, no scans, no changes to the SO stack.`,
 }
 
 // clientConfig resolves flags and environment into an escli.Config,
-// printing the mandatory warnings as it goes.
-func (o *globalOpts) clientConfig(out *os.File) (escli.Config, error) {
+// printing the mandatory warnings to out as it goes.
+func (o *globalOpts) clientConfig(out io.Writer) (escli.Config, error) {
 	esURL := o.esURL
 	if esURL == "" {
 		esURL = os.Getenv(config.EnvESURL)

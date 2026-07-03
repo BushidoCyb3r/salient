@@ -18,7 +18,6 @@ type Model struct {
 	Nodes map[string]*Node // keyed by IP
 	g     *simple.WeightedDirectedGraph
 	ids   map[string]int64
-	byID  map[int64]string
 	order []string // node IPs in first-seen insertion order, for determinism
 }
 
@@ -32,7 +31,6 @@ func Build(edges []Edge) *Model {
 		Nodes: map[string]*Node{},
 		g:     simple.NewWeightedDirectedGraph(0, 0),
 		ids:   map[string]int64{},
-		byID:  map[int64]string{},
 	}
 	for i := range edges {
 		e := &edges[i]
@@ -61,7 +59,6 @@ func (m *Model) node(ip string, first, last time.Time, sensors []string) *Node {
 	if !ok {
 		id := int64(len(m.ids))
 		m.ids[ip] = id
-		m.byID[id] = ip
 		m.order = append(m.order, ip)
 		n = &Node{IP: ip, Subnet: Subnet(ip), FirstSeen: first, LastSeen: last}
 		m.Nodes[ip] = n
@@ -84,9 +81,6 @@ func (m *Model) Directed() *simple.WeightedDirectedGraph { return m.g }
 
 // ID returns the gonum node id for an IP.
 func (m *Model) ID(ip string) (int64, bool) { id, ok := m.ids[ip]; return id, ok }
-
-// IP returns the IP for a gonum node id.
-func (m *Model) IP(id int64) string { return m.byID[id] }
 
 // SortedNodes returns nodes in a deterministic order (by IP).
 func (m *Model) SortedNodes() []*Node {

@@ -10,11 +10,15 @@ import (
 )
 
 // overviewPrefixes are tried finest-first; the overview picks the first one
-// whose group count fits MapOverviewMaxGroups.
-var overviewPrefixes = []int{24, 20, 16, 12, 8}
+// whose group count fits MapOverviewMaxGroups. Coarsening stops at /16: a /12
+// or /8 group is labeled with its supernet network address (e.g. 10.16.0.0/12
+// holding 10.18.x hosts), which names no segment an operator actually runs and
+// reads as a phantom network. Past /16 the overflow "other internal networks"
+// bucket absorbs the excess instead of inventing a misleading boundary.
+var overviewPrefixes = []int{24, 20, 16}
 
 // overviewPrefix returns the finest grouping prefix, no finer than start,
-// that yields at most max groups. If even /8 exceeds the cap the caller
+// that yields at most max groups. If even /16 exceeds the cap the caller
 // merges overflow groups into one "other networks" group.
 func overviewPrefix(nodes []graph.Node, start, max int) int {
 	for _, p := range overviewPrefixes {
@@ -166,7 +170,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		}
 		m.Nodes = append(m.Nodes, MapNode{
 			ID: n.IP, Group: resolve(n.Subnet), Label: nodeLabel(n),
-			Role: string(topRole(n)), Tier: tierOf(n),
+			Role: string(n.TopRole()), Tier: tierOf(n),
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 			Evidence: evidence(n), Drift: nodeDrift[n.IP],
 		})

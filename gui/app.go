@@ -226,6 +226,17 @@ func (a *App) Connect(req ConnectRequest) (escli.ClusterInfo, error) {
 	a.mu.Lock()
 	a.cli, a.info, a.fm = cli, info, fm
 	a.mu.Unlock()
+
+	// Surface the same trust warnings the CLI prints — a GUI-only operator
+	// otherwise never sees that TLS verification is off or that the key can
+	// write (DEFILADE_PLAN.md §14). Best-effort: the connection itself
+	// already succeeded, so a failed privilege probe is not fatal.
+	if req.InsecureSkipVerify {
+		a.emit("connect:warning", "TLS certificate verification is DISABLED — the connection to the grid is open to interception. Use a CA cert instead.")
+	}
+	if priv, perr := cli.CheckWritePrivileges(ctx, fm.IndexPattern); perr == nil && priv.CanWrite {
+		a.emit("connect:warning", "this API key can WRITE to "+fm.IndexPattern+" ("+priv.Detail+"). Defilade never writes, but the key violates least privilege — create a read-only key.")
+	}
 	return info, nil
 }
 

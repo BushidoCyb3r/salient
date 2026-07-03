@@ -19,13 +19,14 @@ func nodesInSubnets(subnets []string) []graph.Node {
 func TestOverviewPrefix(t *testing.T) {
 	var spread, oneSixteen, multiEight []string
 	for i := 0; i < 200; i++ {
-		// 20 /16s with ten /24s each — only /12 gets under the group cap.
+		// 20 /16s with ten /24s each — exceeds the cap at every prefix, so
+		// coarsening bottoms out at /16 and overflow merges into "other".
 		spread = append(spread, fmt.Sprintf("10.%d.%d.0/24", i%20, i/20))
 		// 200 /24s inside one /16 — /20 still yields 13 groups.
 		oneSixteen = append(oneSixteen, fmt.Sprintf("10.99.%d.0/24", i))
 	}
 	for i := 0; i < 12; i++ {
-		// 12 distinct /8s — even /8 exceeds the cap; caller must merge.
+		// 12 distinct /8s — never coarsens past /16; caller merges overflow.
 		multiEight = append(multiEight, fmt.Sprintf("%d.0.0.0/24", 10+i*10))
 	}
 	cases := []struct {
@@ -36,9 +37,9 @@ func TestOverviewPrefix(t *testing.T) {
 	}{
 		{"few subnets keep /24", []string{"10.0.1.0/24", "10.0.2.0/24"}, 24, 24},
 		{"one /16 coarsens to /16", oneSixteen, 24, 16},
-		{"spread /16s coarsen to /12", spread, 24, 12},
+		{"spread /16s bottom out at /16", spread, 24, 16},
 		{"explicit start skips finer prefixes", oneSixteen, 16, 16},
-		{"multi-/8 bottoms out at /8", multiEight, 24, 8},
+		{"multi-/8 bottoms out at /16", multiEight, 24, 16},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -49,7 +50,7 @@ func TestOverviewPrefix(t *testing.T) {
 	}
 	// Determinism: same input, same answer, and group count at the chosen
 	// prefix respects the cap whenever a satisfying prefix exists.
-	nodes := nodesInSubnets(spread)
+	nodes := nodesInSubnets(oneSixteen)
 	p := overviewPrefix(nodes, 24, config.MapOverviewMaxGroups)
 	if p2 := overviewPrefix(nodes, 24, config.MapOverviewMaxGroups); p2 != p {
 		t.Fatalf("overviewPrefix not deterministic: %d vs %d", p, p2)

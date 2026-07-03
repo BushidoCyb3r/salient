@@ -19,7 +19,7 @@ var htmlTmpl = template.Must(template.New("report").Funcs(template.FuncMap{
 	"pct": func(f float64) string {
 		return strconv.Itoa(int(f*100 + 0.5))
 	},
-	"topRole": topRole,
+	"topRole": graph.Node.TopRole,
 }).Parse(reportHTML))
 
 const reportHTML = `<!DOCTYPE html>

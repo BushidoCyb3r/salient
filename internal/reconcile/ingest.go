@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/netip"
 	"strings"
+	"unicode"
 )
 
 // Asset is one documented host from the unit's asset list.
@@ -91,15 +92,36 @@ type columns struct{ ip, hostname, role, segment int }
 
 // detectHeader classifies header cells by keyword. Segment keywords are
 // checked before hostname ones so "VLAN Name" lands on segment, not hostname.
+//
+// The IP column is resolved first, in two priority passes: an explicit "ip"
+// token beats a generic address column ("MAC Address, IP" resolves to the IP
+// cell), and "ip" must match as a whole token — substring matching would
+// claim "Description" (descr·ip·tion) and silently break real spreadsheets.
 func detectHeader(header []string) (columns, bool) {
 	cols := columns{ip: -1, hostname: -1, role: -1, segment: -1}
 	for i, cell := range header {
-		l := strings.ToLower(strings.TrimSpace(cell))
+		if hasToken(normHeader(cell), "ip", "ipaddress", "ipaddr", "ipv4", "ipv6") {
+			cols.ip = i
+			break
+		}
+	}
+	if cols.ip < 0 {
+		for i, cell := range header {
+			l := normHeader(cell)
+			if !strings.Contains(l, "mac") && containsAny(l, "address", "addr") {
+				cols.ip = i
+				break
+			}
+		}
+	}
+	for i, cell := range header {
+		if i == cols.ip {
+			continue
+		}
+		l := normHeader(cell)
 		switch {
 		case cols.segment < 0 && containsAny(l, "vlan", "segment", "subnet", "site", "enclave", "zone", "network"):
 			cols.segment = i
-		case cols.ip < 0 && containsAny(l, "ip", "address", "addr"):
-			cols.ip = i
 		case cols.hostname < 0 && containsAny(l, "host", "name", "fqdn", "asset", "system", "device"):
 			cols.hostname = i
 		case cols.role < 0 && containsAny(l, "role", "function", "type", "purpose", "service", "description"):
@@ -107,6 +129,21 @@ func detectHeader(header []string) (columns, bool) {
 		}
 	}
 	return cols, cols.ip >= 0
+}
+
+func normHeader(cell string) string { return strings.ToLower(strings.TrimSpace(cell)) }
+
+// hasToken reports whether any letter/digit token of l equals one of want.
+func hasToken(l string, want ...string) bool {
+	tokens := strings.FieldsFunc(l, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
+	for _, tok := range tokens {
+		for _, w := range want {
+			if tok == w {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // detectByContent finds the column with the most parseable IPs across all

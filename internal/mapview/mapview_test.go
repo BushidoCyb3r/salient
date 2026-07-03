@@ -2,6 +2,7 @@ package mapview_test
 
 import (
 	"fmt"
+	"net/netip"
 	"strings"
 	"testing"
 	"time"
@@ -115,6 +116,29 @@ func TestBuildLargeSnapshotProducesBriefingOverview(t *testing.T) {
 	}
 	if !hasOverviewFinding(mm.Findings) {
 		t.Fatal("overview does not explain that the map was condensed")
+	}
+}
+
+// TestOverviewGroupsNeverCoarserThanSixteen guards the reported bug: overview
+// coarsening produced supernet labels like "10.16.0.0/12" that name no real
+// segment the operator runs (their hosts are 10.18.61.x). Group boxes must
+// stay at /16 or finer; excess collapses into the honest "other" bucket.
+func TestOverviewGroupsNeverCoarserThanSixteen(t *testing.T) {
+	mm := mapview.Build(largeFixture(), mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("large snapshot should build in overview mode")
+	}
+	for _, g := range mm.Groups {
+		if g.CIDR == "" {
+			continue // "other"/"external" aggregate boxes carry no CIDR
+		}
+		p, err := netip.ParsePrefix(g.CIDR)
+		if err != nil {
+			t.Fatalf("group CIDR %q does not parse: %v", g.CIDR, err)
+		}
+		if p.Bits() < 16 {
+			t.Errorf("group %q is coarser than /16 — a supernet address that names no real network", g.CIDR)
+		}
 	}
 }
 

@@ -107,7 +107,17 @@ func Analyze(ctx context.Context, cfg Config, snap graph.Snapshot) (Result, erro
 	if cfg.APIKey != "" {
 		req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
 	}
-	resp, err := (&http.Client{Timeout: cfg.Timeout}).Do(req)
+	// The egress guard promises summarized topology stays on the configured
+	// host: re-validate every redirect target so a loopback endpoint answering
+	// 3xx can't bounce the payload (and its Authorization header) to a remote
+	// host without --allow-network-data-egress.
+	client := &http.Client{
+		Timeout: cfg.Timeout,
+		CheckRedirect: func(r *http.Request, _ []*http.Request) error {
+			return validateEndpoint(r.URL.String(), cfg.AllowRemote)
+		},
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return result, fmt.Errorf("analysis request: %w", err)
 	}
@@ -192,7 +202,20 @@ func summarize(snap graph.Snapshot, maxNodes, maxEdges int) ([]nodePayload, []ed
 		outNodes = append(outNodes, nodePayload{ID: n.IP, Hostnames: n.Hostnames, Subnet: n.Subnet, Roles: n.Roles, Scores: n.Scores})
 	}
 	edges := append([]graph.Edge(nil), snap.Edges...)
-	sort.Slice(edges, func(i, j int) bool { return edges[i].ConnCount > edges[j].ConnCount })
+	// Stable, fully-ordered: equal ConnCount must not select a different edge
+	// set run to run (the whole pipeline is deterministic by design).
+	sort.Slice(edges, func(i, j int) bool {
+		if edges[i].ConnCount != edges[j].ConnCount {
+			return edges[i].ConnCount > edges[j].ConnCount
+		}
+		if edges[i].Src != edges[j].Src {
+			return edges[i].Src < edges[j].Src
+		}
+		if edges[i].Dst != edges[j].Dst {
+			return edges[i].Dst < edges[j].Dst
+		}
+		return edges[i].Port < edges[j].Port
+	})
 	outEdges := make([]edgePayload, 0, min(maxEdges, len(edges)))
 	for _, e := range edges {
 		if !selected[e.Src] || !selected[e.Dst] {

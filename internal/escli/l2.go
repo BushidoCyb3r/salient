@@ -30,7 +30,7 @@ func GatewayCandidatesQuery(fm FieldMap, window time.Duration) (string, error) {
 				"terms": map[string]any{"field": fm.ObserverName, "size": config.SensorTermsSize, "missing": ""},
 				"aggs": map[string]any{
 					"macs": map[string]any{
-						"terms": map[string]any{"field": fm.DestinationMAC, "size": 50},
+						"terms": map[string]any{"field": fm.DestinationMAC, "size": config.GatewayMACTermsSize},
 						"aggs": map[string]any{
 							"ips": map[string]any{"cardinality": map[string]any{"field": fm.DestinationIP}},
 						},

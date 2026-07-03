@@ -249,14 +249,14 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		n := &nodes[i]
 		t := tierOf(n)
 		drift := nodeDrift[n.IP]
-		if drift == "" && t == TierClient && topRole(n) == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
+		if drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
 			aggCount[resolve(n.Subnet)]++
 			continue
 		}
 		visible[n.IP] = true
 		m.Nodes = append(m.Nodes, MapNode{
 			ID: n.IP, Group: resolve(n.Subnet), Label: nodeLabel(n),
-			Role: string(topRole(n)), Tier: t,
+			Role: string(n.TopRole()), Tier: t,
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 			Evidence: evidence(n), Drift: drift,
 		})
@@ -305,13 +305,6 @@ func sortModel(m *Model) {
 
 func groupID(cidr string) string { return "g:" + cidr }
 
-func topRole(n *graph.Node) graph.Role {
-	if len(n.Roles) == 0 {
-		return graph.RoleUnknown
-	}
-	return n.Roles[0].Role
-}
-
 func nodeLabel(n *graph.Node) string {
 	if len(n.Hostnames) > 0 {
 		return n.Hostnames[0] + "\n" + n.IP
@@ -328,7 +321,7 @@ func evidence(n *graph.Node) []string {
 }
 
 func tierOf(n *graph.Node) Tier {
-	switch topRole(n) {
+	switch n.TopRole() {
 	case graph.RoleDC, graph.RoleDNS:
 		return TierCore
 	case graph.RoleFileServer, graph.RoleDatabase, graph.RoleWebServer, graph.RoleJumpBox:

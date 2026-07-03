@@ -10,9 +10,9 @@ import (
 )
 
 // TerrainAddr reports whether an IP can be terrain: a rankable, mappable
-// host. Multicast, broadcast, and unspecified addresses are traffic
-// artifacts (DHCP, mDNS, IGMP), not hosts, no matter how much traffic
-// converges on them.
+// host. Multicast, broadcast, unspecified, loopback, and link-local addresses
+// are traffic artifacts (DHCP, mDNS, IGMP, cloud metadata 169.254.169.254),
+// not hosts, no matter how much traffic converges on them.
 // ponytail: only the all-ones broadcast is caught; subnet-directed
 // broadcasts (x.x.x.255) need the subnet mask, add if they show up ranked.
 func TerrainAddr(ip string) bool {
@@ -20,7 +20,8 @@ func TerrainAddr(ip string) bool {
 	if err != nil {
 		return false
 	}
-	return !a.IsMulticast() && !a.IsUnspecified() && ip != "255.255.255.255"
+	return !a.IsMulticast() && !a.IsUnspecified() && !a.IsLoopback() &&
+		!a.IsLinkLocalUnicast() && !a.IsLinkLocalMulticast() && ip != "255.255.255.255"
 }
 
 // Role is an inferred host function (DEFILADE_PLAN.md §7). Gateway is
@@ -102,6 +103,16 @@ type Node struct {
 	LastSeen  time.Time       `json:"last_seen"`
 	Sensors   []string        `json:"sensors,omitempty"`
 	Scores    ScoreSet        `json:"scores"`
+}
+
+// TopRole returns the highest-confidence role label for display, or
+// RoleUnknown when nothing was inferred. Roles are stored confidence-sorted
+// by InferRoles.
+func (n Node) TopRole() Role {
+	if len(n.Roles) == 0 {
+		return RoleUnknown
+	}
+	return n.Roles[0].Role
 }
 
 // RoleEvidence is the per-responder client-cardinality result of one

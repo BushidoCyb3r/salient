@@ -63,9 +63,10 @@ counts, reporting sensors, and whether MAC fields survived the ECS mapping. If a
 field names differ from the defaults, pin them with `--fieldmap custom.yaml`
 (see `docs/FIELDMAP.md`).
 
-A native desktop viewer (Linux/macOS/Windows) for browsing saved
-snapshots and maps in a real window is also available — see
-`docs/GUI.md`. It's a viewer only; scanning and analysis stay CLI-only.
+A native desktop operator console (Linux/macOS/Windows) is also available — see
+`docs/GUI.md`. It connects to a grid, runs scans with live progress, and browses
+and exports the resulting snapshots and maps in a real window. Model-assisted
+`analyze` remains CLI-only.
 
 ## Hard constraints
 

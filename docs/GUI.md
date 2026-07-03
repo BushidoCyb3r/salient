@@ -1,13 +1,17 @@
-# Desktop Map Viewer
+# Desktop Operator Console
 
-A native window (Linux/macOS/Windows) for browsing saved Defilade
-snapshots and their briefing maps — reuses the same Cytoscape map as
-`defilade map --format html`, with added right-click actions and search.
+A native window (Linux/macOS/Windows) that connects to a Security Onion grid,
+runs scans with live progress, and browses the resulting snapshots and briefing
+maps — reuses the same Cytoscape map as `defilade map --format html`, with added
+right-click actions, search, and PNG/HTML/GraphML export.
 
-It is a **viewer only**: it never talks to Elasticsearch and never
-triggers a scan, diff, or reconcile. Run those with the CLI first;
-the GUI reads whatever `<data-dir>/{snapshots,reports,maps}` already
-has (default `defilade-data/`, same as the CLI).
+It runs the same read-only scan pipeline as the CLI (`internal/scan`): the only
+Elasticsearch traffic is the aggregation queries a `defilade scan` issues, and
+the only writes are the snapshot, report, and map under `<data-dir>`
+(default `defilade-data/`, same as the CLI). The API key lives in memory only —
+never persisted to disk, never included in an emitted event. Model-assisted
+`analyze`, `diff`, and `reconcile` stay CLI-only; the console reads whatever
+snapshots those and its own scans leave in `<data-dir>/{snapshots,reports,maps}`.
 
 ## Building
 
@@ -52,10 +56,24 @@ compiles with the `-tags webkit2_41` tag automatically (it probes
 
 ## Manual QA checklist (per OS — no automated GUI test harness exists)
 
+Exercise against the fake grid: `go run ./testdata/fakees -port 9299`, connect to
+`http://127.0.0.1:9299` with any base64 key (e.g. `dGVzdDp0ZXN0`).
+
 - [ ] App launches, native window opens (no browser chrome)
+- [ ] Launch screen shows the centered logo and connect form
+- [ ] Cmd/Ctrl+V pastes into the connect-form inputs (native Edit menu)
+- [ ] Connect succeeds; the cluster name from the grid renders as plain
+      text (no markup injection), and the console swaps in
+- [ ] A bad URL / unreachable host shows an inline connect error and
+      re-enables the Connect button (does not spin forever)
+- [ ] Run Scan streams timestamped progress lines; Cancel aborts a
+      running scan; the handling reminder prints on completion
+- [ ] A completed scan refreshes the snapshot list and loads the new map
 - [ ] Snapshot list populates from `<data-dir>`; entries whose
       `.json.gz` was deleted appear greyed out and unclickable
-- [ ] Selecting a snapshot renders its map
+- [ ] Selecting a snapshot renders its map (dark theme)
+- [ ] Export PNG / HTML / GraphML each save via the native Save dialog;
+      cancelling the dialog is a no-op (no error)
 - [ ] Right-click a node: Copy IP, Show evidence, Focus this group,
       Clear focus all work
 - [ ] Search box dims non-matching nodes and clears on empty input

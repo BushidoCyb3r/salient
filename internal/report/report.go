@@ -16,11 +16,3 @@ func JSON(w io.Writer, snap graph.Snapshot) error {
 	enc.SetIndent("", "  ")
 	return enc.Encode(snap)
 }
-
-// topRole returns the highest-confidence role label for display.
-func topRole(n graph.Node) graph.Role {
-	if len(n.Roles) == 0 {
-		return graph.RoleUnknown
-	}
-	return n.Roles[0].Role
-}

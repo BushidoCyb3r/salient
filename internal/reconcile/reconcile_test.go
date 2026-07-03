@@ -33,6 +33,35 @@ func TestParseCSVForgivingHeaders(t *testing.T) {
 	}
 }
 
+// A "Description" column contains the substring "ip" and used to hijack the
+// IP column, dropping every row. The IP column must match "ip" as a token.
+func TestParseCSVDescriptionDoesNotHijackIP(t *testing.T) {
+	csv := "Hostname,Description,IP Address\n" +
+		"web01,front-end web server,10.0.0.5\n"
+	assets, _, err := ParseCSV(strings.NewReader(csv))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assets) != 1 || assets[0].IP != "10.0.0.5" {
+		t.Fatalf("assets = %+v, want IP 10.0.0.5", assets)
+	}
+	if assets[0].Role != "front-end web server" {
+		t.Errorf("role = %q, want the Description column", assets[0].Role)
+	}
+}
+
+// An explicit "IP" column wins over a generic address column ("MAC Address").
+func TestParseCSVExplicitIPBeatsMAC(t *testing.T) {
+	csv := "MAC Address,IP,Hostname\naa:bb:cc:dd:ee:ff,10.0.0.7,host1\n"
+	assets, _, err := ParseCSV(strings.NewReader(csv))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assets) != 1 || assets[0].IP != "10.0.0.7" {
+		t.Fatalf("assets = %+v, want IP 10.0.0.7", assets)
+	}
+}
+
 func TestParseCSVHeaderless(t *testing.T) {
 	csv := "dc01,10.0.1.5\nws-1,10.0.2.9\n"
 	assets, warnings, err := ParseCSV(strings.NewReader(csv))

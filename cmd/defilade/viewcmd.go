@@ -97,8 +97,7 @@ func writeBrowserIndex(dataDir string, logo []byte) (string, error) {
 }
 
 func browserCommand(goos, browser, target string, lookPath func(string) (string, error)) (string, []string, error) {
-	if browser != "" {
-		parts := strings.Fields(browser)
+	if parts := strings.Fields(browser); len(parts) > 0 {
 		if name, err := lookPath(parts[0]); err == nil {
 			return name, append(parts[1:], target), nil
 		}

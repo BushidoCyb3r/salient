@@ -4,3 +4,14 @@ graphify-out/cache/
 .claude/
 .superpowers/
 docs/superpowers/plans/
+
+# Internal-only docs (handoffs, design plan, specs) — not for public repo
+docs/*_HANDOFF.md
+docs/DEFILADE_PLAN.md
+docs/AI.md
+docs/superpowers/specs/
+
+# AI agent tooling / instructions — not for public repo
+AGENTS.md
+.codex/
+.claude/

@@ -32,7 +32,7 @@ func GraphML(w io.Writer, snap graph.Snapshot) error {
 	for _, n := range snap.Nodes {
 		fmt.Fprintf(w, "    <node id=%q>\n", esc(n.IP))
 		writeData(w, "d_ip", n.IP)
-		writeData(w, "d_role", string(topRole(n)))
+		writeData(w, "d_role", string(n.TopRole()))
 		writeData(w, "d_subnet", n.Subnet)
 		writeData(w, "d_comp", fmt.Sprintf("%.4f", n.Scores.Composite))
 		writeData(w, "d_rank", fmt.Sprintf("%d", n.Scores.Rank))

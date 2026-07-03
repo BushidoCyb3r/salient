@@ -29,7 +29,7 @@ func ResponderCardinalityQuery(fm FieldMap, datasets []string, window time.Durat
 				"terms": map[string]any{"field": fm.DestinationIP, "size": config.ResponderTermsSize},
 				"aggs": map[string]any{
 					"clients":      map[string]any{"cardinality": map[string]any{"field": fm.SourceIP}},
-					"sample_hosts": map[string]any{"terms": map[string]any{"field": fm.SourceIP, "size": 3}},
+					"sample_hosts": map[string]any{"terms": map[string]any{"field": fm.SourceIP, "size": config.RoleSampleHostsSize}},
 				},
 			},
 		},
