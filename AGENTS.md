@@ -23,6 +23,15 @@ and current status: `README.md` in this repo.
   acknowledgement required for remote network-data egress.
 - No new servers, containers, agents, or Security Onion config changes.
 
+## Active work: GUI operator console (2026-07-03)
+
+In-progress feature on branch **`feature/desktop-map-viewer`** (not master):
+turning the desktop GUI from viewer-only into a scan-capable operator console
+(AdaptixC2-style dark UI, ES connect form, live scan feedback). **Backend done,
+frontend UI not started.** Full status, what's committed, and the remaining
+TODO are in **`docs/GUI_HANDOFF.md`** — read it before touching the GUI.
+GitHub repo now exists (private, github.com/BushidoCyb3r/defilade); PR #1 open.
+
 ## Current status
 
 - **All plan phases (0–4) are implemented and committed on master.**
