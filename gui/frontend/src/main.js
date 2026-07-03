@@ -1,44 +1,72 @@
-import { ListSnapshots, LoadModel, Legend } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, Legend } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
-const snaplist = document.getElementById('snaplist');
-const snaplistEmpty = document.getElementById('snaplist-empty');
-const title = document.getElementById('title');
-const submeta = document.getElementById('submeta');
-const errbanner = document.getElementById('errbanner');
-const errtext = document.getElementById('errtext');
+const $ = (id) => document.getElementById(id);
 
-function showError(msg) {
-  errtext.textContent = msg;
-  errbanner.style.display = 'block';
-}
-document.getElementById('errdismiss').onclick = () => { errbanner.style.display = 'none'; };
+/* ---------------- connect ---------------- */
 
-async function refreshList() {
+$('connform').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('connbtn');
+  $('connerr').textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  try {
+    const info = await Connect({
+      ESURL: $('c-url').value.trim(),
+      APIKey: $('c-key').value,
+      CACertPath: $('c-ca').value.trim(),
+      FieldmapPath: $('c-fm').value.trim(),
+      InsecureSkipVerify: $('c-insecure').checked,
+    });
+    // carry the launch-screen scan defaults into the console popover
+    $('s-window').value = $('c-window').value.trim() || '336h';
+    $('s-scope').value = $('c-scope').value.trim();
+    $('s-tz').value = $('c-tz').value.trim() || 'Local';
+    $('clustername').innerHTML = '<span class="dot"></span>' + (info.ClusterName || 'connected');
+    document.body.classList.add('connected');
+    await renderLegend();
+    await refreshList(true);
+    logLine('connected to ' + (info.ClusterName || 'grid'), 'ok');
+  } catch (err) {
+    $('connerr').textContent = 'Connect failed: ' + err;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Connect';
+  }
+});
+
+/* ---------------- snapshot list ---------------- */
+
+async function refreshList(loadNewest) {
   let entries;
   try {
     entries = await ListSnapshots();
   } catch (err) {
-    showError('Could not list snapshots: ' + err);
+    logLine('could not list snapshots: ' + err, 'err');
     return;
   }
   entries = entries || [];
-  snaplist.innerHTML = '';
-  snaplistEmpty.style.display = entries.length === 0 ? 'block' : 'none';
-  for (const e of entries) {
+  const list = $('snaplist');
+  list.innerHTML = '';
+  $('snaplist-empty').style.display = entries.length === 0 ? 'block' : 'none';
+  for (const en of entries) {
     const li = document.createElement('li');
-    li.textContent = e.Timestamp;
-    if (e.Snapshot) {
+    li.textContent = en.Timestamp;
+    if (en.Snapshot) {
       li.onclick = () => {
-        openSnapshot(e.Snapshot);
-        snaplist.querySelectorAll('li').forEach(x => x.classList.toggle('sel', x === li));
+        openSnapshot(en.Snapshot);
+        list.querySelectorAll('li').forEach((x) => x.classList.toggle('sel', x === li));
       };
     } else {
       li.style.opacity = '0.4';
-      li.style.cursor = 'default';
       li.title = 'snapshot file missing — map cannot be rebuilt';
     }
-    snaplist.appendChild(li);
+    list.appendChild(li);
+  }
+  if (loadNewest && entries.length && entries[0].Snapshot) {
+    openSnapshot(entries[0].Snapshot);
+    list.firstChild.classList.add('sel');
   }
 }
 
@@ -47,26 +75,90 @@ async function renderLegend() {
   try {
     items = await Legend();
   } catch (err) {
-    showError('Could not load legend: ' + err);
+    logLine('could not load legend: ' + err, 'err');
     return;
   }
-  const legend = document.getElementById('legend');
+  const legend = $('legend');
   legend.innerHTML = '';
   for (const item of items) {
     const row = document.createElement('div');
     row.className = 'lg';
-    const swatch = document.createElement('i');
-    swatch.style.background = item.Color;
-    row.appendChild(swatch);
+    const sw = document.createElement('i');
+    sw.style.background = item.Color;
+    row.appendChild(sw);
     row.appendChild(document.createTextNode(item.Label));
     legend.appendChild(row);
   }
 }
 
+/* ---------------- scan ---------------- */
+
+let scanning = false;
+
+$('scanbtn').onclick = () => {
+  const cfg = $('scancfg');
+  cfg.style.display = cfg.style.display === 'block' ? 'none' : 'block';
+};
+
+$('scango').onclick = async () => {
+  if (scanning) return;
+  $('scancfg').style.display = 'none';
+  const scope = $('s-scope').value.split(',').map((s) => s.trim()).filter(Boolean);
+  setScanning(true);
+  $('tasklog').innerHTML = '';
+  logLine('scan requested (window ' + $('s-window').value + (scope.length ? ', scope ' + scope.join(' ') : '') + ')');
+  try {
+    await RunScan({ Window: $('s-window').value.trim(), Scope: scope, TZ: $('s-tz').value.trim(), MaxEdges: 0 });
+  } catch (err) {
+    logLine('scan failed: ' + err, 'err');
+    setScanning(false);
+  }
+};
+
+$('cancelbtn').onclick = () => {
+  if (scanning) {
+    CancelScan();
+    logLine('cancel requested…', 'warn');
+  }
+};
+
+function setScanning(on) {
+  scanning = on;
+  $('scanbtn').disabled = on;
+  $('cancelbtn').disabled = !on;
+  $('taskstate').textContent = on ? 'scanning…' : 'idle';
+  $('pulse').classList.toggle('idle', !on);
+}
+
+EventsOn('scan:progress', (s) => logLine(s.Detail || s.Name, s.Warn ? 'warn' : ''));
+EventsOn('scan:done', (snapshotPath) => {
+  logLine('done — snapshot ' + snapshotPath, 'ok');
+  logLine('handling reminder: report, map, and snapshot describe network terrain — protect at the network\'s classification.', 'warn');
+  setScanning(false);
+  refreshList(true);
+});
+EventsOn('scan:error', (msg) => {
+  logLine('scan error: ' + msg, 'err');
+  setScanning(false);
+});
+
+function logLine(text, cls) {
+  const log = $('tasklog');
+  const div = document.createElement('div');
+  div.className = 'ln' + (cls ? ' ' + cls : '');
+  const ts = new Date().toTimeString().slice(0, 8);
+  div.innerHTML = '<span class="ts">[' + ts + ']</span> ';
+  div.appendChild(document.createTextNode(text));
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ---------------- map (dark) ---------------- */
+
 let cy = null;
 let curLayout = 'fcose';
-const tierColor = { core: '#fdeee6', service: '#eaf1fb', client: '#ffffff' };
-const tierBorder = { core: '#d95f30', service: '#3d7edb', client: '#8f97a5' };
+const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
+const tierBorder = { core: '#d9773f', service: '#4d8fe0', client: '#586274' };
 const layouts = {
   fcose: { name: 'fcose', animate: false, nodeSeparation: 120, idealEdgeLength: () => 140 },
   dagre: { name: 'dagre', animate: false, rankDir: 'TB', ranker: 'tight-tree', rankSep: 90, nodeSep: 30, transform: (n, p) => p },
@@ -75,16 +167,17 @@ const layouts = {
 function runLayout(name) {
   curLayout = name;
   cy.layout(layouts[name]).run();
-  document.getElementById('b-fcose').classList.toggle('on', name === 'fcose');
-  document.getElementById('b-dagre').classList.toggle('on', name === 'dagre');
+  $('b-fcose').classList.toggle('on', name === 'fcose');
+  $('b-dagre').classList.toggle('on', name === 'dagre');
 }
-document.getElementById('b-fcose').onclick = () => { if (cy) runLayout('fcose'); };
-document.getElementById('b-dagre').onclick = () => { if (cy) runLayout('dagre'); };
+$('b-fcose').onclick = () => { if (cy) runLayout('fcose'); };
+$('b-dagre').onclick = () => { if (cy) runLayout('dagre'); };
+
+function openSnapshot(path) {
+  LoadModel(path).then(renderModel).catch((err) => logLine('could not load snapshot: ' + err, 'err'));
+}
 
 function renderModel(model) {
-  title.textContent = 'Defilade briefing map — ' + (model.meta.cluster_name || '');
-  submeta.textContent = 'window ' + model.meta.window;
-
   const els = [];
   for (const g of model.groups || []) {
     els.push({ data: { id: g.id, label: g.label }, classes: 'grp' + (g.blind_spot ? ' blind' : '') });
@@ -110,79 +203,75 @@ function renderModel(model) {
 
   if (cy) cy.destroy();
   cy = cytoscape({
-    container: document.getElementById('cy'), elements: els, wheelSensitivity: 0.2,
+    container: $('cy'), elements: els, wheelSensitivity: 0.2,
     style: [
-      { selector: 'node.grp', style: { 'background-color': '#f2f4f8', 'background-opacity': 0.55, 'border-color': '#b9c0cc', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#39414f', padding: 18 } },
-      { selector: 'node.grp.blind', style: { 'border-color': '#c96a6a', 'border-style': 'dashed', 'background-color': '#f6e8e8' } },
-      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: 'data(label)', 'text-valign': 'center', 'font-size': 10, 'background-color': ele => tierColor[ele.data('tier')] || '#fff', 'border-width': 1.6, 'border-color': ele => tierBorder[ele.data('tier')] || '#8f97a5' } },
+      { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 18 } },
+      { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
+      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: 'data(label)', 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
       { selector: 'node[agg>0]', style: { shape: 'round-rectangle', 'border-style': 'double', 'border-width': 3 } },
-      { selector: 'node.drift-new', style: { 'border-color': '#238b45', 'border-width': 4 } },
-      { selector: 'node.drift-vanished', style: { opacity: 0.3, 'border-style': 'dashed', 'border-color': '#737983' } },
-      { selector: 'node.drift-rank-up,node.drift-rank-down', style: { 'border-color': '#d8a02e', 'border-width': 4 } },
-      { selector: 'node.drift-undocumented', style: { 'border-color': '#c0392b', 'border-width': 4 } },
-      { selector: 'node.drift-silent', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#737983' } },
-      { selector: 'node.drift-contradicted', style: { 'border-color': '#d8a02e', 'border-width': 4, 'border-style': 'double' } },
-      { selector: 'edge', style: { 'curve-style': 'bezier', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)', 'target-arrow-shape': 'triangle', width: 'data(width)', label: 'data(label)', 'font-size': 9, color: '#555c68', 'text-rotation': 'autorotate', 'text-background-color': '#fcfcfd', 'text-background-opacity': 0.85, opacity: 0.8 } },
-      { selector: 'edge.drift-new', style: { 'line-color': '#238b45', 'target-arrow-color': '#238b45', 'line-style': 'solid', opacity: 1 } },
-      { selector: 'edge.drift-vanished', style: { 'line-color': '#737983', 'target-arrow-color': '#737983', 'line-style': 'dashed', opacity: 0.3 } },
-      { selector: 'node.drift-off', style: { opacity: 1, 'border-width': 1.6, 'border-style': 'solid', 'border-color': ele => tierBorder[ele.data('tier')] || '#8f97a5' } },
-      { selector: 'edge.drift-off', style: { opacity: 0.8, 'line-style': 'solid', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)' } },
+      { selector: 'node.drift-new', style: { 'border-color': '#3fb950', 'border-width': 4 } },
+      { selector: 'node.drift-vanished', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
+      { selector: 'node.drift-rank-up,node.drift-rank-down', style: { 'border-color': '#e3a008', 'border-width': 4 } },
+      { selector: 'node.drift-undocumented', style: { 'border-color': '#f85149', 'border-width': 4 } },
+      { selector: 'node.drift-silent', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
+      { selector: 'node.drift-contradicted', style: { 'border-color': '#e3a008', 'border-width': 4, 'border-style': 'double' } },
+      { selector: 'edge', style: { 'curve-style': 'bezier', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)', 'target-arrow-shape': 'triangle', width: 'data(width)', label: 'data(label)', 'font-size': 9, color: '#8b949e', 'text-rotation': 'autorotate', 'text-background-color': '#0b0f14', 'text-background-opacity': 0.85, opacity: 0.85 } },
+      { selector: 'edge.drift-new', style: { 'line-color': '#3fb950', 'target-arrow-color': '#3fb950', 'line-style': 'solid', opacity: 1 } },
+      { selector: 'edge.drift-vanished', style: { 'line-color': '#8b949e', 'target-arrow-color': '#8b949e', 'line-style': 'dashed', opacity: 0.35 } },
+      { selector: 'node.drift-off', style: { opacity: 1, 'border-width': 1.6, 'border-style': 'solid', 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
+      { selector: 'edge.drift-off', style: { opacity: 0.85, 'line-style': 'solid', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)' } },
       { selector: '.dim', style: { opacity: 0.12 } },
     ],
   });
   runLayout(curLayout);
   bindContextMenu();
 
-  document.getElementById('l-heat').onchange = function () {
+  $('l-heat').onchange = function () {
     if (this.checked) {
-      cy.nodes(':childless').forEach(n => {
+      cy.nodes(':childless').forEach((n) => {
         const c = n.data('comp');
-        n.style('background-color', 'rgb(' + Math.round(255 - 90 * c) + ',' + Math.round(240 - 170 * c) + ',' + Math.round(235 - 180 * c) + ')');
+        n.style('background-color', 'rgb(' + Math.round(40 + 180 * c) + ',' + Math.round(30 + 40 * c) + ',' + Math.round(25 + 20 * c) + ')');
       });
     } else {
-      cy.nodes(':childless').forEach(n => n.removeStyle('background-color'));
+      cy.nodes(':childless').forEach((n) => n.removeStyle('background-color'));
     }
   };
-  document.getElementById('l-lbl').onchange = function () {
-    cy.edges().style('text-opacity', this.checked ? 1 : 0);
-  };
-  document.getElementById('l-drift').onchange = function () {
+  $('l-lbl').onchange = function () { cy.edges().style('text-opacity', this.checked ? 1 : 0); };
+  $('l-drift').onchange = function () {
     cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed,.drift-undocumented,.drift-silent,.drift-contradicted')
       .toggleClass('drift-off', !this.checked);
   };
 
-  cy.on('tap', 'node:childless', e => {
+  cy.on('tap', 'node:childless', (e) => {
     const n = e.target;
-    document.getElementById('ev').textContent =
+    $('ev').textContent =
       n.data('label') + '\nrole: ' + n.data('role') + (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
       '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
       (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)');
   });
 }
 
-function openSnapshot(path) {
-  LoadModel(path)
-    .then(renderModel)
-    .catch(err => showError('Could not load snapshot: ' + err));
-}
-
-document.getElementById('search').addEventListener('input', e => {
+$('search').addEventListener('input', (e) => {
   if (!cy) return;
   const q = e.target.value.trim().toLowerCase();
   if (!q) { cy.nodes(':childless').removeClass('dim'); return; }
-  cy.nodes(':childless').forEach(n => {
+  cy.nodes(':childless').forEach((n) => {
     const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev')).toLowerCase();
     n.toggleClass('dim', !hay.includes(q));
   });
 });
 
-const ctxmenu = document.getElementById('ctxmenu');
-document.addEventListener('click', () => { ctxmenu.style.display = 'none'; });
+const ctxmenu = $('ctxmenu');
+document.addEventListener('click', (e) => {
+  if (!ctxmenu.contains(e.target)) ctxmenu.style.display = 'none';
+  const cfg = $('scancfg');
+  if (cfg.style.display === 'block' && !cfg.contains(e.target) && e.target !== $('scanbtn')) cfg.style.display = 'none';
+});
 
 function bindContextMenu() {
-  cy.on('cxttap', 'node:childless', e => {
+  cy.on('cxttap', 'node:childless', (e) => {
     const n = e.target;
     const pos = e.renderedPosition || e.position;
     ctxmenu.innerHTML = '';
@@ -196,7 +285,7 @@ function bindContextMenu() {
     addItem('Show evidence', () => cy.emit('tap', [n]));
     addItem('Focus this group', () => {
       const group = n.data('parent');
-      cy.nodes(':childless').forEach(m => m.toggleClass('dim', m.data('parent') !== group));
+      cy.nodes(':childless').forEach((m) => m.toggleClass('dim', m.data('parent') !== group));
     });
     addItem('Clear focus', () => cy.nodes(':childless').removeClass('dim'));
     ctxmenu.style.left = pos.x + 'px';
@@ -205,8 +294,6 @@ function bindContextMenu() {
   });
 }
 
+/* native File-menu events still work in the console */
 EventsOn('snapshot:open', openSnapshot);
-EventsOn('snapshots:refresh', refreshList);
-
-refreshList();
-renderLegend();
+EventsOn('snapshots:refresh', () => refreshList(false));

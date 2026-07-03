@@ -28,6 +28,20 @@ works everywhere else.)
 
 Produces a native binary/bundle under `gui/build/bin/`.
 
+## Running (runtime dependencies)
+
+The built binary is dynamically linked against the system webview at run
+time — the machine that *runs* it needs the runtime libraries (the `-devel`
+packages above are only needed to *build*):
+
+- Debian/Ubuntu: `sudo apt-get install libwebkit2gtk-4.1-0 libgtk-3-0`
+- Fedora/RHEL/Rocky: `sudo dnf install webkit2gtk4.1 gtk3`
+
+RHEL-family (Rocky/RHEL/Fedora) is a supported build and run target, not just
+Debian/Ubuntu. On RHEL the webview ships as `webkit2gtk4.1`, so `make gui`
+compiles with the `-tags webkit2_41` tag automatically (it probes
+`pkg-config --exists webkit2gtk-4.1`).
+
 ## Known gaps
 
 - Builds are unsigned — expect a Gatekeeper warning on macOS and a
