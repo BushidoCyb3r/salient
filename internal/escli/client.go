@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -66,7 +67,13 @@ func New(cfg Config) (*Client, error) {
 		Addresses: []string{cfg.ESURL},
 		APIKey:    cfg.APIKey,
 		Transport: &http.Transport{
-			TLSClientConfig:       tlsCfg,
+			TLSClientConfig: tlsCfg,
+			// DialContext bounds the TCP handshake itself. Without it, an
+			// unreachable-but-silent host (firewall drop, dead route) hangs
+			// on the OS's own retransmit timeout — which can run past two
+			// minutes — because ResponseHeaderTimeout below only starts
+			// once a connection already exists.
+			DialContext:           (&net.Dialer{Timeout: cfg.Timeout}).DialContext,
 			ResponseHeaderTimeout: cfg.Timeout,
 		},
 	})

@@ -83,6 +83,12 @@ type ConnectRequest struct {
 // Connect validates the grid connection (authenticated GET /), resolves the
 // field map, and stores a live client in memory for RunScan to reuse. It
 // returns the cluster identity so the console can show what it's attached to.
+// connectProbeTimeout bounds the initial GET / auth check so an
+// unreachable or silently-dropping host fails fast with a visible error
+// instead of leaving the Connect button spinning indefinitely — the
+// connect screen has no cancel affordance, unlike a running scan.
+const connectProbeTimeout = 20 * time.Second
+
 func (a *App) Connect(req ConnectRequest) (escli.ClusterInfo, error) {
 	cli, err := escli.New(escli.Config{
 		ESURL:              req.ESURL,
@@ -94,7 +100,9 @@ func (a *App) Connect(req ConnectRequest) (escli.ClusterInfo, error) {
 	if err != nil {
 		return escli.ClusterInfo{}, err
 	}
-	info, err := cli.Info(a.ctx)
+	ctx, cancel := context.WithTimeout(a.ctx, connectProbeTimeout)
+	defer cancel()
+	info, err := cli.Info(ctx)
 	if err != nil {
 		return escli.ClusterInfo{}, err
 	}
