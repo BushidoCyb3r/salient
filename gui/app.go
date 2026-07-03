@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -94,10 +96,16 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	return mapview.Build(snap, mapview.Options{}), nil
 }
 
-// ExportMap re-renders the snapshot currently on screen as html, svg, or
-// graphml — the same renderers the CLI's `map --format` uses — and saves it
-// wherever the operator picks via the native Save dialog. Returns "" (no
-// error) if the dialog was cancelled.
+// ExportMap re-renders the snapshot currently on screen as html or graphml —
+// the same renderers the CLI's `map --format` uses — and saves it wherever
+// the operator picks via the native Save dialog. Returns "" (no error) if
+// the dialog was cancelled.
+//
+// "svg" is deliberately not offered here: report.SVGMap lays nodes out with
+// its own static grid algorithm, independent of whatever fcose/dagre layout
+// is currently on screen in the console, so the export would never match
+// what the operator is looking at — exactly the complaint that led to
+// ExportImage below, which rasterizes the live Cytoscape canvas instead.
 func (a *App) ExportMap(path string, format string) (string, error) {
 	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
 	if err != nil {
@@ -108,14 +116,12 @@ func (a *App) ExportMap(path string, format string) (string, error) {
 	var ext, filterName string
 	var render func(io.Writer, *mapview.Model) error
 	switch format {
-	case "svg":
-		ext, filterName, render = ".svg", "SVG image", report.SVGMap
 	case "graphml":
 		ext, filterName, render = ".graphml", "GraphML", report.GraphMLMap
 	case "html":
 		ext, filterName, render = ".html", "HTML", report.HTMLMap
 	default:
-		return "", fmt.Errorf("unknown export format %q (want html, svg, or graphml)", format)
+		return "", fmt.Errorf("unknown export format %q (want html or graphml)", format)
 	}
 
 	saveDialog := a.saveFileFn
@@ -137,6 +143,40 @@ func (a *App) ExportMap(path string, format string) (string, error) {
 		return "", err
 	}
 	if err := os.WriteFile(out, buf.Bytes(), config.OutputFileMode); err != nil {
+		return "", err
+	}
+	return out, nil
+}
+
+// ExportImage saves a PNG the frontend captured from the live Cytoscape
+// canvas via cy.png() — i.e. exactly the layout, positions, and colors
+// currently on screen, whichever of fcose/dagre is active. dataURL is the
+// "data:image/png;base64,..." string cy.png() returns. Returns "" (no
+// error) if the Save dialog was cancelled.
+func (a *App) ExportImage(dataURL string) (string, error) {
+	const prefix = "data:image/png;base64,"
+	if !strings.HasPrefix(dataURL, prefix) {
+		return "", errors.New("expected a data:image/png;base64 URL")
+	}
+	png, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(dataURL, prefix))
+	if err != nil {
+		return "", fmt.Errorf("decoding image data: %w", err)
+	}
+
+	saveDialog := a.saveFileFn
+	if saveDialog == nil {
+		saveDialog = func(opts runtime.SaveDialogOptions) (string, error) {
+			return runtime.SaveFileDialog(a.ctx, opts)
+		}
+	}
+	out, err := saveDialog(runtime.SaveDialogOptions{
+		DefaultFilename: time.Now().UTC().Format("20060102T150405Z") + ".png",
+		Filters:         []runtime.FileFilter{{DisplayName: "PNG image", Pattern: "*.png"}},
+	})
+	if err != nil || out == "" {
+		return "", err
+	}
+	if err := os.WriteFile(out, png, config.OutputFileMode); err != nil {
 		return "", err
 	}
 	return out, nil

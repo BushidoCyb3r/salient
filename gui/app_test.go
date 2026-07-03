@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
+	"encoding/base64"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -80,7 +82,6 @@ func TestExportMapWritesEachFormat(t *testing.T) {
 		format, ext, marker string
 	}{
 		{"html", ".html", "<html"},
-		{"svg", ".svg", "<svg"},
 		{"graphml", ".graphml", "<graphml"},
 	} {
 		outDir := t.TempDir()
@@ -126,6 +127,52 @@ func TestExportMapUnknownFormat(t *testing.T) {
 	writeSnapshot(t, snapPath, graph.Snapshot{Meta: graph.SnapshotMeta{ClusterName: "x"}})
 	if _, err := (&App{}).ExportMap(snapPath, "pdf"); err == nil {
 		t.Fatal("ExportMap() with an unknown format should error")
+	}
+}
+
+func TestExportImageWritesDecodedPNG(t *testing.T) {
+	outDir := t.TempDir()
+	a := &App{saveFileFn: func(opts runtime.SaveDialogOptions) (string, error) {
+		if opts.DefaultFilename == "" {
+			t.Fatal("SaveDialogOptions.DefaultFilename is empty")
+		}
+		return filepath.Join(outDir, "out.png"), nil
+	}}
+	png := []byte{0x89, 'P', 'N', 'G', 1, 2, 3}
+	dataURL := "data:image/png;base64," + base64.StdEncoding.EncodeToString(png)
+
+	saved, err := a.ExportImage(dataURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(saved)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(body, png) {
+		t.Fatalf("ExportImage() wrote %v, want %v", body, png)
+	}
+	info, err := os.Stat(saved)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Errorf("ExportImage() mode = %o, want 600", info.Mode().Perm())
+	}
+}
+
+func TestExportImageCancelledDialogReturnsNoError(t *testing.T) {
+	a := &App{saveFileFn: func(runtime.SaveDialogOptions) (string, error) { return "", nil }}
+	png := []byte{1, 2, 3}
+	saved, err := a.ExportImage("data:image/png;base64," + base64.StdEncoding.EncodeToString(png))
+	if err != nil || saved != "" {
+		t.Fatalf("ExportImage() = %q, %v; want empty path, nil error on cancel", saved, err)
+	}
+}
+
+func TestExportImageRejectsNonPNGDataURL(t *testing.T) {
+	if _, err := (&App{}).ExportImage("data:text/plain;base64,aGVsbG8="); err == nil {
+		t.Fatal("ExportImage() with a non-PNG data URL should error")
 	}
 }
 

@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, Legend } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -189,7 +189,17 @@ $('exportbtn').onclick = async () => {
   const btn = $('exportbtn');
   btn.disabled = true;
   try {
-    const saved = await ExportMap(currentSnapshotPath, fmt);
+    let saved;
+    if (fmt === 'png') {
+      // Rasterize the canvas exactly as currently laid out (fcose/dagre,
+      // whichever is active) — this is what matches the on-screen view,
+      // unlike the server-side SVG renderer which lays nodes out itself.
+      if (!cy) throw new Error('no map loaded');
+      const dataURL = cy.png({ full: true, scale: 2, bg: '#0d1117' });
+      saved = await ExportImage(dataURL);
+    } else {
+      saved = await ExportMap(currentSnapshotPath, fmt);
+    }
     if (saved) logLine('exported ' + fmt.toUpperCase() + ' to ' + saved, 'ok');
   } catch (err) {
     logLine('export failed: ' + err, 'err');

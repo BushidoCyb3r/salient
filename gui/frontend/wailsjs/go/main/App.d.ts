@@ -10,6 +10,8 @@ export function CancelScan():Promise<void>;
 
 export function Connect(arg1:main.ConnectRequest):Promise<escli.ClusterInfo>;
 
+export function ExportImage(arg1:string):Promise<string>;
+
 export function ExportMap(arg1:string,arg2:string):Promise<string>;
 
 export function Legend():Promise<Array<main.LegendItem>>;
