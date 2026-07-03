@@ -26,9 +26,9 @@ func fixtureEdges() []edge {
 	ws := func(i int) string { return fmt.Sprintf("10.0.3.%d", 30+i) }
 	for i := 0; i < 15; i++ {
 		edges = append(edges,
-			edge{ws(i), "10.0.1.10", 88, 400 + i},  // kerberos -> DC
-			edge{ws(i), "10.0.1.11", 53, 900 + i},  // dns
-			edge{ws(i), "10.0.1.20", 445, 60 + i},  // smb
+			edge{ws(i), "10.0.1.10", 88, 400 + i}, // kerberos -> DC
+			edge{ws(i), "10.0.1.11", 53, 900 + i}, // dns
+			edge{ws(i), "10.0.1.20", 445, 60 + i}, // smb
 		)
 	}
 	if *variant == 1 {
