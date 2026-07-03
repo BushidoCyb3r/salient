@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -14,6 +16,7 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/escli"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/defilade/internal/report"
 	"github.com/BushidoCyb3r/defilade/internal/scan"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
@@ -26,6 +29,9 @@ type App struct {
 	// emitFn, when set, replaces the Wails runtime event emitter — the
 	// scan progress path is then unit-testable without the Wails runtime.
 	emitFn func(event string, data ...interface{})
+	// saveFileFn, when set, replaces runtime.SaveFileDialog — ExportMap's
+	// render logic is then unit-testable without the Wails runtime.
+	saveFileFn func(opts runtime.SaveDialogOptions) (string, error)
 
 	mu     sync.Mutex
 	cli    *escli.Client      // set by Connect; nil until connected
@@ -70,17 +76,70 @@ func (a *App) ListSnapshots() ([]snapshot.ArtifactEntry, error) {
 	return snapshot.ScanArtifacts(a.DataDir)
 }
 
-// LoadModel accepts either an absolute path (native Open dialog) or a
-// DataDir-relative path (ArtifactEntry.Snapshot from ListSnapshots).
-func (a *App) LoadModel(path string) (*mapview.Model, error) {
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(a.DataDir, path)
+// resolveSnapshotPath accepts either an absolute path (native Open dialog)
+// or a DataDir-relative path (ArtifactEntry.Snapshot from ListSnapshots).
+func (a *App) resolveSnapshotPath(path string) string {
+	if filepath.IsAbs(path) {
+		return path
 	}
-	snap, err := snapshot.Load(path)
+	return filepath.Join(a.DataDir, path)
+}
+
+// LoadModel loads a snapshot and re-derives its briefing-map model fresh.
+func (a *App) LoadModel(path string) (*mapview.Model, error) {
+	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
 	if err != nil {
 		return nil, err
 	}
 	return mapview.Build(snap, mapview.Options{}), nil
+}
+
+// ExportMap re-renders the snapshot currently on screen as html, svg, or
+// graphml — the same renderers the CLI's `map --format` uses — and saves it
+// wherever the operator picks via the native Save dialog. Returns "" (no
+// error) if the dialog was cancelled.
+func (a *App) ExportMap(path string, format string) (string, error) {
+	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	if err != nil {
+		return "", err
+	}
+	mm := mapview.Build(snap, mapview.Options{})
+
+	var ext, filterName string
+	var render func(io.Writer, *mapview.Model) error
+	switch format {
+	case "svg":
+		ext, filterName, render = ".svg", "SVG image", report.SVGMap
+	case "graphml":
+		ext, filterName, render = ".graphml", "GraphML", report.GraphMLMap
+	case "html":
+		ext, filterName, render = ".html", "HTML", report.HTMLMap
+	default:
+		return "", fmt.Errorf("unknown export format %q (want html, svg, or graphml)", format)
+	}
+
+	saveDialog := a.saveFileFn
+	if saveDialog == nil {
+		saveDialog = func(opts runtime.SaveDialogOptions) (string, error) {
+			return runtime.SaveFileDialog(a.ctx, opts)
+		}
+	}
+	out, err := saveDialog(runtime.SaveDialogOptions{
+		DefaultFilename: snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ext,
+		Filters:         []runtime.FileFilter{{DisplayName: filterName, Pattern: "*" + ext}},
+	})
+	if err != nil || out == "" {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	if err := render(&buf, mm); err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(out, buf.Bytes(), config.OutputFileMode); err != nil {
+		return "", err
+	}
+	return out, nil
 }
 
 // ConnectRequest is the connection form the launch screen submits. The API

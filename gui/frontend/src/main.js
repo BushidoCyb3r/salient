@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, Legend } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, Legend } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -173,9 +173,30 @@ function runLayout(name) {
 $('b-fcose').onclick = () => { if (cy) runLayout('fcose'); };
 $('b-dagre').onclick = () => { if (cy) runLayout('dagre'); };
 
+let currentSnapshotPath = '';
+
 function openSnapshot(path) {
-  LoadModel(path).then(renderModel).catch((err) => logLine('could not load snapshot: ' + err, 'err'));
+  LoadModel(path).then((model) => {
+    currentSnapshotPath = path;
+    $('exportbtn').disabled = false;
+    renderModel(model);
+  }).catch((err) => logLine('could not load snapshot: ' + err, 'err'));
 }
+
+$('exportbtn').onclick = async () => {
+  if (!currentSnapshotPath) return;
+  const fmt = $('exportfmt').value;
+  const btn = $('exportbtn');
+  btn.disabled = true;
+  try {
+    const saved = await ExportMap(currentSnapshotPath, fmt);
+    if (saved) logLine('exported ' + fmt.toUpperCase() + ' to ' + saved, 'ok');
+  } catch (err) {
+    logLine('export failed: ' + err, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+};
 
 function renderModel(model) {
   const els = [];

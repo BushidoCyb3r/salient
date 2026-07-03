@@ -136,6 +136,15 @@
       </div>
       <h2>Search</h2>
       <input id="search" placeholder="IP, hostname, role...">
+      <h2>Export</h2>
+      <div style="display:flex;gap:6px">
+        <select id="exportfmt" style="flex:1">
+          <option value="html">HTML</option>
+          <option value="svg">SVG</option>
+          <option value="graphml">GraphML</option>
+        </select>
+        <button id="exportbtn" disabled>Export</button>
+      </div>
       <h2>Legend</h2>
       <div id="legend"></div>
       <h2>Evidence</h2><div id="ev">click a node</div>

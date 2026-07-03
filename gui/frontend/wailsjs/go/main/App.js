@@ -10,6 +10,10 @@ export function Connect(arg1) {
   return window['go']['main']['App']['Connect'](arg1);
 }
 
+export function ExportMap(arg1, arg2) {
+  return window['go']['main']['App']['ExportMap'](arg1, arg2);
+}
+
 export function Legend() {
   return window['go']['main']['App']['Legend']();
 }

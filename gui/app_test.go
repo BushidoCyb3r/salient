@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
@@ -63,6 +66,66 @@ func TestLoadModel(t *testing.T) {
 	}
 	if got.Meta.ClusterName != "test-cluster" || len(got.Nodes) != 1 {
 		t.Fatalf("LoadModel() = %#v", got)
+	}
+}
+
+func TestExportMapWritesEachFormat(t *testing.T) {
+	snapPath := filepath.Join(t.TempDir(), "snapshot.json.gz")
+	writeSnapshot(t, snapPath, graph.Snapshot{
+		Meta:  graph.SnapshotMeta{ClusterName: "test-cluster"},
+		Nodes: []graph.Node{{IP: "10.0.0.10", Subnet: "10.0.0.0/24"}},
+	})
+
+	for _, tc := range []struct {
+		format, ext, marker string
+	}{
+		{"html", ".html", "<html"},
+		{"svg", ".svg", "<svg"},
+		{"graphml", ".graphml", "<graphml"},
+	} {
+		outDir := t.TempDir()
+		a := &App{saveFileFn: func(opts runtime.SaveDialogOptions) (string, error) {
+			if opts.DefaultFilename == "" {
+				t.Fatal("SaveDialogOptions.DefaultFilename is empty")
+			}
+			return filepath.Join(outDir, "out"+tc.ext), nil
+		}}
+		saved, err := a.ExportMap(snapPath, tc.format)
+		if err != nil {
+			t.Fatalf("%s: %v", tc.format, err)
+		}
+		body, err := os.ReadFile(saved)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(body), tc.marker) {
+			t.Errorf("%s export missing %q marker", tc.format, tc.marker)
+		}
+		info, err := os.Stat(saved)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.Mode().Perm() != 0o600 {
+			t.Errorf("%s export mode = %o, want 600", tc.format, info.Mode().Perm())
+		}
+	}
+}
+
+func TestExportMapCancelledDialogReturnsNoError(t *testing.T) {
+	snapPath := filepath.Join(t.TempDir(), "snapshot.json.gz")
+	writeSnapshot(t, snapPath, graph.Snapshot{Meta: graph.SnapshotMeta{ClusterName: "x"}})
+	a := &App{saveFileFn: func(runtime.SaveDialogOptions) (string, error) { return "", nil }}
+	saved, err := a.ExportMap(snapPath, "html")
+	if err != nil || saved != "" {
+		t.Fatalf("ExportMap() = %q, %v; want empty path, nil error on cancel", saved, err)
+	}
+}
+
+func TestExportMapUnknownFormat(t *testing.T) {
+	snapPath := filepath.Join(t.TempDir(), "snapshot.json.gz")
+	writeSnapshot(t, snapPath, graph.Snapshot{Meta: graph.SnapshotMeta{ClusterName: "x"}})
+	if _, err := (&App{}).ExportMap(snapPath, "pdf"); err == nil {
+		t.Fatal("ExportMap() with an unknown format should error")
 	}
 }
 
