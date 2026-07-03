@@ -6,7 +6,7 @@
 
 Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs already aggregated on a Security Onion manager and produces a typed dependency graph, a ranked key-cyber-terrain report with evidence attached to every ranking, briefing-ready network maps, drift detection between snapshots, and a doc-vs-reality reconciliation report. Primary use case: CPT/hunt-team terrain familiarization in the first 72 hours on an unfamiliar network.
 
-> **Project status: Phase 3 implemented; live-grid validation pending.** `scan` aggregates the window
+> **Project status: all planned phases (0–4) implemented; live-grid validation pending.** `scan` aggregates the window
 > server-side, builds and scores the dependency graph, and writes a snapshot,
 > analyst report, and briefing map. Stored snapshots can also be rendered offline as
 > HTML, SVG, or GraphML; `diff` compares snapshots and emits HTML or JSON drift
@@ -95,15 +95,22 @@ of the network it describes.
 
 ## Repository layout
 
-See `DEFILADE_PLAN.md` for the full architecture and phased plan. Current tree:
-
 ```
-cmd/defilade/          CLI (cobra): test-connection, discover, scan, report, map, diff, reconcile, analyze, list
+cmd/defilade/          CLI (cobra): test-connection, discover, scan, report, map, diff, reconcile, analyze, list, view
 internal/config/       every tunable default — no magic numbers inline
 internal/escli/        read-only ES client, FieldMap, query builders
-internal/mapview/      subnet grouping, gateway inference, map simplification
+internal/graph/        typed dependency-graph and snapshot types
+internal/score/        key-cyber-terrain composite scoring
+internal/mapview/      subnet grouping, gateway inference, map simplification/overview
 internal/reconcile/    asset-list ingest and doc-vs-reality comparison
 internal/report/       analyst reports and HTML/SVG/GraphML map renderers
+internal/snapshot/     snapshot save/load/list/diff, and artifact scanning shared by the CLI `view` command and the GUI
+internal/assist/       optional snapshot-only model-assisted analysis (`analyze`)
+gui/                   native desktop map viewer, separate Wails v2 Go module — see docs/GUI.md
+web/                   vendored, embedded JS for the HTML/interactive map (no CDN assets)
 docs/DEPLOYMENT.md     read-only API key + so-firewall allow-list steps
 docs/FIELDMAP.md       field-map verification worksheet (Phase 0 output)
+docs/GUI.md            desktop viewer build steps and manual QA checklist
+docs/MAPS.md           map rendering, briefing-overview condensation, --focus
+docs/AI.md             `analyze` command: scope, egress guard, threat model
 ```
