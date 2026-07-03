@@ -53,7 +53,28 @@ Full spec: `docs/superpowers/specs/2026-07-03-gui-operator-console-design.md`.
    - Tested: `gui/scan_test.go` (Connect stores client, RunScan emits
      progress+done and clears cancel, bad-window + not-connected errors).
 
-## TODO (not started)
+## Frontend DONE (`d7dd7c9`)
+
+Both screens built in one pass — `gui/frontend/index.html` + `gui/frontend/src/main.js`
+are now the dark operator console: launch screen (centered logo + full connect form,
+API key password field, inline errors) → console (top bar cluster + Run Scan/Cancel,
+snapshot sidebar, dark-restyled Cytoscape map, streaming task-output panel wired to
+scan:progress/done/error with a live pulse). Logo copied to `gui/frontend/public/`.
+`gui/frontend_test.go` markers updated. `make gui` builds; gui + root tests pass.
+
+## Remaining
+
+- **Manual visual QA** on a machine with a display (headless box can't verify
+  rendering/interaction): connect against the fake grid
+  (`go run ./testdata/fakees -port 9299`, connect to `http://127.0.0.1:9299`, key
+  `dGVzdDp0ZXN0`), run a scan, watch the task log stream, confirm the map renders
+  dark and the new snapshot loads. Checklist scaffold in `docs/GUI.md`.
+- **Optional: RHEL CI job** — CI gui-build is ubuntu/macos/windows only. A
+  Rocky/Fedora container job would continuously verify the RHEL build. Runtime deps
+  now documented in `docs/GUI.md`.
+- Merge PR #1 when the user is ready (currently open, feature→master).
+
+## Original TODO (now largely done — kept for reference)
 
 3. **Frontend: dark launch/connect screen** (`gui/frontend/index.html`,
    `gui/frontend/src/main.js`). Near-black bg (#0d1117), big centered logo,
