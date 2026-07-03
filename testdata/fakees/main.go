@@ -48,12 +48,13 @@ func fixtureEdges() []edge {
 }
 
 func main() {
+	bind := flag.String("bind", "0.0.0.0", "listen address (0.0.0.0 for cross-machine testing, 127.0.0.1 for loopback-only)")
 	port := flag.String("port", "9299", "listen port")
 	flag.Parse()
 
 	http.HandleFunc("/", route)
-	log.Printf("fakees variant %d on :%s", *variant, *port)
-	log.Fatal(http.ListenAndServe("127.0.0.1:"+*port, nil))
+	log.Printf("fakees variant %d on %s:%s", *variant, *bind, *port)
+	log.Fatal(http.ListenAndServe(*bind+":"+*port, nil))
 }
 
 func route(w http.ResponseWriter, r *http.Request) {
