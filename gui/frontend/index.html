@@ -1,12 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>gui</title>
-</head>
-<body>
-<div id="app"></div>
-<script src="./src/main.js" type="module"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Defilade Briefing Map</title>
+<style>
+ :root{--bg:#fcfcfd;--fg:#1c2330;--mut:#6a7180;--line:#d7dbe2}
+ *{box-sizing:border-box} body{margin:0;font:14px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;height:100vh}
+ header{padding:10px 18px;border-bottom:1px solid var(--line);display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+ h1{margin:0;font-size:16px} .meta{color:var(--mut);font-size:12px}
+ #wrap{flex:1;display:flex;min-height:0}
+ #cy{flex:1;min-width:0}
+ aside{width:300px;border-left:1px solid var(--line);padding:12px;overflow:auto;font-size:13px}
+ aside h2{font-size:12px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px}
+ ul#snaplist{list-style:none;margin:0;padding:0}
+ ul#snaplist li{padding:6px;border-radius:5px;cursor:pointer}
+ ul#snaplist li:hover{background:#eef1f6}
+ ul#snaplist li.sel{background:#e8eefb}
+ #snaplist-empty{color:var(--mut);font-style:italic}
+ input#search{width:100%;padding:6px;border:1px solid var(--line);border-radius:5px}
+ #ev{white-space:pre-wrap;color:var(--mut)}
+ .ctl label{display:block;margin:2px 0;cursor:pointer}
+ button{margin:2px 4px 2px 0;padding:4px 10px;border:1px solid var(--line);background:#fff;border-radius:5px;cursor:pointer}
+ button.on{background:#e8eefb;border-color:#3d7edb}
+ .lg{display:flex;align-items:center;gap:6px;margin:2px 0}
+ .lg i{width:22px;height:4px;display:inline-block}
+ #ctxmenu{position:absolute;display:none;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:10;font-size:13px}
+ #ctxmenu div{padding:6px 14px;cursor:pointer}
+ #ctxmenu div:hover{background:#eef1f6}
+ #errbanner{display:none;background:#fdf3ef;color:#a04a26;border-bottom:1px solid #e8c4b2;padding:8px 18px;font-size:12px}
+ #errbanner button{float:right}
+</style></head><body>
+<div id="errbanner"><span id="errtext"></span><button id="errdismiss">dismiss</button></div>
+<header><h1 id="title">Defilade briefing map</h1><span class="meta" id="submeta"></span></header>
+<div id="wrap"><div id="cy"></div>
+<aside>
+ <h2>Snapshots</h2>
+ <ul id="snaplist"></ul>
+ <div id="snaplist-empty" style="display:none">No snapshots found in the data directory. Run <code>defilade scan</code> first.</div>
+ <h2>Layout</h2>
+ <button id="b-fcose" class="on">organic (fcose)</button><button id="b-dagre">tiered (dagre)</button>
+ <h2>Layers</h2>
+ <div class="ctl">
+  <label><input type="checkbox" id="l-heat"> criticality heat</label>
+  <label><input type="checkbox" id="l-lbl" checked> edge labels</label>
+  <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
+ </div>
+ <h2>Search</h2>
+ <input id="search" placeholder="IP, hostname, role...">
+ <h2>Legend</h2>
+ <div id="legend"></div>
+ <h2>Evidence</h2><div id="ev">click a node</div>
+</aside></div>
+<div id="ctxmenu"></div>
+<script src="/vendor/cytoscape.min.js"></script>
+<script src="/vendor/layout-base.js"></script>
+<script src="/vendor/cose-base.js"></script>
+<script src="/vendor/cytoscape-fcose.js"></script>
+<script src="/vendor/dagre.min.js"></script>
+<script src="/vendor/cytoscape-dagre.js"></script>
+<script type="module" src="./src/main.js"></script>
+</body></html>

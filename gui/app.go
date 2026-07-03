@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"path/filepath"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
@@ -26,16 +26,16 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
 func (a *App) ListSnapshots() ([]snapshot.ArtifactEntry, error) {
 	return snapshot.ScanArtifacts(a.DataDir)
 }
 
+// LoadModel accepts either an absolute path (native Open dialog) or a
+// DataDir-relative path (ArtifactEntry.Snapshot from ListSnapshots).
 func (a *App) LoadModel(path string) (*mapview.Model, error) {
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(a.DataDir, path)
+	}
 	snap, err := snapshot.Load(path)
 	if err != nil {
 		return nil, err

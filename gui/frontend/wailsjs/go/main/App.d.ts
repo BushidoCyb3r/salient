@@ -4,8 +4,6 @@ import {main} from '../models';
 import {snapshot} from '../models';
 import {mapview} from '../models';
 
-export function Greet(arg1:string):Promise<string>;
-
 export function Legend():Promise<Array<main.LegendItem>>;
 
 export function ListSnapshots():Promise<Array<snapshot.ArtifactEntry>>;
