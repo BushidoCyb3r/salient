@@ -50,19 +50,17 @@ jobs:
           name: defilade-gui-${{ matrix.os }}
           path: gui/build/bin/*
 
-  # Verifies the RHEL-family build path (Rocky/Fedora): webkit2gtk ships as
-  # 4.1 there, so `make gui` auto-adds -tags webkit2_41 via its pkg-config
-  # probe. GitHub has no RHEL runner, so run Rocky 9 in a container.
-  gui-build-rocky:
+  # Verifies the RHEL-family build path. On Fedora (RHEL upstream) webkit2gtk
+  # ships as 4.1 — the same API the Rocky dev box uses — so `make gui`
+  # auto-adds -tags webkit2_41 via its pkg-config probe. GitHub has no
+  # RHEL-family runner, so run Fedora in a container. (Rocky/RHEL 9 only ships
+  # the older webkit2gtk-4.0 API; Fedora exercises the 4.1 path we actually ship.)
+  gui-build-fedora:
     runs-on: ubuntu-latest
-    container: rockylinux:9
+    container: fedora:latest
     steps:
       - name: Install base tools and webview build deps
-        run: |
-          dnf -y install 'dnf-command(config-manager)'
-          dnf config-manager --set-enabled crb
-          dnf -y install epel-release
-          dnf -y install gcc make git tar gzip which pkgconf-pkg-config gtk3-devel webkit2gtk4.1-devel
+        run: dnf -y install gcc make git tar gzip which pkgconf-pkg-config gtk3-devel webkit2gtk4.1-devel
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
@@ -81,5 +79,5 @@ jobs:
         run: go test ./...
       - uses: actions/upload-artifact@v4
         with:
-          name: defilade-gui-rockylinux9
+          name: defilade-gui-fedora
           path: gui/build/bin/*
