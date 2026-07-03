@@ -69,9 +69,11 @@ scan:progress/done/error with a live pulse). Logo copied to `gui/frontend/public
   (`go run ./testdata/fakees -port 9299`, connect to `http://127.0.0.1:9299`, key
   `dGVzdDp0ZXN0`), run a scan, watch the task log stream, confirm the map renders
   dark and the new snapshot loads. Checklist scaffold in `docs/GUI.md`.
-- **Optional: RHEL CI job** — CI gui-build is ubuntu/macos/windows only. A
-  Rocky/Fedora container job would continuously verify the RHEL build. Runtime deps
-  now documented in `docs/GUI.md`.
+- **RHEL CI job — added** (`6d203a8`): `gui-build-rocky` runs the GUI build in a
+  `rockylinux:9` container (CRB+EPEL for gtk3-devel/webkit2gtk4.1-devel), `make gui`
+  auto-adds `-tags webkit2_41`. Watch its first run on GitHub Actions — if a package
+  name is off on Rocky 9 (e.g. webkit2gtk4.1-devel needing a different repo), adjust
+  the dnf line. Runtime deps documented in `docs/GUI.md`.
 - Merge PR #1 when the user is ready (currently open, feature→master).
 
 ## Original TODO (now largely done — kept for reference)
