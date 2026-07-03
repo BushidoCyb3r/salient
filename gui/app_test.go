@@ -11,6 +11,21 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 )
 
+func TestDefaultDataDirIsAbsoluteUnderHome(t *testing.T) {
+	got := defaultDataDir()
+	if !filepath.IsAbs(got) {
+		t.Fatalf("defaultDataDir() = %q, want an absolute path", got)
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(home, config.DataDirName)
+	if got != want {
+		t.Fatalf("defaultDataDir() = %q, want %q", got, want)
+	}
+}
+
 func TestListSnapshotsFindsReportArtifact(t *testing.T) {
 	dataDir := t.TempDir()
 	reports := filepath.Join(dataDir, "reports")

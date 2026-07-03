@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -35,7 +36,20 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{DataDir: config.DataDirName}
+	return &App{DataDir: defaultDataDir()}
+}
+
+// defaultDataDir anchors DataDir to the user's home directory. Unlike the
+// CLI — always run from a terminal in a directory the operator chose —
+// a double-clicked (or `open`ed) .app has no reliable working directory;
+// on macOS it's often "/", which isn't writable. A relative "defilade-data"
+// would then fail every scan with a read-only-filesystem error.
+func defaultDataDir() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return config.DataDirName
+	}
+	return filepath.Join(home, config.DataDirName)
 }
 
 // startup is called when the app starts. The context is saved
