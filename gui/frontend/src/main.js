@@ -642,7 +642,11 @@ function bindContextMenu() {
     };
     addItem('Copy IP', () => navigator.clipboard.writeText(n.data('id')));
     if (!n.data('agg') && !n.data('gw')) {
-      addItem('Assign to device…', () => {
+      addItem('Assign to device…', (click) => {
+        // The rebuild below detaches this menu item; without this the same
+        // click bubbles to the document close handler, which no longer sees
+        // the target inside #ctxmenu and hides the picker instantly.
+        click.stopPropagation();
         ctxmenu.innerHTML = '';
         const ip = n.data('id');
         const doAssign = async (name) => {
