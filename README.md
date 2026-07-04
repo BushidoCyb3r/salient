@@ -185,3 +185,12 @@ Additional operator documentation:
 ## License
 
 Defilade is licensed under the [Apache License 2.0](LICENSE).
+
+Defilade uses the
+[official Elasticsearch Go client](https://github.com/elastic/go-elasticsearch/blob/v8.19.6/LICENSE),
+which is also licensed under Apache-2.0. Defilade connects to external
+Elasticsearch and Security Onion installations; those platforms remain subject
+to their own licenses:
+
+- [Elasticsearch licensing](https://www.elastic.co/licensing/elastic-license)
+- [Security Onion license](https://securityonionsolutions.com/license/)
