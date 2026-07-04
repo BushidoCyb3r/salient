@@ -6,8 +6,24 @@ export function AggregateHosts(arg1, arg2) {
   return window['go']['main']['App']['AggregateHosts'](arg1, arg2);
 }
 
+export function AssignIP(arg1, arg2) {
+  return window['go']['main']['App']['AssignIP'](arg1, arg2);
+}
+
 export function CancelScan() {
   return window['go']['main']['App']['CancelScan']();
+}
+
+export function DeleteDevice(arg1) {
+  return window['go']['main']['App']['DeleteDevice'](arg1);
+}
+
+export function DeviceHints(arg1) {
+  return window['go']['main']['App']['DeviceHints'](arg1);
+}
+
+export function DismissHint(arg1) {
+  return window['go']['main']['App']['DismissHint'](arg1);
 }
 
 export function Connect(arg1) {
@@ -26,6 +42,10 @@ export function Legend() {
   return window['go']['main']['App']['Legend']();
 }
 
+export function ListDevices() {
+  return window['go']['main']['App']['ListDevices']();
+}
+
 export function ListSnapshots() {
   return window['go']['main']['App']['ListSnapshots']();
 }
@@ -38,6 +58,18 @@ export function RunScan(arg1) {
   return window['go']['main']['App']['RunScan'](arg1);
 }
 
+export function SaveDevice(arg1, arg2) {
+  return window['go']['main']['App']['SaveDevice'](arg1, arg2);
+}
+
+export function SetLabels(arg1, arg2) {
+  return window['go']['main']['App']['SetLabels'](arg1, arg2);
+}
+
 export function SuggestTags(arg1) {
   return window['go']['main']['App']['SuggestTags'](arg1);
+}
+
+export function UnassignIP(arg1) {
+  return window['go']['main']['App']['UnassignIP'](arg1);
 }

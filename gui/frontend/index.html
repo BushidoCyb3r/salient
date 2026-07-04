@@ -52,6 +52,17 @@
  ul#snaplist li:hover{background:var(--panel2)}
  ul#snaplist li.sel{background:#10312c;border-color:var(--accent)}
  #snaplist-empty{color:var(--mut);font-style:italic}
+ ul#devlist{list-style:none;margin:0;padding:0}
+ ul#devlist li{padding:5px 8px;border-radius:6px;cursor:pointer;border:1px solid transparent}
+ ul#devlist li:hover{background:var(--panel2)}
+ ul#devlist li .dev,#hl-list li .dev{color:#a78bfa}
+ #devhints .dh{background:#241a33;border:1px solid #a78bfa55;border-radius:6px;padding:6px 8px;margin:4px 0;font-size:12px}
+ #devhints .dh .act{display:flex;gap:6px;margin-top:5px}
+ #devhints .dh button{padding:2px 8px;font-size:11px}
+ #ev .devcard{color:var(--fg);white-space:normal}
+ #ev .devcard button{padding:2px 8px;font-size:11px;margin:2px 4px 2px 0}
+ #ev .devcard textarea{width:100%;font:inherit;background:#0b0f14;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;min-height:52px;margin:4px 0;box-sizing:border-box}
+ #ev .devcard .ip{cursor:pointer;color:var(--accent2)}
  #search{margin-top:2px}
  .ctl label{display:flex;align-items:center;gap:7px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--fg);margin:3px 0;cursor:pointer}
  .ctl input{width:auto}
@@ -162,6 +173,10 @@
       </div>
       <h2>Search</h2>
       <input id="search" placeholder="IP, hostname, role...">
+      <h2>Devices</h2>
+      <div id="devhints"></div>
+      <ul id="devlist"></ul>
+      <div id="devempty" class="hint">right-click a map node to assign it to a device</div>
       <h2>Export</h2>
       <div style="display:flex;gap:6px">
         <select id="exportfmt" style="flex:1">

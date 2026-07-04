@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -34,6 +34,7 @@ $('connform').addEventListener('submit', async (e) => {
     cn.appendChild(document.createTextNode(info.ClusterName || 'connected'));
     document.body.classList.add('connected');
     await renderLegend();
+    await refreshDevices();
     await refreshList(true);
     logLine('connected to ' + (info.ClusterName || 'grid'), 'ok');
   } catch (err) {
@@ -191,6 +192,7 @@ function openSnapshot(path) {
     $('ai-tagbtn').disabled = false;
     $('ai-status').textContent = 'ready';
     renderModel(model);
+    refreshDevices();
   }).catch((err) => logLine('could not load snapshot: ' + err, 'err'));
 }
 
@@ -275,10 +277,11 @@ function renderModel(model) {
         id: n.id, parent: n.group || undefined, label: n.label.split('\n')[0], role: n.role, tier: n.tier,
         comp: n.composite || 0, rank: n.rank || 0, gw: n.gateway ? 1 : 0, inf: n.inferred ? 1 : 0,
         agg: n.agg_count || 0, drift: n.drift || '', ev: (n.evidence || []).join('\n'),
+        device: n.device || '', deviceType: n.device_type || '', labels: (n.labels || []).join(', '),
         aiTags: (n.suggested_tags || []).join(', '), aiConfidence: n.suggestion_confidence || 0,
         aiRationale: n.suggestion_rationale || '', aiModel: n.suggestion_model || '',
       },
-      classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
+      classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.device ? 'dev-linked ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
     });
   }
   const edges = model.edges || [];
@@ -296,11 +299,12 @@ function renderModel(model) {
     style: [
       { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 18 } },
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
-      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: 'data(label)', 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
+      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
       { selector: 'node[agg>0]', style: { shape: 'round-rectangle', 'border-style': 'double', 'border-width': 3 } },
       { selector: 'node.ai-tagged', style: { 'border-color': '#39d3ff', 'border-width': 4 } },
+      { selector: 'node.dev-linked', style: { 'border-color': '#a78bfa', 'border-width': 3 } },
       { selector: 'node.drift-new', style: { 'border-color': '#3fb950', 'border-width': 4 } },
       { selector: 'node.drift-vanished', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
       { selector: 'node.drift-rank-up,node.drift-rank-down', style: { 'border-color': '#e3a008', 'border-width': 4 } },
@@ -394,6 +398,12 @@ function renderHostList(q) {
       role.textContent = ' — ' + h.role;
       li.appendChild(role);
     }
+    if (h.device) {
+      const dev = document.createElement('span');
+      dev.className = 'dev';
+      dev.textContent = ' ◈ ' + h.device;
+      li.appendChild(dev);
+    }
     li.title = h.id;
     li.onclick = () => {
       $('ev').textContent =
@@ -411,12 +421,163 @@ function renderHostList(q) {
 $('hl-close').onclick = closeHostList;
 $('hl-filter').addEventListener('input', (e) => renderHostList(e.target.value.trim().toLowerCase()));
 
+/* ---------------- devices ---------------- */
+
+let registry = { devices: [], labels: {}, dismissed_hints: [] };
+
+async function refreshDevices() {
+  try {
+    const reg = await ListDevices();
+    registry = {
+      devices: (reg && reg.devices) || [],
+      labels: (reg && reg.labels) || {},
+      dismissed_hints: (reg && reg.dismissed_hints) || [],
+    };
+  } catch (err) {
+    logLine('could not load device registry: ' + err, 'err');
+    return;
+  }
+  renderDevices();
+  renderHints();
+  applyDeviceBadges();
+}
+
+function renderDevices() {
+  const list = $('devlist');
+  list.innerHTML = '';
+  $('devempty').style.display = registry.devices.length ? 'none' : 'block';
+  for (const d of registry.devices) {
+    const li = document.createElement('li');
+    const name = document.createElement('span');
+    name.className = 'dev';
+    name.textContent = '◈ ' + d.name;
+    li.appendChild(name);
+    const count = (d.ips || []).length;
+    const meta = (d.type ? d.type + ', ' : '') + count + ' IP' + (count === 1 ? '' : 's');
+    li.appendChild(document.createTextNode(' (' + meta + ')'));
+    li.onclick = () => showDeviceCard(d.name);
+    list.appendChild(li);
+  }
+}
+
+async function renderHints() {
+  const box = $('devhints');
+  box.innerHTML = '';
+  if (!currentSnapshotPath) return;
+  let hints = [];
+  try {
+    hints = (await DeviceHints(currentSnapshotPath)) || [];
+  } catch (err) {
+    logLine('could not compute device hints: ' + err, 'err');
+    return;
+  }
+  for (const h of hints) {
+    const div = document.createElement('div');
+    div.className = 'dh';
+    div.appendChild(document.createTextNode('"' + h.hostname + '" seen on ' + h.ips.length + ' IPs — same device?'));
+    const act = document.createElement('div');
+    act.className = 'act';
+    const link = document.createElement('button');
+    link.textContent = 'link as ' + h.hostname;
+    link.onclick = async () => {
+      try {
+        for (const ip of h.ips) await AssignIP(h.hostname, ip);
+        logLine('linked ' + h.ips.length + ' IPs as device "' + h.hostname + '"', 'ok');
+        await refreshDevices();
+      } catch (err) { logLine('link failed: ' + err, 'err'); }
+    };
+    const dis = document.createElement('button');
+    dis.textContent = 'dismiss';
+    dis.onclick = async () => {
+      try { await DismissHint(h.key); await refreshDevices(); }
+      catch (err) { logLine('dismiss failed: ' + err, 'err'); }
+    };
+    act.appendChild(link);
+    act.appendChild(dis);
+    div.appendChild(act);
+    box.appendChild(div);
+  }
+}
+
+function deviceForIP(ip) {
+  for (const d of registry.devices) if ((d.ips || []).includes(ip)) return d;
+  return null;
+}
+
+function applyDeviceBadges() {
+  if (!cy) return;
+  cy.nodes(':childless').forEach((n) => {
+    const d = deviceForIP(n.data('id'));
+    n.data('device', d ? d.name : '');
+    n.data('labels', (registry.labels[n.data('id')] || []).join(', '));
+    n.toggleClass('dev-linked', !!d);
+  });
+}
+
+function showDeviceCard(name) {
+  const d = registry.devices.find((x) => x.name === name);
+  if (!d) return;
+  const ev = $('ev');
+  ev.textContent = '';
+  const card = document.createElement('div');
+  card.className = 'devcard';
+  const head = document.createElement('div');
+  head.textContent = '◈ ' + d.name + (d.type ? ' (' + d.type + ')' : '');
+  head.style.color = '#a78bfa';
+  card.appendChild(head);
+  const notes = document.createElement('textarea');
+  notes.value = d.notes || '';
+  notes.placeholder = 'notes…';
+  card.appendChild(notes);
+  const save = document.createElement('button');
+  save.textContent = 'save notes';
+  save.onclick = async () => {
+    try {
+      await SaveDevice(d.name, { name: d.name, type: d.type || '', notes: notes.value, ips: d.ips || [] });
+      logLine('saved notes for ' + d.name, 'ok');
+      await refreshDevices();
+    } catch (err) { logLine('save failed: ' + err, 'err'); }
+  };
+  card.appendChild(save);
+  for (const ip of d.ips || []) {
+    const row = document.createElement('div');
+    const a = document.createElement('span');
+    a.className = 'ip';
+    a.textContent = ip;
+    a.title = 'zoom to node';
+    a.onclick = () => {
+      if (!cy) return;
+      const n = cy.getElementById(ip);
+      if (n.nonempty()) { cy.animate({ center: { eles: n }, zoom: 1.4, duration: 300 }); }
+      else logLine(ip + ' is not individually visible on this map (aggregated)', 'warn');
+    };
+    row.appendChild(a);
+    const un = document.createElement('button');
+    un.textContent = 'unlink';
+    un.style.marginLeft = '8px';
+    un.onclick = async () => {
+      try { await UnassignIP(ip); await refreshDevices(); showDeviceCard(d.name); }
+      catch (err) { logLine('unlink failed: ' + err, 'err'); }
+    };
+    row.appendChild(un);
+    card.appendChild(row);
+  }
+  const del = document.createElement('button');
+  del.textContent = 'delete device';
+  del.onclick = async () => {
+    try { await DeleteDevice(d.name); logLine('deleted device ' + d.name, 'ok'); $('ev').textContent = 'click a node'; await refreshDevices(); }
+    catch (err) { logLine('delete failed: ' + err, 'err'); }
+  };
+  card.appendChild(del);
+  ev.appendChild(card);
+}
+
 $('search').addEventListener('input', (e) => {
   if (!cy) return;
   const q = e.target.value.trim().toLowerCase();
   if (!q) { cy.nodes(':childless').removeClass('dim'); return; }
   cy.nodes(':childless').forEach((n) => {
-    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev') + ' ' + n.data('aiTags')).toLowerCase();
+    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev') + ' ' + n.data('aiTags') + ' ' + n.data('device') + ' ' + n.data('labels')).toLowerCase();
     n.toggleClass('dim', !hay.includes(q));
   });
 });
@@ -440,6 +601,29 @@ function bindContextMenu() {
       ctxmenu.appendChild(d);
     };
     addItem('Copy IP', () => navigator.clipboard.writeText(n.data('id')));
+    if (!n.data('agg') && !n.data('gw')) {
+      addItem('Assign to device…', () => {
+        ctxmenu.innerHTML = '';
+        const ip = n.data('id');
+        const doAssign = async (name) => {
+          try {
+            const moved = await AssignIP(name, ip);
+            logLine('assigned ' + ip + ' to ' + name + (moved ? ' (moved from ' + moved + ')' : ''), 'ok');
+            ctxmenu.style.display = 'none';
+            await refreshDevices();
+          } catch (err) { logLine('assign failed: ' + err, 'err'); }
+        };
+        for (const d of registry.devices) addItem('→ ' + d.name, () => doAssign(d.name));
+        const inp = document.createElement('input');
+        inp.placeholder = 'new device name…';
+        inp.style.margin = '6px';
+        inp.style.width = 'calc(100% - 12px)';
+        inp.onclick = (ev) => ev.stopPropagation();
+        inp.onkeydown = (ev) => { if (ev.key === 'Enter' && inp.value.trim()) doAssign(inp.value.trim()); };
+        ctxmenu.appendChild(inp);
+        inp.focus();
+      });
+    }
     addItem('Show evidence', () => cy.emit('tap', [n]));
     addItem('Focus this group', () => {
       const group = n.data('parent');
@@ -454,6 +638,7 @@ function bindContextMenu() {
 
 /* connection trust warnings (insecure TLS, writable key) */
 EventsOn('connect:warning', (msg) => logLine('warning: ' + msg, 'warn'));
+EventsOn('device:warning', (msg) => logLine('warning: ' + msg, 'warn'));
 
 /* native File-menu events still work in the console */
 EventsOn('snapshot:open', openSnapshot);
