@@ -36,6 +36,10 @@ export function LoadDriftModel(arg1:string,arg2:string):Promise<mapview.Model>;
 
 export function LoadModel(arg1:string):Promise<mapview.Model>;
 
+export function LoadReconcileModel(arg1:string,arg2:string):Promise<mapview.Model>;
+
+export function PickAssetCSV():Promise<string>;
+
 export function RunScan(arg1:main.ScanRequest):Promise<scan.Result>;
 
 export function SaveDevice(arg1:string,arg2:devices.Device):Promise<void>;

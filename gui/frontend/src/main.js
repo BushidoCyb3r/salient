@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -85,10 +85,42 @@ async function refreshList(loadNewest) {
 
 /* ---------------- drift ---------------- */
 
-// Replaced with the full reconcile view in the reconcile task.
+/* ---------------- reconcile ---------------- */
+
 let sessionAssetPath = '';
-function clearReconcile() {}
-async function applyReconcile() {}
+
+function clearReconcile(reload) {
+  sessionAssetPath = '';
+  $('rec-chip').style.display = 'none';
+  if (reload && currentSnapshotPath) openSnapshot(currentSnapshotPath);
+}
+
+async function applyReconcile() {
+  if (!sessionAssetPath || !currentSnapshotPath) return;
+  try {
+    const model = await LoadReconcileModel(currentSnapshotPath, sessionAssetPath);
+    renderModel(model);
+    refreshDevices();
+    logFindings(model);
+    const findings = (model.findings || []).filter((f) => /silent|asset list|contradict/.test(f));
+    $('rec-label').textContent = sessionAssetPath.split(/[\\/]/).pop() + ' — ' +
+      (findings.length ? findings.length + ' finding group' + (findings.length === 1 ? '' : 's') : 'no findings');
+    $('rec-chip').style.display = 'flex';
+  } catch (err) {
+    logLine('reconcile failed: ' + err, 'err');
+    clearReconcile(true);
+  }
+}
+
+$('rec-load').onclick = async () => {
+  try {
+    const path = await PickAssetCSV();
+    if (!path) return;
+    sessionAssetPath = path;
+    await applyReconcile();
+  } catch (err) { logLine('asset CSV pick failed: ' + err, 'err'); }
+};
+$('rec-clear').onclick = () => clearReconcile(true);
 
 function refreshDriftBaseline() {
   const sel = $('drift-base');

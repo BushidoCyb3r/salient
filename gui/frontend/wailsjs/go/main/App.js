@@ -58,6 +58,14 @@ export function LoadModel(arg1) {
   return window['go']['main']['App']['LoadModel'](arg1);
 }
 
+export function LoadReconcileModel(arg1, arg2) {
+  return window['go']['main']['App']['LoadReconcileModel'](arg1, arg2);
+}
+
+export function PickAssetCSV() {
+  return window['go']['main']['App']['PickAssetCSV']();
+}
+
 export function RunScan(arg1) {
   return window['go']['main']['App']['RunScan'](arg1);
 }
