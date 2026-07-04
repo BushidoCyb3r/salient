@@ -28,6 +28,7 @@ type Device struct {
 type Registry struct {
 	Devices        []Device            `json:"devices"`
 	Labels         map[string][]string `json:"labels,omitempty"`          // ip -> durable labels
+	RoleOverrides  map[string]string   `json:"role_overrides,omitempty"`  // ip -> operator-corrected role
 	DismissedHints []string            `json:"dismissed_hints,omitempty"` // hint keys never to re-show
 }
 
@@ -82,6 +83,28 @@ func (r Registry) Validate() error {
 			owner[ip] = d.Name
 		}
 	}
+	for ip := range r.RoleOverrides {
+		if _, err := netip.ParseAddr(ip); err != nil {
+			return fmt.Errorf("role override for invalid IP %q", ip)
+		}
+	}
+	return nil
+}
+
+// SetRole records an operator role correction for ip; an empty role clears
+// it. The inferred role in snapshots is never touched — this is an overlay.
+func (r *Registry) SetRole(ip, role string) error {
+	if _, err := netip.ParseAddr(ip); err != nil {
+		return fmt.Errorf("invalid IP %q", ip)
+	}
+	if role == "" {
+		delete(r.RoleOverrides, ip)
+		return nil
+	}
+	if r.RoleOverrides == nil {
+		r.RoleOverrides = map[string]string{}
+	}
+	r.RoleOverrides[ip] = role
 	return nil
 }
 

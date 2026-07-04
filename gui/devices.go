@@ -3,6 +3,7 @@ package main
 import (
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/BushidoCyb3r/defilade/internal/devices"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
@@ -83,6 +84,22 @@ func (a *App) DismissHint(key string) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { r.Dismiss(key); return nil })
 }
 
+// SetRole records an operator role correction; empty role clears it.
+func (a *App) SetRole(ip, role string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { return r.SetRole(ip, role) })
+}
+
+// overrideTiers maps known override roles (lowercased) to their map tier.
+// Free-text overrides not listed here keep the node's inferred tier.
+var overrideTiers = map[string]mapview.Tier{
+	"domaincontroller": mapview.TierCore, "dnsserver": mapview.TierCore,
+	"fileserver": mapview.TierService, "database": mapview.TierService,
+	"webserver": mapview.TierService, "jumpbox": mapview.TierService,
+	"mailserver": mapview.TierService,
+	"printer": mapview.TierClient, "camera": mapview.TierClient,
+	"workstation": mapview.TierClient,
+}
+
 // Hint is a suggested same-device link: one hostname observed on 2+ IPs.
 // Nothing links automatically — the operator accepts or dismisses it.
 type Hint struct {
@@ -149,6 +166,12 @@ func overlayNodes(nodes []mapview.MapNode, reg *devices.Registry) {
 		}
 		if lbls := reg.Labels[nodes[i].ID]; len(lbls) > 0 {
 			nodes[i].Labels = lbls
+		}
+		if role := reg.RoleOverrides[nodes[i].ID]; role != "" {
+			nodes[i].RoleOverride = role
+			if t, ok := overrideTiers[strings.ToLower(role)]; ok {
+				nodes[i].Tier = t
+			}
 		}
 	}
 }

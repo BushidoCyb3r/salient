@@ -164,6 +164,30 @@ func TestDeleteAndDismiss(t *testing.T) {
 	}
 }
 
+func TestSetRoleSetClearValidate(t *testing.T) {
+	var r Registry
+	if err := r.SetRole("10.0.0.1", "Camera"); err != nil {
+		t.Fatal(err)
+	}
+	if r.RoleOverrides["10.0.0.1"] != "Camera" {
+		t.Fatalf("RoleOverrides = %#v", r.RoleOverrides)
+	}
+	if err := r.SetRole("nope", "Camera"); err == nil {
+		t.Fatal("bad IP must error")
+	}
+	if err := r.SetRole("10.0.0.1", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := r.RoleOverrides["10.0.0.1"]; ok {
+		t.Fatal("empty role must clear the override")
+	}
+	// Validate rejects a hand-edited registry with a bad override key.
+	bad := Registry{RoleOverrides: map[string]string{"not-an-ip": "Camera"}}
+	if err := bad.Validate(); err == nil {
+		t.Fatal("Validate must reject invalid override IP")
+	}
+}
+
 func TestSaveRejectsInvalidRegistry(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "devices.json")
 	r := Registry{Devices: []Device{{Name: ""}}}

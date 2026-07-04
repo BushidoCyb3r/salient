@@ -7,6 +7,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/devices"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/defilade/internal/mapview"
 )
 
 func TestRegistryBindingsRoundTrip(t *testing.T) {
@@ -84,6 +85,59 @@ func TestLoadModelAppliesDeviceOverlay(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("node not in model")
+	}
+}
+
+func TestRoleOverrideOverlayAndTierRemap(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	for ip, role := range map[string]string{
+		"10.0.0.10": "Printer",    // known role -> client tier
+		"10.0.0.11": "MailServer", // known role -> service tier
+		"10.0.0.12": "Octoprint",  // custom text -> tier unchanged
+	} {
+		if err := a.SetRole(ip, role); err != nil {
+			t.Fatal(err)
+		}
+	}
+	path := filepath.Join(dataDir, "snapshot.json.gz")
+	mkNode := func(ip string) graph.Node {
+		return graph.Node{IP: ip, Subnet: "10.0.0.0/24",
+			Roles:  []graph.RoleAssertion{{Role: graph.RoleWebServer, Confidence: 0.7}},
+			Scores: graph.ScoreSet{Composite: 1, Rank: 1}}
+	}
+	writeSnapshot(t, path, graph.Snapshot{Nodes: []graph.Node{
+		mkNode("10.0.0.10"), mkNode("10.0.0.11"), mkNode("10.0.0.12"),
+	}})
+	m, err := a.LoadModel(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]mapview.MapNode{}
+	for _, n := range m.Nodes {
+		got[n.ID] = n
+	}
+	if n := got["10.0.0.10"]; n.RoleOverride != "Printer" || n.Tier != mapview.TierClient {
+		t.Errorf("10.0.0.10 = override %q tier %q, want Printer/client", n.RoleOverride, n.Tier)
+	}
+	if n := got["10.0.0.11"]; n.RoleOverride != "MailServer" || n.Tier != mapview.TierService {
+		t.Errorf("10.0.0.11 = override %q tier %q, want MailServer/service", n.RoleOverride, n.Tier)
+	}
+	// WebServer inference puts the node in the service tier; custom text must not move it.
+	if n := got["10.0.0.12"]; n.RoleOverride != "Octoprint" || n.Tier != mapview.TierService {
+		t.Errorf("10.0.0.12 = override %q tier %q, want Octoprint/service(unchanged)", n.RoleOverride, n.Tier)
+	}
+	// Inferred role is preserved alongside the override.
+	if got["10.0.0.10"].Role != string(graph.RoleWebServer) {
+		t.Errorf("inferred role destroyed: %q", got["10.0.0.10"].Role)
+	}
+	// Clearing removes the override.
+	if err := a.SetRole("10.0.0.10", ""); err != nil {
+		t.Fatal(err)
+	}
+	reg, _ := a.ListDevices()
+	if _, ok := reg.RoleOverrides["10.0.0.10"]; ok {
+		t.Fatal("override not cleared")
 	}
 }
 
