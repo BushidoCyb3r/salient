@@ -20,6 +20,8 @@ export function DeleteDevice(arg1:string):Promise<void>;
 
 export function DeviceHints(arg1:string):Promise<Array<main.Hint>>;
 
+export function DiscoverGrid(arg1:string):Promise<Array<string>>;
+
 export function DismissHint(arg1:string):Promise<void>;
 
 export function ExportImage(arg1:string):Promise<string>;

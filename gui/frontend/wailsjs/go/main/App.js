@@ -26,6 +26,10 @@ export function DeviceHints(arg1) {
   return window['go']['main']['App']['DeviceHints'](arg1);
 }
 
+export function DiscoverGrid(arg1) {
+  return window['go']['main']['App']['DiscoverGrid'](arg1);
+}
+
 export function DismissHint(arg1) {
   return window['go']['main']['App']['DismissHint'](arg1);
 }

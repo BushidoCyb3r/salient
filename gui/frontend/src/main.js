@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -37,6 +37,9 @@ $('connform').addEventListener('submit', async (e) => {
     await refreshDevices();
     await refreshList(true);
     logLine('connected to ' + (info.ClusterName || 'grid'), 'ok');
+    DiscoverGrid($('c-window').value.trim() || '336h').then((lines) => {
+      for (const ln of lines || []) logLine(ln, ln.startsWith('WARNING') ? 'warn' : '');
+    }).catch((err) => logLine('grid discovery failed: ' + err, 'warn'));
   } catch (err) {
     $('connerr').textContent = 'Connect failed: ' + err;
   } finally {
