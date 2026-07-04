@@ -2,9 +2,11 @@ package snapshot
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 )
 
@@ -42,5 +44,29 @@ func TestSaveLoadRoundTripAndPermissions(t *testing.T) {
 	}
 	if len(entries) != 1 || entries[0].Nodes != 1 || entries[0].Edges != 1 {
 		t.Errorf("bad index: %+v", entries)
+	}
+}
+
+func TestLoadResolvesBareNameAgainstDefaultSnapshotsDir(t *testing.T) {
+	oldWD, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+
+	created := time.Date(2026, 7, 3, 12, 0, 0, 0, time.UTC)
+	if _, err := Save(config.DataDirName, graph.Snapshot{Meta: graph.SnapshotMeta{CreatedAt: created}}); err != nil {
+		t.Fatal(err)
+	}
+	name := created.Format("20060102T150405Z") + ".json.gz"
+	got, err := Load(filepath.Base(name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Meta.CreatedAt.Equal(created) {
+		t.Fatalf("created_at = %v, want %v", got.Meta.CreatedAt, created)
 	}
 }

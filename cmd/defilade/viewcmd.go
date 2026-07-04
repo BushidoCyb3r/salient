@@ -15,6 +15,7 @@ import (
 
 	defilade "github.com/BushidoCyb3r/defilade"
 	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 	"github.com/spf13/cobra"
 )
@@ -74,23 +75,14 @@ func writeBrowserIndex(dataDir string, logo []byte) (string, error) {
 		return "", errors.New("no HTML reports or maps found — run `defilade scan` first")
 	}
 
-	if err := os.MkdirAll(dataDir, config.OutputDirMode); err != nil {
-		return "", err
-	}
 	path := filepath.Join(dataDir, "index.html")
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	if err := f.Chmod(config.OutputFileMode); err != nil {
-		return "", err
-	}
 	data := struct {
 		Logo    string
 		Entries []snapshot.ArtifactEntry
 	}{base64.StdEncoding.EncodeToString(logo), entries}
-	if err := template.Must(template.New("index").Parse(browserIndexHTML)).Execute(io.Writer(f), data); err != nil {
+	if err := safefile.Write(path, func(w io.Writer) error {
+		return template.Must(template.New("index").Parse(browserIndexHTML)).Execute(w, data)
+	}); err != nil {
 		return "", err
 	}
 	return path, nil

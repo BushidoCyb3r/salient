@@ -3,14 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/reconcile"
 	"github.com/BushidoCyb3r/defilade/internal/report"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
@@ -59,12 +60,7 @@ and role-contradicted. --map renders a briefing map with the same flags.`,
 				}
 			case "html":
 				out := snapPath + ".reconcile.html"
-				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if err := report.ReconcileHTML(f, res); err != nil {
+				if err := safefile.Write(out, func(w io.Writer) error { return report.ReconcileHTML(w, res) }); err != nil {
 					return err
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), out)
@@ -73,12 +69,9 @@ and role-contradicted. --map renders a briefing map with the same flags.`,
 			}
 			if withMap {
 				out := snapPath + ".reconcile.map.html"
-				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if err := report.HTMLMap(f, mapview.BuildReconcile(snap, res, assets, mapview.Options{})); err != nil {
+				if err := safefile.Write(out, func(w io.Writer) error {
+					return report.HTMLMap(w, mapview.BuildReconcile(snap, res, assets, mapview.Options{}))
+				}); err != nil {
 					return err
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), out)

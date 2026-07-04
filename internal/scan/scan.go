@@ -8,8 +8,8 @@ package scan
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/netip"
-	"os"
 	"path/filepath"
 	"sort"
 	"time"
@@ -19,6 +19,7 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/report"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/score"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
@@ -210,17 +211,9 @@ func zeroCoverage(scope []string, m *graph.Model) []string {
 
 func writeReport(dataDir string, snap graph.Snapshot) (string, error) {
 	dir := filepath.Join(dataDir, "reports")
-	if err := os.MkdirAll(dir, config.OutputDirMode); err != nil {
-		return "", err
-	}
 	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".html"
 	path := filepath.Join(dir, name)
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	if err := report.HTML(f, snap); err != nil {
+	if err := safefile.Write(path, func(w io.Writer) error { return report.HTML(w, snap) }); err != nil {
 		return "", err
 	}
 	return path, nil
@@ -228,18 +221,10 @@ func writeReport(dataDir string, snap graph.Snapshot) (string, error) {
 
 func writeBriefingMap(dataDir string, snap graph.Snapshot) (string, error) {
 	dir := filepath.Join(dataDir, "maps")
-	if err := os.MkdirAll(dir, config.OutputDirMode); err != nil {
-		return "", err
-	}
 	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".html"
 	path := filepath.Join(dir, name)
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
 	mm := mapview.Build(snap, mapview.Options{})
-	if err := report.HTMLMap(f, mm); err != nil {
+	if err := safefile.Write(path, func(w io.Writer) error { return report.HTMLMap(w, mm) }); err != nil {
 		return "", err
 	}
 	return path, nil

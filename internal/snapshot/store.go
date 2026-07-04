@@ -7,6 +7,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 )
 
 // IndexEntry is one line of index.json summarizing a stored snapshot.
@@ -33,29 +35,19 @@ func SnapshotsDir(dataRoot string) string { return filepath.Join(dataRoot, "snap
 // Returns the file path.
 func Save(dataRoot string, snap graph.Snapshot) (string, error) {
 	dir := SnapshotsDir(dataRoot)
-	if err := os.MkdirAll(dir, config.OutputDirMode); err != nil {
-		return "", fmt.Errorf("creating snapshot dir: %w", err)
-	}
 	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".json.gz"
 	path := filepath.Join(dir, name)
 
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-	if err != nil {
-		return "", fmt.Errorf("creating snapshot file: %w", err)
-	}
-	gz := gzip.NewWriter(f)
-	enc := json.NewEncoder(gz)
-	enc.SetIndent("", " ")
-	if err := enc.Encode(snap); err != nil {
-		_ = gz.Close()
-		_ = f.Close()
-		return "", fmt.Errorf("writing snapshot: %w", err)
-	}
-	if err := gz.Close(); err != nil {
-		_ = f.Close()
-		return "", err
-	}
-	if err := f.Close(); err != nil {
+	if err := safefile.Write(path, func(w io.Writer) error {
+		gz := gzip.NewWriter(w)
+		enc := json.NewEncoder(gz)
+		enc.SetIndent("", " ")
+		if err := enc.Encode(snap); err != nil {
+			_ = gz.Close()
+			return fmt.Errorf("writing snapshot: %w", err)
+		}
+		return gz.Close()
+	}); err != nil {
 		return "", err
 	}
 	if err := appendIndex(dir, IndexEntry{
@@ -76,6 +68,9 @@ func Save(dataRoot string, snap graph.Snapshot) (string, error) {
 func Load(path string) (graph.Snapshot, error) {
 	var snap graph.Snapshot
 	f, err := os.Open(path)
+	if os.IsNotExist(err) && !filepath.IsAbs(path) && filepath.Base(path) == path {
+		f, err = os.Open(filepath.Join(config.DataDirName, "snapshots", path))
+	}
 	if err != nil {
 		return snap, fmt.Errorf("opening snapshot: %w", err)
 	}
@@ -128,5 +123,5 @@ func appendIndex(dir string, e IndexEntry) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(indexPath(dir), raw, config.OutputFileMode)
+	return safefile.WriteFile(indexPath(dir), raw)
 }

@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/netip"
-	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/report"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
@@ -65,12 +66,7 @@ See docs/MAPS.md for what these maps do and don't show.`,
 				}
 			case "html":
 				out := path + ".map.html"
-				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if err := report.HTMLMap(f, mm); err != nil {
+				if err := safefile.Write(out, func(w io.Writer) error { return report.HTMLMap(w, mm) }); err != nil {
 					return err
 				}
 				fmt.Fprintln(w, out)

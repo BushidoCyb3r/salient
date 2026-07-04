@@ -11,6 +11,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/assist"
 	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
@@ -60,15 +61,7 @@ func newAnalyzeCmd() *cobra.Command {
 				return err
 			}
 			raw = append(raw, '\n')
-			f, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			if err := f.Chmod(config.OutputFileMode); err != nil {
-				return err
-			}
-			if _, err := f.Write(raw); err != nil {
+			if err := safefile.WriteFile(output, raw); err != nil {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), output)

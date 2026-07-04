@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/report"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
@@ -49,12 +50,7 @@ func newDiffCmd() *cobra.Command {
 				}
 			case "html":
 				out := toPath + ".diff.html"
-				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if err := report.DriftHTML(f, d); err != nil {
+				if err := safefile.Write(out, func(w io.Writer) error { return report.DriftHTML(w, d) }); err != nil {
 					return err
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), out)
@@ -63,12 +59,9 @@ func newDiffCmd() *cobra.Command {
 			}
 			if withMap {
 				out := toPath + ".diff.map.html"
-				f, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, config.OutputFileMode)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-				if err := report.HTMLMap(f, mapview.BuildDrift(to, d, mapview.Options{})); err != nil {
+				if err := safefile.Write(out, func(w io.Writer) error {
+					return report.HTMLMap(w, mapview.BuildDrift(to, d, mapview.Options{}))
+				}); err != nil {
 					return err
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), out)

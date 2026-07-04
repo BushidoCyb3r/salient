@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -19,6 +18,7 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/escli"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/report"
+	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/scan"
 	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
@@ -138,11 +138,7 @@ func (a *App) ExportMap(path string, format string) (string, error) {
 		return "", err
 	}
 
-	var buf bytes.Buffer
-	if err := render(&buf, mm); err != nil {
-		return "", err
-	}
-	if err := os.WriteFile(out, buf.Bytes(), config.OutputFileMode); err != nil {
+	if err := safefile.Write(out, func(w io.Writer) error { return render(w, mm) }); err != nil {
 		return "", err
 	}
 	return out, nil
@@ -176,7 +172,7 @@ func (a *App) ExportImage(dataURL string) (string, error) {
 	if err != nil || out == "" {
 		return "", err
 	}
-	if err := os.WriteFile(out, png, config.OutputFileMode); err != nil {
+	if err := safefile.WriteFile(out, png); err != nil {
 		return "", err
 	}
 	return out, nil
