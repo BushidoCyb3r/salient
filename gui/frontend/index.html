@@ -198,6 +198,18 @@
         <input id="ai-endpoint" value="https://api.openai.com/v1/chat/completions" placeholder="cloud, local, or approved tenant endpoint" spellcheck="false">
         <label>Model</label>
         <input id="ai-model" list="ai-models" value="gpt-4.1-mini" placeholder="provider or local model name" spellcheck="false">
+        <datalist id="role-list">
+          <option value="DomainController"></option>
+          <option value="DNSServer"></option>
+          <option value="FileServer"></option>
+          <option value="Database"></option>
+          <option value="WebServer"></option>
+          <option value="JumpBox"></option>
+          <option value="MailServer"></option>
+          <option value="Printer"></option>
+          <option value="Camera"></option>
+          <option value="Workstation"></option>
+        </datalist>
         <datalist id="ai-models">
           <option value="gpt-4.1-mini"></option>
           <option value="claude-sonnet-4-5"></option>

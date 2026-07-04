@@ -40,6 +40,8 @@ export function SaveDevice(arg1:string,arg2:devices.Device):Promise<void>;
 
 export function SetLabels(arg1:string,arg2:Array<string>):Promise<void>;
 
+export function SetRole(arg1:string,arg2:string):Promise<void>;
+
 export function SuggestTags(arg1:main.TagRequest):Promise<assist.TagResult>;
 
 export function UnassignIP(arg1:string):Promise<void>;

@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -278,6 +278,7 @@ function renderModel(model) {
         comp: n.composite || 0, rank: n.rank || 0, gw: n.gateway ? 1 : 0, inf: n.inferred ? 1 : 0,
         agg: n.agg_count || 0, drift: n.drift || '', ev: (n.evidence || []).join('\n'),
         device: n.device || '', deviceType: n.device_type || '', labels: (n.labels || []).join(', '),
+        services: (n.services || []).join(', '), roleOverride: n.role_override || '',
         aiTags: (n.suggested_tags || []).join(', '), aiConfidence: n.suggestion_confidence || 0,
         aiRationale: n.suggestion_rationale || '', aiModel: n.suggestion_model || '',
       },
@@ -350,11 +351,15 @@ function showNodeEvidence(n) {
   ev.textContent = '';
   const ip = n.data('id');
   const aiDismissed = registry.dismissed_hints.includes('ai:' + ip);
+  const override = n.data('roleOverride');
   let text =
-    n.data('label') + '\nrole: ' + n.data('role') + (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
+    n.data('label') +
+    (override ? '\nrole: ✎ ' + override + ' (operator)\ninferred: ' + n.data('role') : '\nrole: ' + n.data('role')) +
+    (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
     '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
     (n.data('device') ? '\ndevice: ◈ ' + n.data('device') : '') +
     (n.data('labels') ? '\nlabels: ' + n.data('labels') : '') +
+    (n.data('services') ? '\nservices: ' + n.data('services') : '') +
     (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)');
   if (n.data('aiTags') && !aiDismissed) {
     text += '\n\nMODEL SUGGESTION (' + n.data('aiModel') + ', confidence ' + n.data('aiConfidence').toFixed(2) + ')\ntags: ' + n.data('aiTags') + '\n' + n.data('aiRationale');
@@ -421,7 +426,7 @@ function renderHostList(q) {
   const list = $('hl-list');
   list.innerHTML = '';
   const match = q
-    ? hlHosts.filter((h) => (h.id + ' ' + h.label + ' ' + h.role).toLowerCase().includes(q))
+    ? hlHosts.filter((h) => (h.id + ' ' + h.label + ' ' + h.role + ' ' + (h.role_override || '') + ' ' + (h.services || []).join(' ') + ' ' + (h.device || '')).toLowerCase().includes(q))
     : hlHosts;
   for (const h of match.slice(0, HL_MAX_ROWS)) {
     const li = document.createElement('li');
@@ -432,11 +437,22 @@ function renderHostList(q) {
       rank.textContent = ' #' + h.rank;
       li.appendChild(rank);
     }
-    if (h.role && h.role !== 'Unknown') {
+    if (h.role_override) {
+      const role = document.createElement('span');
+      role.className = 'role';
+      role.textContent = ' — ✎ ' + h.role_override;
+      li.appendChild(role);
+    } else if (h.role && h.role !== 'Unknown') {
       const role = document.createElement('span');
       role.className = 'role';
       role.textContent = ' — ' + h.role;
       li.appendChild(role);
+    }
+    if (h.services && h.services.length) {
+      const svc = document.createElement('span');
+      svc.className = 'role';
+      svc.textContent = ' · ' + h.services.join(', ');
+      li.appendChild(svc);
     }
     if (h.device) {
       const dev = document.createElement('span');
@@ -447,8 +463,13 @@ function renderHostList(q) {
     li.title = h.id;
     li.onclick = () => {
       $('ev').textContent =
-        h.label + '\nrole: ' + h.role + (h.rank ? '\nrank: #' + h.rank : '') +
+        h.label +
+        (h.role_override ? '\nrole: ✎ ' + h.role_override + ' (operator)\ninferred: ' + h.role : '\nrole: ' + h.role) +
+        (h.rank ? '\nrank: #' + h.rank : '') +
         '\ncomposite: ' + (h.composite || 0).toFixed(2) +
+        (h.device ? '\ndevice: ◈ ' + h.device : '') +
+        ((h.labels || []).length ? '\nlabels: ' + h.labels.join(', ') : '') +
+        ((h.services || []).length ? '\nservices: ' + h.services.join(', ') : '') +
         ((h.evidence || []).length ? '\n\n' + h.evidence.join('\n') : '\n\n(no role evidence)');
     };
     list.appendChild(li);
@@ -463,7 +484,7 @@ $('hl-filter').addEventListener('input', (e) => renderHostList(e.target.value.tr
 
 /* ---------------- devices ---------------- */
 
-let registry = { devices: [], labels: {}, dismissed_hints: [] };
+let registry = { devices: [], labels: {}, role_overrides: {}, dismissed_hints: [] };
 
 async function refreshDevices() {
   try {
@@ -471,6 +492,7 @@ async function refreshDevices() {
     registry = {
       devices: (reg && reg.devices) || [],
       labels: (reg && reg.labels) || {},
+      role_overrides: (reg && reg.role_overrides) || {},
       dismissed_hints: (reg && reg.dismissed_hints) || [],
     };
   } catch (err) {
@@ -550,6 +572,7 @@ function applyDeviceBadges() {
     const d = deviceForIP(n.data('id'));
     n.data('device', d ? d.name : '');
     n.data('labels', (registry.labels[n.data('id')] || []).join(', '));
+    n.data('roleOverride', registry.role_overrides[n.data('id')] || '');
     n.toggleClass('dev-linked', !!d);
   });
 }
@@ -617,7 +640,7 @@ $('search').addEventListener('input', (e) => {
   const q = e.target.value.trim().toLowerCase();
   if (!q) { cy.nodes(':childless').removeClass('dim'); return; }
   cy.nodes(':childless').forEach((n) => {
-    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev') + ' ' + n.data('aiTags') + ' ' + n.data('device') + ' ' + n.data('labels')).toLowerCase();
+    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev') + ' ' + n.data('aiTags') + ' ' + n.data('device') + ' ' + n.data('labels') + ' ' + n.data('services') + ' ' + n.data('roleOverride')).toLowerCase();
     n.toggleClass('dim', !hay.includes(q));
   });
 });
@@ -664,6 +687,31 @@ function bindContextMenu() {
         inp.style.width = 'calc(100% - 12px)';
         inp.onclick = (ev) => ev.stopPropagation();
         inp.onkeydown = (ev) => { if (ev.key === 'Enter' && inp.value.trim()) doAssign(inp.value.trim()); };
+        ctxmenu.appendChild(inp);
+        inp.focus();
+      });
+      addItem('Set role…', (click) => {
+        // Same detach-vs-document-close race as the device picker.
+        click.stopPropagation();
+        ctxmenu.innerHTML = '';
+        const ip = n.data('id');
+        const inp = document.createElement('input');
+        inp.setAttribute('list', 'role-list');
+        inp.placeholder = 'role — empty clears…';
+        inp.value = n.data('roleOverride') || '';
+        inp.style.margin = '6px';
+        inp.style.width = 'calc(100% - 12px)';
+        inp.onclick = (ev) => ev.stopPropagation();
+        inp.onkeydown = async (ev) => {
+          if (ev.key !== 'Enter') return;
+          const role = inp.value.trim();
+          try {
+            await SetRole(ip, role);
+            logLine(role ? 'set role of ' + ip + ' to ' + role : 'cleared role override on ' + ip, 'ok');
+            ctxmenu.style.display = 'none';
+            await refreshDevices();
+          } catch (err) { logLine('set role failed: ' + err, 'err'); }
+        };
         ctxmenu.appendChild(inp);
         inp.focus();
       });
