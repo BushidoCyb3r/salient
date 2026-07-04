@@ -13,21 +13,26 @@ LDFLAGS := -s -w
 GOOS    ?= $(shell $(GO) env GOOS)
 GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
 
-.PHONY: deps gui-deps build gui gui-test test lint cross clean integration
+.PHONY: deps gui-deps build gui gui-test test check lint cross clean integration
 
 deps:
 	$(GO_ENV) $(GO) mod download
 
-gui-deps: deps
-	cd gui && $(GO_ENV) $(GO) mod download
-	cd gui/frontend && npm ci
+# The pinned repo-local wails CLI. A file target so anything needing it
+# (gui, gui-deps) self-bootstraps on fresh clones and CI — `make gui` must
+# never fail with "no such file" just because gui-deps wasn't run first.
+$(WAILS):
 	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
 	$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+
+gui-deps: deps $(WAILS)
+	cd gui && $(GO_ENV) $(GO) mod download
+	cd gui/frontend && npm ci
 
 build:
 	CGO_ENABLED=0 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
 
-gui:
+gui: $(WAILS)
 	cd gui && PATH="$(GO_PATH)$(PATH)" $(GO_ENV) $(WAILS) build $(GUI_TAGS)
 
 gui-test:
@@ -35,6 +40,14 @@ gui-test:
 
 test:
 	$(GO_ENV) $(GO) test -race ./...
+
+# Pre-push gate mirroring CI's blocking checks (minus -race: this dev box
+# has no gcc; CI covers the race run). Run before every push.
+check:
+	@fmt="$$(gofmt -l .)"; if [ -n "$$fmt" ]; then printf '%s\n' "$$fmt" "fix: gofmt -w ."; exit 1; fi
+	$(GO_ENV) $(GO) vet ./...
+	$(GO_ENV) $(GO) test ./...
+	cd gui && $(GO_ENV) $(GO) vet ./... && $(GO_ENV) $(GO) test ./...
 
 lint:
 	$(GO_ENV) golangci-lint run ./...

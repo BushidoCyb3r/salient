@@ -447,7 +447,7 @@ func TestBuildAttachesServices(t *testing.T) {
 		Edges: []graph.Edge{
 			{Src: "10.0.0.2", Dst: "10.0.0.1", Port: 443, ConnCount: 100},
 			{Src: "10.0.0.2", Dst: "10.0.0.1", Port: 22, ConnCount: 100},
-			{Src: "10.0.0.3", Dst: "10.0.0.1", Port: 443, ConnCount: 100}, // dup https — dedupe
+			{Src: "10.0.0.3", Dst: "10.0.0.1", Port: 443, ConnCount: 100},   // dup https — dedupe
 			{Src: "10.0.0.2", Dst: "10.0.0.3", Port: 49200, ConnCount: 100}, // unknown port — no name
 		},
 	}

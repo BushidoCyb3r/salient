@@ -147,7 +147,7 @@ func TestHostnameHints(t *testing.T) {
 		{IP: "10.10.40.1", Hostnames: []string{"udm"}},
 		{IP: "10.18.61.1", Hostnames: []string{"udm"}},
 		{IP: "10.0.0.5", Hostnames: []string{"nas"}}, // single IP — no hint
-		{IP: "10.0.0.6"},                             // no hostname
+		{IP: "10.0.0.6"}, // no hostname
 		{IP: "10.0.0.7", Hostnames: []string{"printer"}},
 		{IP: "10.0.0.8", Hostnames: []string{"printer"}},
 	}

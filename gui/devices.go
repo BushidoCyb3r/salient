@@ -96,7 +96,7 @@ var overrideTiers = map[string]mapview.Tier{
 	"fileserver": mapview.TierService, "database": mapview.TierService,
 	"webserver": mapview.TierService, "jumpbox": mapview.TierService,
 	"mailserver": mapview.TierService,
-	"printer": mapview.TierClient, "camera": mapview.TierClient,
+	"printer":    mapview.TierClient, "camera": mapview.TierClient,
 	"workstation": mapview.TierClient,
 }
 

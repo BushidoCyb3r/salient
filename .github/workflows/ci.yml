@@ -68,10 +68,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Wails CLI
-        run: |
-          go install github.com/wailsapp/wails/v2/cmd/wails@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      # No separate wails install: `make gui` self-bootstraps the pinned
+      # repo-local wails CLI into .tools/bin (a PATH install is ignored by
+      # the Makefile and previously left this job failing with exit 127).
       - name: Build GUI (make gui adds -tags webkit2_41)
         run: make gui
       - name: Test GUI module
