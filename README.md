@@ -1,125 +1,183 @@
 # Defilade
 
-**Passive terrain-dependency analyzer and network-map generator for Security Onion grids.**
+**A desktop operator console for passive terrain analysis on Security Onion grids.**
 
-*Defilade* is the defensive posture of occupying protected ground — shielded from observation and fire — from which you observe and map the terrain before you're exposed. Defilade the tool is what the defender runs *from* that covered position: passive, read-only, no active scanning that would give away presence or disturb the network. The name describes the operator's posture, not the tool's output.
+Defilade connects read-only to Elasticsearch, aggregates existing Zeek telemetry,
+and turns observed traffic into a scored dependency graph and briefing map. It is
+built for hunting teams that are new to an environment and need to understand its
+key systems and dependencies without active scanning or changes to the Security
+Onion deployment.
 
-Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs already aggregated on a Security Onion manager and produces a typed dependency graph, a ranked key-cyber-terrain report with evidence attached to every ranking, briefing-ready network maps, drift detection between snapshots, and a doc-vs-reality reconciliation report. Primary use case: CPT/hunt-team terrain familiarization in the first 72 hours on an unfamiliar network.
+The desktop console is the primary interface. It connects to the grid, runs scans
+with live progress, browses saved snapshots, investigates role evidence, and
+exports maps from one native window on Linux, macOS, or Windows.
 
-> **Project status: all planned phases (0–4) implemented; live-grid validation pending.** `scan` aggregates the window
-> server-side, builds and scores the dependency graph, and writes a snapshot,
-> analyst report, and briefing map. Stored snapshots can also be rendered offline as
-> HTML, SVG, or GraphML; `diff` compares snapshots and emits HTML or JSON drift
-> reports; `reconcile` diffs a documented asset list (CSV) against observed
-> reality. Optional model-assisted analysis is available only through the explicit
-> snapshot-only `analyze` command. `diff --map` and `reconcile --map` also write
-> interactive maps with changed or contradicted terrain highlighted. Unfocused maps
-> above 120 elements auto-condense to a ~60-element briefing overview — only
-> top-ranked terrain and the strongest dependencies stay individually visible
-> (never a complete topology); use `--focus CIDR` to re-render any enclave in
-> full detail (see `docs/MAPS.md`). The default field map is still an *unverified assumption* about how
-> Security Onion maps Zeek fields to ECS — run `discover` against your grid and record
-> ground truth in `docs/FIELDMAP.md` before trusting a scan. Wrong field maps fail
-> loudly by design.
+## Operator console
 
-## 60-second quickstart
+The console provides:
 
-Prerequisites: Git, Make, and Go 1.26.4 or newer. The repository includes
-locked Go dependency checksums; `make deps` downloads them without installing
-anything system-wide.
+- Elasticsearch connection with API key, CA certificate, custom field map, and
+  explicit insecure-TLS controls.
+- Configurable scan window, scope CIDRs, and timezone.
+- Live scan progress and cancellation.
+- Ranked key-terrain maps grouped by subnet, with observed or inferred gateways.
+- Organic and tiered layouts, criticality heat, and optional edge labels.
+- Snapshot browsing and offline map reconstruction.
+- Search by IP, hostname, role, or evidence.
+- Node evidence and right-click actions for copying, focusing, and inspecting.
+- PNG export of the exact on-screen layout, plus self-contained HTML and GraphML.
 
-```sh
+The API key remains in memory and is never written to disk.
+
+## Build and run
+
+Prerequisites:
+
+- Git
+- Make
+- Go 1.26.4 or newer
+- Node.js and npm
+
+Linux also needs the native webview development packages:
+
+~~~sh
+# Debian/Ubuntu
+sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev
+
+# Fedora/RHEL/Rocky
+sudo dnf install webkit2gtk4.1-devel gtk3-devel
+~~~
+
+Clone, download the pinned dependencies, and build:
+
+~~~sh
 git clone https://github.com/BushidoCyb3r/defilade.git
 cd defilade
+make gui-deps
+make gui
+~~~
+
+Launch the resulting application:
+
+~~~sh
+# Linux
+./gui/build/bin/gui
+
+# macOS
+open gui/build/bin/gui.app
+
+# Windows PowerShell
+.\gui\build\bin\gui.exe
+~~~
+
+Platform-specific runtime packages and unsigned-build warnings are documented in
+[docs/GUI.md](docs/GUI.md).
+
+## First connection
+
+1. Create a read-only Elasticsearch API key using
+   [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+2. Launch the console and enter the manager URL, API key, and CA certificate.
+3. Set the analysis window, timezone, and optional scope CIDRs.
+4. Connect, then select **Run Scan**.
+5. Select the completed snapshot to inspect and export its map.
+
+The default Security Onion field map is an unverified starting point because Zeek
+to ECS mappings vary by deployment and release. Verify it against the target grid
+and record the result in [docs/FIELDMAP.md](docs/FIELDMAP.md) before trusting scan
+output. A wrong field map can produce incomplete terrain.
+
+## What a scan produces
+
+Defilade performs server-side Elasticsearch aggregations rather than downloading
+raw events. A completed scan writes:
+
+- A compressed snapshot containing scored nodes, dependencies, evidence, and
+  observation metadata.
+- A detailed analyst report.
+- A self-contained interactive briefing map.
+
+Artifacts are stored under defilade-data/snapshots, defilade-data/reports, and
+defilade-data/maps. The console can reopen snapshots without reconnecting to the
+grid.
+
+Large unfocused maps are condensed into a briefing overview that retains the
+highest-ranked terrain and strongest dependencies. This is intentional, not a
+complete-topology view.
+
+## Command line
+
+The CLI remains available for automation, field discovery, static exports, drift
+analysis, asset reconciliation, and optional snapshot analysis.
+
+~~~sh
 make deps
 make build
 
-# Keep credentials out of shell history:
 export DEFILADE_ES_URL="https://so-manager:9200"
-export DEFILADE_API_KEY="<base64 id:key — see docs/DEPLOYMENT.md for read-only key creation>"
+export DEFILADE_API_KEY="<base64 id:key>"
 
-# 1. Can we reach and read the grid? Is the key really read-only?
 ./bin/defilade test-connection --ca-cert grid-ca.pem
-
-# 2. What does this grid actually contain?
 ./bin/defilade discover --ca-cert grid-ca.pem --window 168h
-
-# 3. Scan: aggregate 14 days, score terrain, write snapshot + report
 ./bin/defilade scan --ca-cert grid-ca.pem --window 336h \
     --scope 10.0.0.0/8 --tz America/New_York
-
-# Re-render or export a stored snapshot
 ./bin/defilade list
 ./bin/defilade view
-./bin/defilade report --snapshot defilade-data/snapshots/<ts>.json.gz --format graphml
-./bin/defilade map --snapshot defilade-data/snapshots/<ts>.json.gz --format svg > map.svg
-./bin/defilade diff --from defilade-data/snapshots/<older>.json.gz \
-    --to defilade-data/snapshots/<newer>.json.gz --format html --map
+~~~
 
-# Reconcile the supported unit's asset list against observed reality
-./bin/defilade reconcile --snapshot defilade-data/snapshots/<ts>.json.gz \
-    --assets unit-assets.csv --format html --map
+Stored snapshots can also be rendered as HTML, SVG, JSON, or GraphML; compared
+with the diff command; or reconciled against an asset CSV. See
+[docs/MAPS.md](docs/MAPS.md) for map interpretation and export guidance.
 
-# Optional: analyze a stored snapshot with a local compatible endpoint
-./bin/defilade analyze --snapshot defilade-data/snapshots/<ts>.json.gz \
-    --endpoint http://127.0.0.1:11434/v1/chat/completions --model local-model
-```
+## Security model
 
-`discover` reports which Zeek datasets exist (conn, dns, kerberos, smb, …), document
-counts, reporting sensors, and whether MAC fields survived the ECS mapping. If any
-field names differ from the defaults, pin them with `--fieldmap custom.yaml`
-(see `docs/FIELDMAP.md`).
+- Elasticsearch access is read-only. Defilade does not change grid
+  configuration, indices, or documents.
+- The console writes only local snapshots, reports, maps, and operator-selected
+  exports.
+- Runtime assets are bundled locally. There are no CDN dependencies or telemetry.
+- The CLI is a static binary. The desktop console uses the operating system's
+  native webview and must be built per target platform.
+- Remote model analysis is CLI-only, snapshot-only, and requires an explicit
+  network-data-egress acknowledgement.
+- On POSIX systems, managed artifacts use 0600 files in 0700 directories.
+  Windows exports inherit the destination directory's ACLs.
 
-A native desktop operator console (Linux/macOS/Windows) is also available — see
-`docs/GUI.md`. Run `make gui-deps` once, then `make gui`. It connects to a grid,
-runs scans with live progress, and browses
-and exports the resulting snapshots and maps in a real window. Model-assisted
-`analyze` remains CLI-only.
+Terrain artifacts expose network dependencies and critical systems. Protect them
+at the classification and handling level of the network they describe.
 
-## Hard constraints
+## Limitations
 
-- Pure Go, no cgo, single static binary (linux/amd64, darwin/arm64, windows/amd64: `make cross`).
-- **Read-only against Elasticsearch.** The only writes are to the local filesystem.
-- Fully offline by default: no telemetry or CDN assets. The snapshot-only `analyze`
-  command may call an explicitly configured endpoint; remote HTTPS endpoints require
-  `--allow-network-data-egress` (see `docs/AI.md`).
-- Mode 1 deployment only: a binary on an analyst workstation with reach to the manager's ES API. No new servers, containers, agents, or SO config changes.
-
-## Limitations (read before trusting the output)
-
-Stated plainly, because operator credibility comes from stating what the tool can't see:
-
-- **Passive-window blindness.** Defilade sees only what talked during the analysis window. A quarterly job that didn't run is invisible; a decommissioned server and a merely quiet one look identical.
-- **Sensor-coverage blindness.** East-west traffic on segments without a sensor never reaches Zeek. In-scope subnets with zero observed traffic are flagged as *possible blind spots*, not proof of silence.
-- **L3 logical maps, not physical topology.** Flow data cannot see switches, physical links, port assignments, or devices that never converse across a monitored segment. The maps show real observed dependencies annotated with criticality — the thing a hand-drawn Visio can't be — never physical layout.
-- **Gateway inference is inference.** Where MAC fields exist, gateways are placed by MAC-convergence evidence; where they don't, gateways are synthesized per subnet and explicitly labeled "inferred" with a dashed border. The fallback is never presented as observed fact.
-- **Roles are evidence-scored guesses.** Seven conservative rules (DC, DNS, file, DB, jump box, web, gateway); everything else is honestly `Unknown` rather than wrongly labeled.
-
-## Artifact handling
-
-Reports and maps describe your network's dependencies and key terrain — **a briefing
-map is the single most exfiltration-worthy artifact this tool produces**. Output files
-are written 0600 in 0700 directories. Treat every artifact as classified at the level
-of the network it describes.
+- **Passive-window blindness:** only systems that communicated during the selected
+  window are visible.
+- **Sensor-coverage blindness:** unsensed east-west traffic is absent. Empty
+  in-scope networks are possible blind spots, not proof of silence.
+- **Logical, not physical topology:** maps show Layer 3 dependencies, not switches,
+  cabling, ports, or silent devices.
+- **Inferred gateways:** when MAC evidence is unavailable, gateway placement is
+  synthesized and displayed as inferred.
+- **Evidence-scored roles:** server roles are conservative hypotheses backed by
+  observed behavior; uncertain nodes remain Unknown.
 
 ## Repository layout
 
-```
-cmd/defilade/          CLI (cobra): test-connection, discover, scan, report, map, diff, reconcile, analyze, list, view
-internal/config/       every tunable default — no magic numbers inline
-internal/escli/        read-only ES client, FieldMap, query builders
-internal/graph/        typed dependency-graph and snapshot types
-internal/score/        key-cyber-terrain composite scoring
-internal/mapview/      subnet grouping, gateway inference, map simplification/overview
-internal/reconcile/    asset-list ingest and doc-vs-reality comparison
-internal/report/       analyst reports and HTML/SVG/GraphML map renderers
-internal/snapshot/     snapshot save/load/list/diff, and artifact scanning shared by the CLI `view` command and the GUI
-internal/assist/       optional snapshot-only model-assisted analysis (`analyze`)
-gui/                   native desktop map viewer, separate Wails v2 Go module — see docs/GUI.md
-web/                   vendored, embedded JS for the HTML/interactive map (no CDN assets)
-docs/DEPLOYMENT.md     read-only API key + so-firewall allow-list steps
-docs/FIELDMAP.md       field-map verification worksheet (Phase 0 output)
-docs/GUI.md            desktop viewer build steps and manual QA checklist
-docs/MAPS.md           map rendering, briefing-overview condensation, --focus
-docs/AI.md             `analyze` command: scope, egress guard, threat model
-```
+~~~
+gui/                   native desktop operator console
+cmd/defilade/          command-line interface
+internal/scan/         shared scan pipeline used by the console and CLI
+internal/escli/        read-only Elasticsearch client and field mapping
+internal/graph/        dependency graph, evidence, and snapshot types
+internal/score/        key-terrain scoring
+internal/mapview/      subnet grouping, gateways, and briefing-map reduction
+internal/report/       HTML, SVG, JSON, and GraphML renderers
+internal/snapshot/     snapshot storage, artifact indexing, and drift comparison
+internal/reconcile/    asset-list reconciliation
+web/                   embedded offline map assets
+~~~
+
+Additional operator documentation:
+
+- [Desktop console build and QA](docs/GUI.md)
+- [Read-only deployment](docs/DEPLOYMENT.md)
+- [Field-map verification](docs/FIELDMAP.md)
+- [Map interpretation and export](docs/MAPS.md)
