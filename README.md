@@ -18,18 +18,39 @@ The console provides:
 
 - Elasticsearch connection with API key, CA certificate, custom field map, and
   explicit insecure-TLS controls.
+- Automatic grid discovery at connect: observed datasets, missing-dataset
+  warnings (conn is required), and sensors, in the task log.
 - Configurable scan window, scope CIDRs, and timezone.
 - Live scan progress and cancellation.
 - Ranked key-terrain maps grouped by subnet, with observed or inferred gateways.
 - Organic and tiered layouts, criticality heat, and optional edge labels.
 - Snapshot browsing and offline map reconstruction.
+- Aggregate drill-in: clicking an "N other hosts" node opens a filterable list
+  of every collapsed host with its rank, role, services, and device.
+- Per-host service lists derived from observed responder ports (~90 recognized
+  services including the full Active Directory protocol set).
+- Device identity: link multiple IPs (for example one router across several
+  VLANs) into one named device with type and notes; linked nodes get a shared
+  badge and a device card. Hostname-based same-device hints suggest links; the
+  operator confirms or dismisses.
+- Role correction: right-click **Set role…** overrides a wrong inference with
+  any text; the correction is marked ✎, the original inference stays visible,
+  and known roles also move the node to the correct map tier.
+- Drift comparison: pick any older snapshot as a baseline and see what
+  appeared, vanished, or changed rank since.
+- Asset reconciliation: load an inventory CSV and see undocumented hosts,
+  documented-but-silent assets, and role contradictions flagged on the map.
 - Optional model-assisted device tags based on observed network communication,
-  with selectable API shape, endpoint, model, and API key.
-- Search by IP, hostname, role, or evidence.
-- Node evidence and right-click actions for copying, focusing, and inspecting.
+  grounded in operator-confirmed device names, roles, and labels; suggestions
+  can be accepted into durable labels or dismissed permanently.
+- Search by IP, hostname, role, service, device name, or label.
+- Node evidence and right-click actions for copying, focusing, assigning to a
+  device, and correcting roles.
 - PNG export of the exact on-screen layout, plus self-contained HTML and GraphML.
 
-Elasticsearch and model API keys remain in memory and are never written to disk.
+Elasticsearch and model API keys remain in memory and are never written to
+disk. Operator annotations (devices, labels, role overrides) persist in
+`defilade-data/devices.json` and survive rescans.
 
 ## Build and run
 
@@ -81,9 +102,12 @@ Platform-specific runtime packages and unsigned-build warnings are documented in
    [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 2. Launch the console and enter the manager URL, API key, and CA certificate.
 3. Set the analysis window, timezone, and optional scope CIDRs.
-4. Connect, then select **Run Scan**.
-5. Select the completed snapshot to inspect and export its map.
-6. Optionally configure **AI Device Tagging** and select **Suggest Tags** to add
+4. Connect. The task log immediately shows what the grid holds: observed
+   datasets with counts, warnings for missing ones (conn is required), and
+   sensors — verify coverage before spending a scan window.
+5. Select **Run Scan**.
+6. Select the completed snapshot to inspect and export its map.
+7. Optionally configure **AI Device Tagging** and select **Suggest Tags** to add
    communication-based labels to visible devices.
 
 The default Security Onion field map is an unverified starting point because Zeek
@@ -109,7 +133,74 @@ grid.
 
 Large unfocused maps are condensed into a briefing overview that retains the
 highest-ranked terrain and strongest dependencies. This is intentional, not a
-complete-topology view.
+complete-topology view. Clicking a condensed "N other hosts" node opens the
+full host list behind it.
+
+## Console workflows
+
+### Inspecting hosts
+
+Click any node for its evidence: role (with the operator correction and the
+original inference when overridden), rank, composite score, device, labels,
+observed services, and the raw evidence strings behind each role. Click an
+aggregate "N other hosts" node to open the host-list panel — type to filter by
+IP, hostname, role, service, or device; click a row for its evidence.
+
+### Linking IPs into devices
+
+A router with an interface per VLAN appears as several unrelated nodes. To
+merge their identity: right-click the first IP → **Assign to device…** → type a
+name and press Enter. Right-click the remaining IPs → **Assign to device…** →
+pick the existing name. Linked nodes get a violet badge and the device name in
+their label. The **Devices** sidebar section lists every device; click one for
+its card — editable notes, member IPs (click to zoom, unlink to remove), and
+delete. When the same hostname is observed on two or more IPs the Devices
+section offers a one-click "same device?" hint; dismissals are remembered.
+
+### Correcting a wrong role
+
+Right-click the node → **Set role…** → type anything (`Camera`, `PLC`,
+`Octoprint`) or pick a suggestion; Enter applies, an empty value clears. The
+evidence panel shows `role: ✎ Camera (operator)` with the original inference
+kept underneath — corrections never destroy observed evidence. Known role
+names also move the node into the right map tier (core/service/client).
+
+### Comparing snapshots (drift)
+
+Load the snapshot under review, pick an older snapshot in the **Drift**
+baseline dropdown, and select **Compare**. Green borders are new hosts, ghosted
+dashed nodes vanished, amber rank changes; new and vanished edges recolor the
+same way. The change counts print in the task log. **Clear** (or loading
+another snapshot) returns to the normal view.
+
+### Reconciling an asset inventory
+
+Select **Load asset CSV…** in the **Reconcile** section and pick your
+inventory export. The map flags observed-but-undocumented hosts (red),
+documented-but-silent assets (ghosted — check sensor blind spots before
+calling them decommissioned), and role contradictions (amber double border).
+Segment names from the CSV label the subnet boxes. The CSV stays applied
+across snapshot switches until cleared with **×**.
+
+The CSV format is forgiving — real spreadsheet exports work as-is. Only an IP
+column is required; headers are autodetected by keyword:
+
+| Column   | Recognized header keywords                                  |
+|----------|-------------------------------------------------------------|
+| IP       | `ip`, `ipaddress`, `ipaddr`, `ipv4`, `ipv6`, or `address`   |
+| Hostname | `host`, `name`, `fqdn`, `asset`, `system`, `device`         |
+| Role     | `role`, `function`, `type`, `purpose`, `service`, `description` |
+| Segment  | `vlan`, `segment`, `subnet`, `site`, `enclave`, `zone`, `network` |
+
+~~~csv
+ip,hostname,role,segment
+192.168.20.1,udm,Gateway,vlan20
+10.10.40.5,nas01,FileServer,storage
+~~~
+
+Column order does not matter, extra columns are ignored, rows without a
+parseable IP are skipped with a logged warning, and a headerless file still
+works (the IP column is detected by content).
 
 ## Command line
 
@@ -184,9 +275,20 @@ endpoint, model, and credentials issued for that environment; Defilade does not
 assume a universal public endpoint.
 
 Only capped node and edge summaries are sent, never raw Zeek events or
-Elasticsearch credentials. Responses must cite existing device IDs and include
-tags, confidence, and rationale. Invalid IDs or malformed suggestions are
-rejected, and accepted suggestions remain separate from observed evidence.
+Elasticsearch credentials. The summaries include inferred roles and named
+services per observed responder port (snapshots created before the expanded
+port table carry generic `port-N` names — rescan to give the model the richer
+labels). Operator-confirmed facts — device names and types, role corrections,
+and durable labels — ride along as ground truth the model must not contradict;
+free-text device notes never leave the host. Responses must cite existing
+device IDs and include tags, confidence, and rationale. Invalid IDs or
+malformed suggestions are rejected, and accepted suggestions remain separate
+from observed evidence.
+
+In the console, a node with pending suggestions shows them in its evidence
+panel with two actions: **accept tags** promotes them to durable operator
+labels (they survive rescans and feed future tagging runs as ground truth);
+**dismiss suggestion** hides them permanently.
 
 ## Repository layout
 
@@ -195,9 +297,12 @@ gui/                   native desktop operator console
 cmd/defilade/          command-line interface
 internal/scan/         shared scan pipeline used by the console and CLI
 internal/escli/        read-only Elasticsearch client and field mapping
-internal/graph/        dependency graph, evidence, and snapshot types
+internal/graph/        dependency graph, evidence, role inference, snapshots
 internal/score/        key-terrain scoring
+internal/config/       every tunable threshold, port/service tables
 internal/mapview/      subnet grouping, gateways, and briefing-map reduction
+internal/devices/      operator device registry (links, labels, role overrides)
+internal/assist/       model-assisted analysis and device tagging
 internal/report/       HTML, SVG, JSON, and GraphML renderers
 internal/snapshot/     snapshot storage, artifact indexing, and drift comparison
 internal/reconcile/    asset-list reconciliation
