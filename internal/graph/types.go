@@ -35,6 +35,9 @@ const (
 	RoleDatabase   Role = "Database"
 	RoleJumpBox    Role = "JumpBox"
 	RoleWebServer  Role = "WebServer"
+	RolePrinter    Role = "Printer"
+	RoleCamera     Role = "Camera"
+	RoleMail       Role = "MailServer"
 	RoleUnknown    Role = "Unknown"
 )
 

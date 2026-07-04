@@ -24,7 +24,10 @@ type Evidence struct {
 // Unknown — an honest Unknown beats a wrong guess.
 func (m *Model) InferRoles(ev Evidence) {
 	shape := m.adminShape()
-	dbClients := m.dbClientCounts()
+	dbClients := m.clientCounts(func(p uint16) bool { return config.ClassForPort(p) == config.ClassDB })
+	printerClients := m.clientCounts(func(p uint16) bool { return p == 631 || p == 9100 })
+	cameraClients := m.clientCounts(func(p uint16) bool { return p == 554 })
+	mailClients := m.clientCounts(isMailPort)
 
 	for ip, n := range m.Nodes {
 		var roles []RoleAssertion
@@ -61,6 +64,21 @@ func (m *Model) InferRoles(ev Evidence) {
 		if web >= config.RoleWebMinClients {
 			roles = append(roles, assert(RoleWebServer, web, config.RoleWebMinClients,
 				fmt.Sprintf("%d distinct hosts made HTTP/TLS requests to this host", web)))
+		}
+		// Printer / Camera: single-purpose device protocols are strong
+		// signals — one observed client suffices.
+		if c := printerClients[ip]; c >= config.RolePrinterMinClients {
+			roles = append(roles, assert(RolePrinter, int64(c), config.RolePrinterMinClients,
+				fmt.Sprintf("%d distinct hosts sent print traffic (ipp/jetdirect) to this host", c)))
+		}
+		if c := cameraClients[ip]; c >= config.RoleCameraMinClients {
+			roles = append(roles, assert(RoleCamera, int64(c), config.RoleCameraMinClients,
+				fmt.Sprintf("%d distinct hosts pulled RTSP streams from this host", c)))
+		}
+		// MailServer: smtp/imap/pop3 responder with ≥N clients.
+		if c := mailClients[ip]; c >= config.RoleMailMinClients {
+			roles = append(roles, assert(RoleMail, int64(c), config.RoleMailMinClients,
+				fmt.Sprintf("%d distinct hosts connected on mail ports (smtp/imap/pop3)", c)))
 		}
 		// JumpBox: few admin sessions in, many out (graph shape).
 		if sh, ok := shape[ip]; ok && sh.inDeg <= config.RoleJumpMaxInDegree && sh.outDeg >= config.RoleJumpMinOutDegree {
@@ -123,11 +141,12 @@ func (m *Model) adminShape() map[string]degree {
 	return res
 }
 
-// dbClientCounts returns distinct client count per DB-port responder.
-func (m *Model) dbClientCounts() map[string]int {
+// clientCounts returns the distinct client count per responder whose port
+// matches — the shared cardinality primitive behind port-driven role rules.
+func (m *Model) clientCounts(match func(uint16) bool) map[string]int {
 	clients := map[string]map[string]bool{}
 	for _, e := range m.Edges {
-		if config.ClassForPort(e.Port) != config.ClassDB {
+		if !match(e.Port) {
 			continue
 		}
 		if clients[e.Dst] == nil {
@@ -140,6 +159,15 @@ func (m *Model) dbClientCounts() map[string]int {
 		out[ip] = len(set)
 	}
 	return out
+}
+
+// isMailPort reports smtp/submission/imap/pop3 responder ports.
+func isMailPort(p uint16) bool {
+	switch p {
+	case 25, 465, 587, 110, 995, 143, 993:
+		return true
+	}
+	return false
 }
 
 // dbTemporal returns the dominant temporal class of DB-port edges into a node,

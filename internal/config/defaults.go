@@ -128,6 +128,9 @@ const (
 	RoleWebMinClients        = 5
 	RoleJumpMaxInDegree      = 3
 	RoleJumpMinOutDegree     = 5
+	RolePrinterMinClients    = 1
+	RoleCameraMinClients     = 1
+	RoleMailMinClients       = 2
 )
 
 // Scoring weights (DEFILADE_PLAN.md §10). Sum ≈ 1.0.
