@@ -3,8 +3,12 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	goruntime "runtime"
@@ -69,6 +73,67 @@ func TestLoadModel(t *testing.T) {
 	}
 	if got.Meta.ClusterName != "test-cluster" || len(got.Nodes) != 1 {
 		t.Fatalf("LoadModel() = %#v", got)
+	}
+}
+
+func TestSuggestTagsPersistsSafeSidecarAndLoadModelOverlaysIt(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("Authorization"); got != "Bearer secret-key" {
+			t.Errorf("Authorization = %q", got)
+		}
+		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.10\",\"tags\":[\"web server\",\"public facing\"],\"confidence\":0.87,\"rationale\":\"Receives web traffic\"}]}"}}]}`)
+	}))
+	defer server.Close()
+
+	path := filepath.Join(t.TempDir(), "snapshot.json.gz")
+	writeSnapshot(t, path, graph.Snapshot{
+		Nodes: []graph.Node{{
+			IP: "10.0.0.10", Subnet: "10.0.0.0/24",
+			Roles: []graph.RoleAssertion{{Role: graph.RoleWebServer}},
+		}},
+	})
+	a := &App{ctx: context.Background()}
+	result, err := a.SuggestTags(TagRequest{
+		SnapshotPath: path,
+		Provider:     "openai",
+		Endpoint:     server.URL,
+		Model:        "test-model",
+		APIKey:       "secret-key",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Tags) != 1 || result.Tags[0].NodeID != "10.0.0.10" {
+		t.Fatalf("SuggestTags() = %#v", result)
+	}
+
+	sidecar := path + ".tags.json"
+	raw, err := os.ReadFile(sidecar)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(raw, []byte("secret-key")) {
+		t.Fatal("tag sidecar contains the API key")
+	}
+	var artifact TagArtifact
+	if err := json.Unmarshal(raw, &artifact); err != nil {
+		t.Fatal(err)
+	}
+	if artifact.Model != "test-model" || artifact.EndpointHost == "" || len(artifact.Tags) != 1 {
+		t.Fatalf("tag sidecar = %#v", artifact)
+	}
+	if info, err := os.Stat(sidecar); err != nil {
+		t.Fatal(err)
+	} else if goruntime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
+		t.Fatalf("tag sidecar mode = %o, want 600", info.Mode().Perm())
+	}
+
+	model, err := a.LoadModel(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(model.Nodes) != 1 || len(model.Nodes[0].SuggestedTags) != 2 || model.Nodes[0].SuggestionModel != "test-model" {
+		t.Fatalf("LoadModel() tag overlay = %#v", model.Nodes)
 	}
 }
 

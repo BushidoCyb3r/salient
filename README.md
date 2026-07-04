@@ -23,11 +23,13 @@ The console provides:
 - Ranked key-terrain maps grouped by subnet, with observed or inferred gateways.
 - Organic and tiered layouts, criticality heat, and optional edge labels.
 - Snapshot browsing and offline map reconstruction.
+- Optional model-assisted device tags based on observed network communication,
+  with selectable API shape, endpoint, model, and API key.
 - Search by IP, hostname, role, or evidence.
 - Node evidence and right-click actions for copying, focusing, and inspecting.
 - PNG export of the exact on-screen layout, plus self-contained HTML and GraphML.
 
-The API key remains in memory and is never written to disk.
+Elasticsearch and model API keys remain in memory and are never written to disk.
 
 ## Build and run
 
@@ -81,6 +83,8 @@ Platform-specific runtime packages and unsigned-build warnings are documented in
 3. Set the analysis window, timezone, and optional scope CIDRs.
 4. Connect, then select **Run Scan**.
 5. Select the completed snapshot to inspect and export its map.
+6. Optionally configure **AI Device Tagging** and select **Suggest Tags** to add
+   communication-based labels to visible devices.
 
 The default Security Onion field map is an unverified starting point because Zeek
 to ECS mappings vary by deployment and release. Verify it against the target grid
@@ -96,6 +100,8 @@ raw events. A completed scan writes:
   observation metadata.
 - A detailed analyst report.
 - A self-contained interactive briefing map.
+- An optional protected `.tags.json` sidecar containing validated model
+  suggestions when device tagging is used.
 
 Artifacts are stored under defilade-data/snapshots, defilade-data/reports, and
 defilade-data/maps. The console can reopen snapshots without reconnecting to the
@@ -138,8 +144,10 @@ with the diff command; or reconciled against an asset CSV. See
 - Runtime assets are bundled locally. There are no CDN dependencies or telemetry.
 - The CLI is a static binary. The desktop console uses the operating system's
   native webview and must be built per target platform.
-- Remote model analysis is CLI-only, snapshot-only, and requires an explicit
-  network-data-egress acknowledgement.
+- Model requests are snapshot-only and send capped, summarized topology. Remote
+  endpoints require HTTPS and an explicit network-data-egress acknowledgement.
+- Model API keys stay in memory. Tag sidecars record only endpoint host, model,
+  timestamp, and validated suggestions.
 - On POSIX systems, managed artifacts use 0600 files in 0700 directories.
   Windows exports inherit the destination directory's ACLs.
 
@@ -158,6 +166,27 @@ at the classification and handling level of the network they describe.
   synthesized and displayed as inferred.
 - **Evidence-scored roles:** server roles are conservative hypotheses backed by
   observed behavior; uncertain nodes remain Unknown.
+- **Model suggestions are not evidence:** generated device tags are displayed
+  separately and must be verified by an operator.
+
+## Model-assisted device tagging
+
+The console can suggest device tags from communication patterns in a stored
+snapshot. Select an API shape, enter the endpoint and model, provide an API key
+when required, and explicitly acknowledge remote network-data egress. The key
+is kept only for the in-flight request.
+
+Supported request shapes are OpenAI-compatible chat completions, Anthropic
+Messages, and Gemini GenerateContent. These cover the major hosted APIs, local
+Llama servers that expose a compatible endpoint, and compatible Ask Sage
+routes. GenAI.mil and other tenant-controlled services use the API shape,
+endpoint, model, and credentials issued for that environment; Defilade does not
+assume a universal public endpoint.
+
+Only capped node and edge summaries are sent, never raw Zeek events or
+Elasticsearch credentials. Responses must cite existing device IDs and include
+tags, confidence, and rationale. Invalid IDs or malformed suggestions are
+rejected, and accepted suggestions remain separate from observed evidence.
 
 ## Repository layout
 

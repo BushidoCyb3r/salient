@@ -16,7 +16,7 @@ func TestFrontendSelfContainedAndHasExpectedMarkers(t *testing.T) {
 		t.Fatal(err)
 	}
 	combined := string(html) + string(js)
-	for _, want := range []string{"cytoscape", "cxttap", "drift-new", "ListSnapshots", "LoadModel", "Legend", "Connect", "RunScan", "CancelScan", "ExportMap", "ExportImage", "cy.png", "exportfmt", "scan:progress", "scan:done", "connect:warning", "connform", "tasklog", "snapshot:open", "snapshots:refresh"} {
+	for _, want := range []string{"cytoscape", "cxttap", "drift-new", "ListSnapshots", "LoadModel", "Legend", "Connect", "RunScan", "CancelScan", "ExportMap", "ExportImage", "SuggestTags", "cy.png", "exportfmt", "scan:progress", "scan:done", "connect:warning", "connform", "tasklog", "snapshot:open", "snapshots:refresh", "ai-provider", "ai-endpoint", "ai-model", "ai-key", "ai-egress", "ai-tagbtn", "suggested_tags"} {
 		if !strings.Contains(combined, want) {
 			t.Errorf("frontend missing %q", want)
 		}

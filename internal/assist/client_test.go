@@ -87,3 +87,133 @@ func TestValidateEndpointRequiresExplicitSecureRemoteEgress(t *testing.T) {
 		t.Fatalf("explicit secure remote endpoint rejected: %v", err)
 	}
 }
+
+func TestTagDevicesSupportsProviderAPIs(t *testing.T) {
+	tests := []struct {
+		name       string
+		provider   Provider
+		authHeader string
+		response   string
+		checkBody  func(t *testing.T, body []byte)
+	}{
+		{
+			name: "openai compatible", provider: ProviderOpenAI,
+			authHeader: "Authorization",
+			response:   `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.1\",\"tags\":[\"dns\",\"infrastructure\"],\"confidence\":0.9,\"rationale\":\"Answers DNS for many clients\"}]}"}}]}`,
+			checkBody: func(t *testing.T, body []byte) {
+				var request struct {
+					Model    string `json:"model"`
+					Messages []any  `json:"messages"`
+				}
+				if err := json.Unmarshal(body, &request); err != nil {
+					t.Fatal(err)
+				}
+				if request.Model != "test-model" || len(request.Messages) != 2 {
+					t.Fatalf("unexpected OpenAI-compatible request: %s", body)
+				}
+			},
+		},
+		{
+			name: "anthropic messages", provider: ProviderAnthropic,
+			authHeader: "X-Api-Key",
+			response:   `{"content":[{"type":"text","text":"{\"tags\":[{\"node_id\":\"10.0.0.1\",\"tags\":[\"dns\"],\"confidence\":0.9,\"rationale\":\"Answers DNS\"}]}"}]}`,
+			checkBody: func(t *testing.T, body []byte) {
+				var request struct {
+					Model    string `json:"model"`
+					System   string `json:"system"`
+					Messages []any  `json:"messages"`
+				}
+				if err := json.Unmarshal(body, &request); err != nil {
+					t.Fatal(err)
+				}
+				if request.Model != "test-model" || request.System == "" || len(request.Messages) != 1 {
+					t.Fatalf("unexpected Anthropic request: %s", body)
+				}
+			},
+		},
+		{
+			name: "gemini generate content", provider: ProviderGemini,
+			authHeader: "X-Goog-Api-Key",
+			response:   `{"candidates":[{"content":{"parts":[{"text":"{\"tags\":[{\"node_id\":\"10.0.0.1\",\"tags\":[\"dns\"],\"confidence\":0.9,\"rationale\":\"Answers DNS\"}]}"}]}}]}`,
+			checkBody: func(t *testing.T, body []byte) {
+				var request struct {
+					Contents         []any `json:"contents"`
+					GenerationConfig struct {
+						ResponseMimeType string `json:"responseMimeType"`
+					} `json:"generationConfig"`
+				}
+				if err := json.Unmarshal(body, &request); err != nil {
+					t.Fatal(err)
+				}
+				if len(request.Contents) != 1 || request.GenerationConfig.ResponseMimeType != "application/json" {
+					t.Fatalf("unexpected Gemini request: %s", body)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				body, _ := io.ReadAll(r.Body)
+				if got := r.Header.Get(tt.authHeader); got != "secret" && got != "Bearer secret" {
+					t.Errorf("unexpected %s header %q", tt.authHeader, got)
+				}
+				if tt.provider == ProviderAnthropic && r.Header.Get("Anthropic-Version") == "" {
+					t.Error("missing Anthropic-Version header")
+				}
+				tt.checkBody(t, body)
+				w.Header().Set("Content-Type", "application/json")
+				io.WriteString(w, tt.response)
+			}))
+			defer server.Close()
+
+			result, err := TagDevices(context.Background(), Config{
+				Provider: tt.provider, Endpoint: server.URL, Model: "test-model", APIKey: "secret",
+			}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(result.Tags) != 1 || result.Tags[0].NodeID != "10.0.0.1" || result.Tags[0].Tags[0] != "dns" {
+				t.Fatalf("unexpected tags: %+v", result)
+			}
+		})
+	}
+}
+
+func TestTagDevicesRejectsUnknownNode(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"192.0.2.99\",\"tags\":[\"server\"],\"confidence\":0.8,\"rationale\":\"x\"}]}"}}]}`)
+	}))
+	defer server.Close()
+
+	_, err := TagDevices(context.Background(), Config{
+		Provider: ProviderOpenAI, Endpoint: server.URL, Model: "test",
+	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})
+	if err == nil || !strings.Contains(err.Error(), "unknown node") {
+		t.Fatalf("expected unknown-node error, got %v", err)
+	}
+}
+
+func TestTagDevicesRejectsCrossHostRedirect(t *testing.T) {
+	reached := false
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached = true
+		io.WriteString(w, `{}`)
+	}))
+	defer target.Close()
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL, http.StatusTemporaryRedirect)
+	}))
+	defer origin.Close()
+
+	_, err := TagDevices(context.Background(), Config{
+		Provider: ProviderAnthropic, Endpoint: origin.URL, Model: "test", APIKey: "secret",
+	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})
+	if err == nil || !strings.Contains(err.Error(), "redirect host") {
+		t.Fatalf("expected cross-host redirect error, got %v", err)
+	}
+	if reached {
+		t.Fatal("cross-host redirect reached target")
+	}
+}

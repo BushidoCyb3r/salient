@@ -10,8 +10,10 @@ Elasticsearch traffic is the aggregation queries a `defilade scan` issues, and
 the only writes are the snapshot, report, and map under `<data-dir>`
 (default `defilade-data/`, same as the CLI). The API key lives in memory only —
 never persisted to disk, never included in an emitted event. Model-assisted
-`analyze`, `diff`, and `reconcile` stay CLI-only; the console reads whatever
-snapshots those and its own scans leave in `<data-dir>/{snapshots,reports,maps}`.
+`diff` and `reconcile` stay CLI-only; the console reads whatever snapshots those
+and its own scans leave in `<data-dir>/{snapshots,reports,maps}`. Optional device
+tagging can submit a capped snapshot summary to an operator-configured model
+endpoint and stores validated suggestions in a separate protected sidecar.
 
 ## Building
 
@@ -81,3 +83,11 @@ Exercise against the fake grid: `go run ./testdata/fakees -port 9299`, connect t
 - [ ] File → Open Snapshot opens the native file picker
 - [ ] File → Refresh re-scans the data directory
 - [ ] Click-node evidence panel still works
+- [ ] AI Device Tagging stays disabled until a snapshot is selected
+- [ ] Provider changes update endpoint/model defaults but both remain editable
+- [ ] Loopback tagging works without egress consent; remote tagging fails until
+      consent is checked and then requires HTTPS
+- [ ] Successful tags visibly outline matching nodes and appear only under
+      MODEL SUGGESTION in the evidence panel
+- [ ] Restarting the console reloads suggestions from the `.tags.json` sidecar;
+      the sidecar contains no API key

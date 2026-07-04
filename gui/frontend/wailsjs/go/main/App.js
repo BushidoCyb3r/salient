@@ -33,3 +33,7 @@ export function LoadModel(arg1) {
 export function RunScan(arg1) {
   return window['go']['main']['App']['RunScan'](arg1);
 }
+
+export function SuggestTags(arg1) {
+  return window['go']['main']['App']['SuggestTags'](arg1);
+}

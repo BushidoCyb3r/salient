@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
+	"github.com/BushidoCyb3r/defilade/internal/assist"
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/escli"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
@@ -89,11 +92,105 @@ func (a *App) resolveSnapshotPath(path string) string {
 
 // LoadModel loads a snapshot and re-derives its briefing-map model fresh.
 func (a *App) LoadModel(path string) (*mapview.Model, error) {
-	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	resolved := a.resolveSnapshotPath(path)
+	snap, err := snapshot.Load(resolved)
 	if err != nil {
 		return nil, err
 	}
-	return mapview.Build(snap, mapview.Options{}), nil
+	model := mapview.Build(snap, mapview.Options{})
+	artifact, err := loadTagArtifact(resolved)
+	if err != nil {
+		return nil, err
+	}
+	if artifact != nil {
+		byID := make(map[string]assist.DeviceTag, len(artifact.Tags))
+		for _, tag := range artifact.Tags {
+			byID[tag.NodeID] = tag
+		}
+		for i := range model.Nodes {
+			if tag, ok := byID[model.Nodes[i].ID]; ok {
+				model.Nodes[i].SuggestedTags = tag.Tags
+				model.Nodes[i].SuggestionConfidence = tag.Confidence
+				model.Nodes[i].SuggestionRationale = tag.Rationale
+				model.Nodes[i].SuggestionModel = artifact.Model
+			}
+		}
+	}
+	return model, nil
+}
+
+type TagRequest struct {
+	SnapshotPath string
+	Provider     string
+	Endpoint     string
+	Model        string
+	APIKey       string
+	AllowRemote  bool
+}
+
+type TagArtifact struct {
+	GeneratedAt  time.Time          `json:"generated_at"`
+	Provider     string             `json:"provider"`
+	EndpointHost string             `json:"endpoint_host"`
+	Model        string             `json:"model"`
+	Tags         []assist.DeviceTag `json:"tags"`
+}
+
+// SuggestTags stores generated labels separately from observed snapshot data.
+// The API key is used only for this request and is never persisted.
+func (a *App) SuggestTags(req TagRequest) (*assist.TagResult, error) {
+	resolved := a.resolveSnapshotPath(req.SnapshotPath)
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	result, err := assist.TagDevices(ctx, assist.Config{
+		Provider:    assist.Provider(req.Provider),
+		Endpoint:    req.Endpoint,
+		Model:       req.Model,
+		APIKey:      req.APIKey,
+		AllowRemote: req.AllowRemote,
+	}, snap)
+	if err != nil {
+		return nil, err
+	}
+	u, err := url.Parse(req.Endpoint)
+	if err != nil {
+		return nil, err
+	}
+	artifact := TagArtifact{
+		GeneratedAt: time.Now().UTC(), Provider: req.Provider,
+		EndpointHost: u.Host, Model: req.Model, Tags: result.Tags,
+	}
+	raw, err := json.MarshalIndent(artifact, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	if err := safefile.WriteFile(tagArtifactPath(resolved), raw); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func tagArtifactPath(snapshotPath string) string { return snapshotPath + ".tags.json" }
+
+func loadTagArtifact(snapshotPath string) (*TagArtifact, error) {
+	raw, err := os.ReadFile(tagArtifactPath(snapshotPath))
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("reading device tags: %w", err)
+	}
+	var artifact TagArtifact
+	if err := json.Unmarshal(raw, &artifact); err != nil {
+		return nil, fmt.Errorf("decoding device tags: %w", err)
+	}
+	return &artifact, nil
 }
 
 // ExportMap re-renders the snapshot currently on screen as html or graphml —

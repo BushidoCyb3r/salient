@@ -5,6 +5,7 @@ import {escli} from '../models';
 import {snapshot} from '../models';
 import {mapview} from '../models';
 import {scan} from '../models';
+import {assist} from '../models';
 
 export function CancelScan():Promise<void>;
 
@@ -21,3 +22,5 @@ export function ListSnapshots():Promise<Array<snapshot.ArtifactEntry>>;
 export function LoadModel(arg1:string):Promise<mapview.Model>;
 
 export function RunScan(arg1:main.ScanRequest):Promise<scan.Result>;
+
+export function SuggestTags(arg1:main.TagRequest):Promise<assist.TagResult>;

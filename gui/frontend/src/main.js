@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -187,6 +187,8 @@ function openSnapshot(path) {
   LoadModel(path).then((model) => {
     currentSnapshotPath = path;
     $('exportbtn').disabled = false;
+    $('ai-tagbtn').disabled = false;
+    $('ai-status').textContent = 'ready';
     renderModel(model);
   }).catch((err) => logLine('could not load snapshot: ' + err, 'err'));
 }
@@ -216,6 +218,51 @@ $('exportbtn').onclick = async () => {
   }
 };
 
+const providerDefaults = {
+  openai: { endpoint: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4.1-mini' },
+  anthropic: { endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-4-5' },
+  gemini: { endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent', model: 'gemini-2.5-flash' },
+};
+
+$('ai-provider').onchange = (e) => {
+  const defaults = providerDefaults[e.target.value];
+  $('ai-endpoint').value = defaults.endpoint;
+  $('ai-model').value = defaults.model;
+};
+
+$('ai-tagbtn').onclick = async () => {
+  if (!currentSnapshotPath) return;
+  const button = $('ai-tagbtn');
+  const model = $('ai-model').value.trim();
+  let endpoint = $('ai-endpoint').value.trim();
+  if (!model || !endpoint) {
+    $('ai-status').textContent = 'endpoint and model are required';
+    return;
+  }
+  endpoint = endpoint.replace('{model}', encodeURIComponent(model));
+  button.disabled = true;
+  $('ai-status').textContent = 'requesting suggestions…';
+  try {
+    const result = await SuggestTags({
+      SnapshotPath: currentSnapshotPath,
+      Provider: $('ai-provider').value,
+      Endpoint: endpoint,
+      Model: model,
+      APIKey: $('ai-key').value,
+      AllowRemote: $('ai-egress').checked,
+    });
+    const count = (result.tags || []).length;
+    $('ai-status').textContent = count + ' device suggestion' + (count === 1 ? '' : 's') + ' saved';
+    logLine('saved ' + count + ' model-assisted device tag suggestion' + (count === 1 ? '' : 's'), 'ok');
+    openSnapshot(currentSnapshotPath);
+  } catch (err) {
+    $('ai-status').textContent = 'tagging failed: ' + err;
+    logLine('device tagging failed: ' + err, 'err');
+  } finally {
+    button.disabled = false;
+  }
+};
+
 function renderModel(model) {
   const els = [];
   for (const g of model.groups || []) {
@@ -227,8 +274,10 @@ function renderModel(model) {
         id: n.id, parent: n.group || undefined, label: n.label.split('\n')[0], role: n.role, tier: n.tier,
         comp: n.composite || 0, rank: n.rank || 0, gw: n.gateway ? 1 : 0, inf: n.inferred ? 1 : 0,
         agg: n.agg_count || 0, drift: n.drift || '', ev: (n.evidence || []).join('\n'),
+        aiTags: (n.suggested_tags || []).join(', '), aiConfidence: n.suggestion_confidence || 0,
+        aiRationale: n.suggestion_rationale || '', aiModel: n.suggestion_model || '',
       },
-      classes: n.drift ? 'drift-' + n.drift : '',
+      classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
     });
   }
   const edges = model.edges || [];
@@ -250,6 +299,7 @@ function renderModel(model) {
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
       { selector: 'node[agg>0]', style: { shape: 'round-rectangle', 'border-style': 'double', 'border-width': 3 } },
+      { selector: 'node.ai-tagged', style: { 'border-color': '#39d3ff', 'border-width': 4 } },
       { selector: 'node.drift-new', style: { 'border-color': '#3fb950', 'border-width': 4 } },
       { selector: 'node.drift-vanished', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
       { selector: 'node.drift-rank-up,node.drift-rank-down', style: { 'border-color': '#e3a008', 'border-width': 4 } },
@@ -288,7 +338,8 @@ function renderModel(model) {
     $('ev').textContent =
       n.data('label') + '\nrole: ' + n.data('role') + (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
       '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
-      (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)');
+      (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)') +
+      (n.data('aiTags') ? '\n\nMODEL SUGGESTION (' + n.data('aiModel') + ', confidence ' + n.data('aiConfidence').toFixed(2) + ')\ntags: ' + n.data('aiTags') + '\n' + n.data('aiRationale') : '');
   });
 }
 
@@ -297,7 +348,7 @@ $('search').addEventListener('input', (e) => {
   const q = e.target.value.trim().toLowerCase();
   if (!q) { cy.nodes(':childless').removeClass('dim'); return; }
   cy.nodes(':childless').forEach((n) => {
-    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev')).toLowerCase();
+    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev') + ' ' + n.data('aiTags')).toLowerCase();
     n.toggleClass('dim', !hay.includes(q));
   });
 });

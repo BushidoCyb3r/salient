@@ -55,18 +55,22 @@ type Group struct {
 // MapNode is a visible node: a real host, a synthesized gateway, or an
 // aggregated "N workstations" meta-node.
 type MapNode struct {
-	ID        string   `json:"id"`
-	Group     string   `json:"group"`
-	Label     string   `json:"label"`
-	Role      string   `json:"role"`
-	Tier      Tier     `json:"tier"`
-	Composite float64  `json:"composite"`
-	Rank      int      `json:"rank,omitempty"`
-	Gateway   bool     `json:"gateway"`
-	Inferred  bool     `json:"inferred"` // gateway synthesized without L2 evidence
-	AggCount  int      `json:"agg_count,omitempty"`
-	Evidence  []string `json:"evidence,omitempty"`
-	Drift     string   `json:"drift,omitempty"` // new, vanished, rank-up, rank-down
+	ID                   string   `json:"id"`
+	Group                string   `json:"group"`
+	Label                string   `json:"label"`
+	Role                 string   `json:"role"`
+	Tier                 Tier     `json:"tier"`
+	Composite            float64  `json:"composite"`
+	Rank                 int      `json:"rank,omitempty"`
+	Gateway              bool     `json:"gateway"`
+	Inferred             bool     `json:"inferred"` // gateway synthesized without L2 evidence
+	AggCount             int      `json:"agg_count,omitempty"`
+	Evidence             []string `json:"evidence,omitempty"`
+	Drift                string   `json:"drift,omitempty"` // new, vanished, rank-up, rank-down
+	SuggestedTags        []string `json:"suggested_tags,omitempty"`
+	SuggestionConfidence float64  `json:"suggestion_confidence,omitempty"`
+	SuggestionRationale  string   `json:"suggestion_rationale,omitempty"`
+	SuggestionModel      string   `json:"suggestion_model,omitempty"`
 }
 
 // MapEdge is a (possibly bundled) visible edge.
