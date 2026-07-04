@@ -5,7 +5,9 @@ import (
 	"sort"
 
 	"github.com/BushidoCyb3r/defilade/internal/devices"
+	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/defilade/internal/snapshot"
 )
 
 func (a *App) registryPath() string { return filepath.Join(a.DataDir, "devices.json") }
@@ -79,6 +81,64 @@ func (a *App) SetLabels(ip string, labels []string) error {
 // DismissHint permanently hides a hint ("hostname:<name>", "ai:<ip>").
 func (a *App) DismissHint(key string) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { r.Dismiss(key); return nil })
+}
+
+// Hint is a suggested same-device link: one hostname observed on 2+ IPs.
+// Nothing links automatically — the operator accepts or dismisses it.
+type Hint struct {
+	Key      string   `json:"key"`
+	Hostname string   `json:"hostname"`
+	IPs      []string `json:"ips"`
+}
+
+// hostnameHints derives link suggestions from hostname evidence. A hint is
+// suppressed when dismissed or when all its IPs already share one device.
+func hostnameHints(nodes []graph.Node, reg *devices.Registry) []Hint {
+	byHost := map[string][]string{}
+	for _, n := range nodes {
+		for _, h := range n.Hostnames {
+			byHost[h] = append(byHost[h], n.IP)
+		}
+	}
+	var hints []Hint
+	for host, ips := range byHost {
+		if len(ips) < 2 {
+			continue
+		}
+		key := "hostname:" + host
+		if reg.Dismissed(key) {
+			continue
+		}
+		owner, allLinked := "", true
+		for _, ip := range ips {
+			d := reg.DeviceForIP(ip)
+			if d == nil || (owner != "" && d.Name != owner) {
+				allLinked = false
+				break
+			}
+			owner = d.Name
+		}
+		if allLinked {
+			continue
+		}
+		sort.Strings(ips)
+		hints = append(hints, Hint{Key: key, Hostname: host, IPs: ips})
+	}
+	sort.Slice(hints, func(i, j int) bool { return hints[i].Key < hints[j].Key })
+	return hints
+}
+
+// DeviceHints returns pending same-device link suggestions for a snapshot.
+func (a *App) DeviceHints(path string) ([]Hint, error) {
+	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	if err != nil {
+		return nil, err
+	}
+	reg, err := devices.Load(a.registryPath())
+	if err != nil {
+		return nil, err
+	}
+	return hostnameHints(snap.Nodes, &reg), nil
 }
 
 // overlayNodes stamps operator device identity and labels onto map nodes.

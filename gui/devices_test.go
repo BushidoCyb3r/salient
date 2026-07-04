@@ -87,6 +87,43 @@ func TestLoadModelAppliesDeviceOverlay(t *testing.T) {
 	}
 }
 
+func TestHostnameHints(t *testing.T) {
+	nodes := []graph.Node{
+		{IP: "192.168.20.1", Hostnames: []string{"udm"}},
+		{IP: "10.10.40.1", Hostnames: []string{"udm"}},
+		{IP: "10.18.61.1", Hostnames: []string{"udm"}},
+		{IP: "10.0.0.5", Hostnames: []string{"nas"}}, // single IP — no hint
+		{IP: "10.0.0.6"},                             // no hostname
+		{IP: "10.0.0.7", Hostnames: []string{"printer"}},
+		{IP: "10.0.0.8", Hostnames: []string{"printer"}},
+	}
+	var reg devices.Registry
+	hints := hostnameHints(nodes, &reg)
+	if len(hints) != 2 {
+		t.Fatalf("hints = %#v", hints)
+	}
+	if hints[0].Key != "hostname:printer" || len(hints[0].IPs) != 2 {
+		t.Fatalf("hint[0] = %#v", hints[0])
+	}
+	if hints[1].Key != "hostname:udm" || len(hints[1].IPs) != 3 || hints[1].Hostname != "udm" {
+		t.Fatalf("hint[1] = %#v", hints[1])
+	}
+
+	// Dismissed hints stay dismissed.
+	reg.Dismiss("hostname:printer")
+	if got := hostnameHints(nodes, &reg); len(got) != 1 || got[0].Key != "hostname:udm" {
+		t.Fatalf("after dismiss: %#v", got)
+	}
+
+	// A hint whose IPs are already all in one device disappears.
+	reg.Assign("router", "192.168.20.1")
+	reg.Assign("router", "10.10.40.1")
+	reg.Assign("router", "10.18.61.1")
+	if got := hostnameHints(nodes, &reg); len(got) != 0 {
+		t.Fatalf("linked hint should vanish: %#v", got)
+	}
+}
+
 func TestLoadModelSurvivesCorruptRegistry(t *testing.T) {
 	dataDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dataDir, "devices.json"), []byte("{corrupt"), 0o600); err != nil {
