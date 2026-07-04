@@ -74,6 +74,7 @@ export namespace devices {
 	export class Registry {
 	    devices: Device[];
 	    labels?: Record<string, Array<string>>;
+	    role_overrides?: Record<string, string>;
 	    dismissed_hints?: string[];
 	
 	    static createFrom(source: any = {}) {
@@ -84,6 +85,7 @@ export namespace devices {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.devices = this.convertValues(source["devices"], Device);
 	        this.labels = source["labels"];
+	        this.role_overrides = source["role_overrides"];
 	        this.dismissed_hints = source["dismissed_hints"];
 	    }
 	
@@ -564,6 +566,8 @@ export namespace mapview {
 	    device?: string;
 	    device_type?: string;
 	    labels?: string[];
+	    role_override?: string;
+	    services?: string[];
 	    suggested_tags?: string[];
 	    suggestion_confidence?: number;
 	    suggestion_rationale?: string;
@@ -590,6 +594,8 @@ export namespace mapview {
 	        this.device = source["device"];
 	        this.device_type = source["device_type"];
 	        this.labels = source["labels"];
+	        this.role_override = source["role_override"];
+	        this.services = source["services"];
 	        this.suggested_tags = source["suggested_tags"];
 	        this.suggestion_confidence = source["suggestion_confidence"];
 	        this.suggestion_rationale = source["suggestion_rationale"];
