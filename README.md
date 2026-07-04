@@ -181,3 +181,7 @@ Additional operator documentation:
 - [Read-only deployment](docs/DEPLOYMENT.md)
 - [Field-map verification](docs/FIELDMAP.md)
 - [Map interpretation and export](docs/MAPS.md)
+
+## License
+
+Defilade is licensed under the [Apache License 2.0](LICENSE).
