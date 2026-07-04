@@ -1,6 +1,8 @@
 BINARY  := defilade
 PKG     := ./cmd/defilade
-GO      ?= go
+# Prefer the known-good local toolchain when present; fall back to PATH.
+GO      ?= $(if $(wildcard $(HOME)/.local/go/bin/go),$(HOME)/.local/go/bin/go,$(shell command -v go 2>/dev/null || printf go))
+GO_ENV  ?= env -u GOROOT
 WAILS_VERSION := v2.12.0
 TOOLS_DIR ?= .tools
 WAILS_BIN_DIR ?= $(TOOLS_DIR)/bin
@@ -13,36 +15,36 @@ GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webki
 .PHONY: deps gui-deps build gui gui-test test lint cross clean integration
 
 deps:
-	$(GO) mod download
+	$(GO_ENV) $(GO) mod download
 
 gui-deps: deps
-	cd gui && $(GO) mod download
+	cd gui && $(GO_ENV) $(GO) mod download
 	cd gui/frontend && npm ci
 	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
-	GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+	$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
 
 build:
-	CGO_ENABLED=0 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
+	CGO_ENABLED=0 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
 
 gui:
-	cd gui && $(WAILS) build $(GUI_TAGS)
+	cd gui && $(GO_ENV) $(WAILS) build $(GUI_TAGS)
 
 gui-test:
-	cd gui && $(GO) test ./...
+	cd gui && $(GO_ENV) $(GO) test ./...
 
 test:
-	$(GO) test -race ./...
+	$(GO_ENV) $(GO) test -race ./...
 
 lint:
-	golangci-lint run ./...
+	$(GO_ENV) golangci-lint run ./...
 
 # Hard constraint: pure Go, no cgo, static binaries for all three targets.
 # GOFLAGS=-p=2: elastic's typedapi/types package OOM-kills the compiler on
 # small (≤4GB) boxes when target builds overlap at full parallelism.
 cross:
-	CGO_ENABLED=0 GOFLAGS=-p=2 GOOS=linux   GOARCH=amd64 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY)-linux-amd64 $(PKG)
-	CGO_ENABLED=0 GOFLAGS=-p=2 GOOS=darwin  GOARCH=arm64 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY)-darwin-arm64 $(PKG)
-	CGO_ENABLED=0 GOFLAGS=-p=2 GOOS=windows GOARCH=amd64 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY)-windows-amd64.exe $(PKG)
+	CGO_ENABLED=0 GOFLAGS=-p=2 GOOS=linux   GOARCH=amd64 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY)-linux-amd64 $(PKG)
+	CGO_ENABLED=0 GOFLAGS=-p=2 GOOS=darwin  GOARCH=arm64 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY)-darwin-arm64 $(PKG)
+	CGO_ENABLED=0 GOFLAGS=-p=2 GOOS=windows GOARCH=amd64 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY)-windows-amd64.exe $(PKG)
 
 # Live-grid check, never in CI. Usage:
 #   make integration ES_URL=https://manager:9200 API_KEY=... [CA_CERT=grid-ca.pem]
