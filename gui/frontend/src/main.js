@@ -341,12 +341,52 @@ function renderModel(model) {
   cy.on('tap', 'node:childless', (e) => {
     const n = e.target;
     if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('label')); return; }
-    $('ev').textContent =
-      n.data('label') + '\nrole: ' + n.data('role') + (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
-      '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
-      (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)') +
-      (n.data('aiTags') ? '\n\nMODEL SUGGESTION (' + n.data('aiModel') + ', confidence ' + n.data('aiConfidence').toFixed(2) + ')\ntags: ' + n.data('aiTags') + '\n' + n.data('aiRationale') : '');
+    showNodeEvidence(n);
   });
+}
+
+function showNodeEvidence(n) {
+  const ev = $('ev');
+  ev.textContent = '';
+  const ip = n.data('id');
+  const aiDismissed = registry.dismissed_hints.includes('ai:' + ip);
+  let text =
+    n.data('label') + '\nrole: ' + n.data('role') + (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
+    '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
+    (n.data('device') ? '\ndevice: ◈ ' + n.data('device') : '') +
+    (n.data('labels') ? '\nlabels: ' + n.data('labels') : '') +
+    (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)');
+  if (n.data('aiTags') && !aiDismissed) {
+    text += '\n\nMODEL SUGGESTION (' + n.data('aiModel') + ', confidence ' + n.data('aiConfidence').toFixed(2) + ')\ntags: ' + n.data('aiTags') + '\n' + n.data('aiRationale');
+  }
+  ev.appendChild(document.createTextNode(text));
+  if (n.data('aiTags') && !aiDismissed) {
+    const row = document.createElement('div');
+    row.className = 'devcard';
+    const accept = document.createElement('button');
+    accept.textContent = 'accept tags';
+    accept.onclick = async () => {
+      try {
+        await SetLabels(ip, n.data('aiTags').split(', '));
+        logLine('promoted AI tags to durable labels for ' + ip, 'ok');
+        await refreshDevices();
+        n.data('labels', n.data('aiTags'));
+        showNodeEvidence(n);
+      } catch (err) { logLine('accept failed: ' + err, 'err'); }
+    };
+    const dismiss = document.createElement('button');
+    dismiss.textContent = 'dismiss suggestion';
+    dismiss.onclick = async () => {
+      try {
+        await DismissHint('ai:' + ip);
+        await refreshDevices();
+        showNodeEvidence(n);
+      } catch (err) { logLine('dismiss failed: ' + err, 'err'); }
+    };
+    row.appendChild(accept);
+    row.appendChild(dismiss);
+    ev.appendChild(row);
+  }
 }
 
 /* ---------------- aggregate-node host list ---------------- */
