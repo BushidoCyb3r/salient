@@ -3,6 +3,7 @@ PKG     := ./cmd/defilade
 # Prefer the known-good local toolchain when present; fall back to PATH.
 GO      ?= $(if $(wildcard $(HOME)/.local/go/bin/go),$(HOME)/.local/go/bin/go,$(shell command -v go 2>/dev/null || printf go))
 GO_ENV  ?= env -u GOROOT
+GO_PATH  ?= $(if $(wildcard $(HOME)/.local/go/bin/go),$(HOME)/.local/go/bin:,$(EMPTY))
 WAILS_VERSION := v2.12.0
 TOOLS_DIR ?= .tools
 WAILS_BIN_DIR ?= $(TOOLS_DIR)/bin
@@ -27,7 +28,7 @@ build:
 	CGO_ENABLED=0 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
 
 gui:
-	cd gui && $(GO_ENV) $(WAILS) build $(GUI_TAGS)
+	cd gui && PATH="$(GO_PATH)$(PATH)" $(GO_ENV) $(WAILS) build $(GUI_TAGS)
 
 gui-test:
 	cd gui && $(GO_ENV) $(GO) test ./...
