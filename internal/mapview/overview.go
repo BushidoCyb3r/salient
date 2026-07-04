@@ -141,13 +141,16 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		return "g:external"
 	}
 
+	groupHasRetained := map[string]bool{}
 	for _, i := range idx {
 		n := &nodes[i]
 		if !retained[n.IP] {
 			continue
 		}
+		gid := resolve(n.Subnet)
+		groupHasRetained[gid] = true
 		m.Nodes = append(m.Nodes, MapNode{
-			ID: n.IP, Group: resolve(n.Subnet), Label: nodeLabel(n),
+			ID: n.IP, Group: gid, Label: nodeLabel(n),
 			Role: string(n.TopRole()), Tier: tierOf(n),
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 			Evidence: evidence(n), Drift: nodeDrift[n.IP],
@@ -179,12 +182,31 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		})
 	}
 
-	m.addOverviewGateways(snap, byIP, resolve)
+	// Observed L2 gateways are real evidence — add them before budgeting
+	// edges. Inferred gateways are guesses and come last, in leftover space.
+	hasObserved := m.addObservedGateways(snap)
 
 	visible := retained
 	m.bundleEdges(filterFocusEdges(snap.Edges, byIP), visible, byIP, resolve, opts.MinConns, edgeDrift)
+
+	// Edges are the dependency story — budget them before inferred gateways,
+	// and protect cross-group (inter-VLAN) bundles inside the trim so routed
+	// dependencies never lose their slot to intra-group filler.
+	groupOf := map[string]string{}
+	for _, n := range m.Nodes {
+		groupOf[n.ID] = n.Group
+	}
 	edgeBudget := config.MapTargetElements - len(m.Groups) - len(m.Nodes)
-	m.Edges = trimOverviewEdges(m.Edges, edgeBudget, retained)
+	m.Edges = trimOverviewEdges(m.Edges, edgeBudget, retained, groupOf)
+
+	// Inferred gateways only when the grid has no observed L2 evidence, only
+	// for VLANs whose structure isn't already shown by a retained node, and
+	// only in whatever element budget remains: a dashed "probably a router"
+	// guess must never displace a real dependency edge or clutter a VLAN that
+	// already shows its own hosts.
+	if !hasObserved {
+		m.addInferredGateways(snap, byIP, resolve, groupHasRetained)
+	}
 
 	for _, cidr := range snap.Meta.ZeroCovCIDRs {
 		// Text only in overview mode — hatched group boxes would spend the
@@ -203,33 +225,44 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	return m
 }
 
-// addOverviewGateways caps gateways at one per overview group. Observed L2
-// candidates win by descending IP count, then MAC and sensor.
-func (m *Model) addOverviewGateways(snap graph.Snapshot, byIP map[string]*graph.Node, resolve func(string) string) {
-	if len(snap.Meta.L2Gateways) > 0 {
-		gws := append([]graph.L2Gateway(nil), snap.Meta.L2Gateways...)
-		sort.Slice(gws, func(i, j int) bool {
-			if gws[i].IPCount != gws[j].IPCount {
-				return gws[i].IPCount > gws[j].IPCount
-			}
-			if gws[i].MAC != gws[j].MAC {
-				return gws[i].MAC < gws[j].MAC
-			}
-			return gws[i].Sensor < gws[j].Sensor
-		})
-		if len(gws) > len(m.Groups) {
-			gws = gws[:len(m.Groups)]
-		}
-		for _, gw := range gws {
-			m.Nodes = append(m.Nodes, MapNode{
-				ID:    "gw:" + gw.MAC,
-				Label: fmt.Sprintf("gateway %s", gw.MAC),
-				Role:  "Gateway", Tier: TierCore, Gateway: true,
-				Evidence: []string{fmt.Sprintf("MAC answered for %d distinct IPs (sensor %s) — observed L2 convergence", gw.IPCount, gw.Sensor)},
-			})
-		}
-		return
+// addObservedGateways adds gateways backed by L2 MAC convergence, capped at
+// one per overview group, best (highest IP count) first. Returns whether any
+// observed evidence existed — the caller skips inferred gateways when it did.
+func (m *Model) addObservedGateways(snap graph.Snapshot) bool {
+	if len(snap.Meta.L2Gateways) == 0 {
+		return false
 	}
+	gws := append([]graph.L2Gateway(nil), snap.Meta.L2Gateways...)
+	sort.Slice(gws, func(i, j int) bool {
+		if gws[i].IPCount != gws[j].IPCount {
+			return gws[i].IPCount > gws[j].IPCount
+		}
+		if gws[i].MAC != gws[j].MAC {
+			return gws[i].MAC < gws[j].MAC
+		}
+		return gws[i].Sensor < gws[j].Sensor
+	})
+	if len(gws) > len(m.Groups) {
+		gws = gws[:len(m.Groups)]
+	}
+	for _, gw := range gws {
+		m.Nodes = append(m.Nodes, MapNode{
+			ID:    "gw:" + gw.MAC,
+			Label: fmt.Sprintf("gateway %s", gw.MAC),
+			Role:  "Gateway", Tier: TierCore, Gateway: true,
+			Evidence: []string{fmt.Sprintf("MAC answered for %d distinct IPs (sensor %s) — observed L2 convergence", gw.IPCount, gw.Sensor)},
+		})
+	}
+	return true
+}
+
+// addInferredGateways synthesizes at most one dashed gateway per routed VLAN
+// that has no observed L2 evidence — but only for groups whose own hosts are
+// all aggregated (a group already showing a retained node needs no phantom)
+// and only while element budget remains. Groups are taken in ID order for
+// determinism, strongest-terrain groups first would need a rank the
+// aggregate doesn't carry, so ID order is the stable, explainable choice.
+func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.Node, resolve func(string) string, groupHasRetained map[string]bool) {
 	crossGroup := map[string]bool{}
 	for _, e := range snap.Edges {
 		s, sOK := byIP[e.Src]
@@ -242,9 +275,12 @@ func (m *Model) addOverviewGateways(snap graph.Snapshot, byIP map[string]*graph.
 		}
 	}
 	for _, g := range m.Groups {
-		// Only real internal CIDR groups get an inferred gateway — a dashed
-		// gateway inside the "external" or "other" box would be noise.
-		if crossGroup[g.ID] && g.CIDR != "" {
+		if m.Elements() >= config.MapTargetElements {
+			return
+		}
+		// Only real internal CIDR groups that route, aren't already shown by
+		// a retained host, and fit the budget get a dashed inferred gateway.
+		if crossGroup[g.ID] && g.CIDR != "" && !groupHasRetained[g.ID] {
 			m.Nodes = append(m.Nodes, MapNode{
 				ID: g.ID + ":gw", Group: g.ID, Label: "gateway (inferred)",
 				Role: "Gateway", Tier: TierCore, Gateway: true, Inferred: true,
@@ -255,13 +291,24 @@ func (m *Model) addOverviewGateways(snap graph.Snapshot, byIP map[string]*graph.
 }
 
 // trimOverviewEdges keeps every drift/overlay-flagged edge (a drift map
-// exists to show them) plus the strongest budget-many others: edges touching
-// retained terrain first, then by connection count and stable keys.
-func trimOverviewEdges(edges []MapEdge, budget int, retained map[string]bool) []MapEdge {
+// exists to show them) plus the strongest budget-many others. Priority after
+// drift: cross-group (inter-VLAN) bundles — the routed-dependency story an
+// operator opens the map for — then edges touching retained terrain, then
+// connection count and stable keys. groupOf maps an edge endpoint id (a
+// retained IP or a "…:clients" aggregate) to its group; endpoints absent from
+// it (or in the same group) are not cross-group.
+func trimOverviewEdges(edges []MapEdge, budget int, retained map[string]bool, groupOf map[string]string) []MapEdge {
+	crosses := func(e MapEdge) bool {
+		gs, gd := groupOf[e.Src], groupOf[e.Dst]
+		return gs != "" && gd != "" && gs != gd
+	}
 	sort.Slice(edges, func(i, j int) bool {
 		a, b := edges[i], edges[j]
 		if af, bf := a.Drift != "", b.Drift != ""; af != bf {
 			return af
+		}
+		if ac, bc := crosses(a), crosses(b); ac != bc {
+			return ac
 		}
 		at := retained[a.Src] || retained[a.Dst]
 		bt := retained[b.Src] || retained[b.Dst]

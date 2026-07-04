@@ -62,6 +62,63 @@ func TestOverviewKeepsTruePrefixGroups(t *testing.T) {
 	}
 }
 
+// TestOverviewKeepsCrossVLANEdges guards the reported regression: after the
+// group cap rose, per-VLAN aggregate + inferred-gateway nodes starved the
+// element budget and trimOverviewEdges dropped the cross-VLAN dependencies
+// first (they touch no retained host). Cross-group bundles are the story of
+// a routed network and must survive.
+func TestOverviewKeepsCrossVLANEdges(t *testing.T) {
+	var nodes []graph.Node
+	var edges []graph.Edge
+	rank := 0
+	add := func(ip, subnet string, composite float64) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: composite, Rank: rank}})
+	}
+	// 12 VLAN gateways get the top ranks (retained). Their client hosts rank
+	// far lower and aggregate into "N other hosts".
+	for v := 0; v < 12; v++ {
+		add(fmt.Sprintf("10.0.%d.1", v), fmt.Sprintf("10.0.%d.0/24", v), 0.9)
+	}
+	for v := 0; v < 12; v++ {
+		for h := 0; h < 40; h++ {
+			add(fmt.Sprintf("10.0.%d.%d", v, h+10), fmt.Sprintf("10.0.%d.0/24", v), 0.02)
+		}
+	}
+	// Filler: strong intra-VLAN edges among retained hosts in VLAN 0. These
+	// out-rank the cross-VLAN bundles in trimming and consume the budget.
+	for h := 10; h < 20; h++ {
+		edges = append(edges, graph.Edge{
+			Src: fmt.Sprintf("10.0.0.%d", h), Dst: "10.0.0.1",
+			Port: 445, ConnCount: 9000,
+		})
+	}
+	// Heavy cross-VLAN traffic between aggregated hosts of adjacent VLANs —
+	// routed through the gateway in reality. None touch a retained host.
+	for v := 0; v < 11; v++ {
+		edges = append(edges, graph.Edge{
+			Src: fmt.Sprintf("10.0.%d.30", v), Dst: fmt.Sprintf("10.0.%d.30", v+1),
+			Port: 445, ConnCount: 5000,
+		})
+	}
+	m := buildOverview(graph.Snapshot{Nodes: nodes, Edges: edges}, Options{GroupPrefix: 24}, nil, nil, 0)
+
+	group := map[string]string{}
+	for _, n := range m.Nodes {
+		group[n.ID] = n.Group
+	}
+	cross := 0
+	for _, e := range m.Edges {
+		if gs, gd := group[e.Src], group[e.Dst]; gs != "" && gd != "" && gs != gd {
+			cross++
+		}
+	}
+	if cross == 0 {
+		t.Fatalf("no cross-VLAN edges survived the overview (of %d edges) — the routed dependencies were trimmed", len(m.Edges))
+	}
+}
+
 func TestTrimOverviewEdgesDriftExempt(t *testing.T) {
 	retained := map[string]bool{"10.0.0.1": true}
 	var edges []MapEdge
@@ -74,7 +131,7 @@ func TestTrimOverviewEdgesDriftExempt(t *testing.T) {
 	// Weakest possible edge, but drift-flagged: must survive any budget.
 	edges = append(edges, MapEdge{Src: "10.9.9.9", Dst: "10.8.8.8", Class: "web", Conns: 1, Drift: "new"})
 
-	got := trimOverviewEdges(edges, 3, retained)
+	got := trimOverviewEdges(edges, 3, retained, nil)
 	if len(got) != 4 {
 		t.Fatalf("kept %d edges, want 3 budgeted + 1 flagged", len(got))
 	}
@@ -87,7 +144,7 @@ func TestTrimOverviewEdgesDriftExempt(t *testing.T) {
 	if !driftKept {
 		t.Error("drift-flagged edge was trimmed; flagged edges are budget-exempt")
 	}
-	if got2 := trimOverviewEdges(edges, -5, retained); len(got2) != 1 || got2[0].Drift != "new" {
+	if got2 := trimOverviewEdges(edges, -5, retained, nil); len(got2) != 1 || got2[0].Drift != "new" {
 		t.Errorf("negative budget must keep only flagged edges, got %d", len(got2))
 	}
 }
