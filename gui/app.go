@@ -21,6 +21,7 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/escli"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/defilade/internal/reconcile"
 	"github.com/BushidoCyb3r/defilade/internal/report"
 	"github.com/BushidoCyb3r/defilade/internal/safefile"
 	"github.com/BushidoCyb3r/defilade/internal/scan"
@@ -38,6 +39,9 @@ type App struct {
 	// saveFileFn, when set, replaces runtime.SaveFileDialog — ExportMap's
 	// render logic is then unit-testable without the Wails runtime.
 	saveFileFn func(opts runtime.SaveDialogOptions) (string, error)
+	// openFileFn, when set, replaces runtime.OpenFileDialog — PickAssetCSV
+	// is then unit-testable without the Wails runtime.
+	openFileFn func(opts runtime.OpenDialogOptions) (string, error)
 
 	mu     sync.Mutex
 	cli    *escli.Client      // set by Connect; nil until connected
@@ -172,6 +176,47 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 	})
 	a.applyDeviceOverlay(hosts)
 	return hosts, nil
+}
+
+// PickAssetCSV opens the native Open dialog for an asset inventory CSV.
+// Returns "" (no error) when the dialog is cancelled.
+func (a *App) PickAssetCSV() (string, error) {
+	open := a.openFileFn
+	if open == nil {
+		open = func(opts runtime.OpenDialogOptions) (string, error) {
+			return runtime.OpenFileDialog(a.ctx, opts)
+		}
+	}
+	return open(runtime.OpenDialogOptions{
+		Title:   "Asset inventory CSV",
+		Filters: []runtime.FileFilter{{DisplayName: "CSV", Pattern: "*.csv"}},
+	})
+}
+
+// LoadReconcileModel reconciles a snapshot against an asset CSV and returns
+// the flagged map model. ParseCSV warnings and reconcile counts ride
+// Model.Findings.
+func (a *App) LoadReconcileModel(snapshotPath, assetsPath string) (*mapview.Model, error) {
+	resolved := a.resolveSnapshotPath(snapshotPath)
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(assetsPath)
+	if err != nil {
+		return nil, fmt.Errorf("asset CSV: %w", err)
+	}
+	defer f.Close()
+	assets, warnings, err := reconcile.ParseCSV(f)
+	if err != nil {
+		return nil, fmt.Errorf("asset CSV: %w", err)
+	}
+	res := reconcile.Compare(snap, assets)
+	model := mapview.BuildReconcile(snap, res, assets, mapview.Options{})
+	for _, w := range warnings {
+		model.Findings = append(model.Findings, "asset CSV: "+w)
+	}
+	return a.finishModel(resolved, model)
 }
 
 type TagRequest struct {
