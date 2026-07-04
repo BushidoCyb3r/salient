@@ -2,7 +2,10 @@ BINARY  := defilade
 PKG     := ./cmd/defilade
 GO      ?= go
 WAILS_VERSION := v2.12.0
-WAILS   ?= $(shell $(GO) env GOPATH)/bin/wails
+TOOLS_DIR ?= .tools
+WAILS_BIN_DIR ?= $(TOOLS_DIR)/bin
+WAILS_CACHE_DIR ?= $(TOOLS_DIR)/go-build
+WAILS   ?= $(abspath $(WAILS_BIN_DIR)/wails)
 LDFLAGS := -s -w
 GOOS    ?= $(shell $(GO) env GOOS)
 GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
@@ -15,7 +18,8 @@ deps:
 gui-deps: deps
 	cd gui && $(GO) mod download
 	cd gui/frontend && npm ci
-	$(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
+	GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
 
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
@@ -49,4 +53,4 @@ integration: build
 		./bin/$(BINARY) discover $(if $(CA_CERT),--ca-cert $(CA_CERT))
 
 clean:
-	rm -rf bin gui/build/bin
+	rm -rf bin gui/build/bin $(TOOLS_DIR)
