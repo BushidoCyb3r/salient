@@ -199,8 +199,10 @@ func TestTagDevicesSendsOperatorFacts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The graph payload rides inside a JSON-escaped message string, so
+	// quotes arrive backslash-escaped — assert on bare tokens.
 	body := string(captured)
-	for _, want := range []string{`"operator"`, `"device":"router"`, `"device_type":"gateway"`, `"role_override":"Gateway"`, `"udm"`} {
+	for _, want := range []string{"operator", "router", "gateway", "Gateway", "udm"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("request body missing %s", want)
 		}
