@@ -163,6 +163,17 @@
       <h2>Snapshots</h2>
       <ul id="snaplist"></ul>
       <div id="snaplist-empty" style="display:none">No snapshots yet. Run a scan.</div>
+      <h2>Drift</h2>
+      <select id="drift-base" disabled></select>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button id="drift-go" disabled style="flex:1">Compare</button>
+        <button id="drift-clear" style="flex:1">Clear</button>
+      </div>
+      <h2>Reconcile</h2>
+      <button id="rec-load" style="width:100%">Load asset CSV…</button>
+      <div id="rec-chip" style="display:none;margin-top:6px;align-items:center;gap:6px">
+        <span id="rec-label" class="hint" style="flex:1"></span><button id="rec-clear">×</button>
+      </div>
       <h2>Layout</h2>
       <button id="b-fcose" class="on">organic</button><button id="b-dagre">tiered</button>
       <h2>Layers</h2>

@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -47,6 +47,8 @@ $('connform').addEventListener('submit', async (e) => {
 
 /* ---------------- snapshot list ---------------- */
 
+let snapshotEntries = [];
+
 async function refreshList(loadNewest) {
   let entries;
   try {
@@ -56,6 +58,7 @@ async function refreshList(loadNewest) {
     return;
   }
   entries = entries || [];
+  snapshotEntries = entries;
   const list = $('snaplist');
   list.innerHTML = '';
   $('snaplist-empty').style.display = entries.length === 0 ? 'block' : 'none';
@@ -77,7 +80,49 @@ async function refreshList(loadNewest) {
     openSnapshot(entries[0].Snapshot);
     list.firstChild.classList.add('sel');
   }
+  refreshDriftBaseline();
 }
+
+/* ---------------- drift ---------------- */
+
+// Replaced with the full reconcile view in the reconcile task.
+let sessionAssetPath = '';
+function clearReconcile() {}
+async function applyReconcile() {}
+
+function refreshDriftBaseline() {
+  const sel = $('drift-base');
+  sel.innerHTML = '';
+  const options = snapshotEntries.filter((en) => en.Snapshot && en.Snapshot !== currentSnapshotPath);
+  for (const en of options) {
+    const opt = document.createElement('option');
+    opt.value = en.Snapshot;
+    opt.textContent = en.Timestamp;
+    sel.appendChild(opt);
+  }
+  const ready = options.length > 0 && !!currentSnapshotPath;
+  sel.disabled = !ready;
+  $('drift-go').disabled = !ready;
+}
+
+function logFindings(model) {
+  for (const f of model.findings || []) {
+    logLine(f, f.includes('blind spot') || f.startsWith('drift vs') ? 'warn' : '');
+  }
+}
+
+$('drift-go').onclick = async () => {
+  const base = $('drift-base').value;
+  if (!base || !currentSnapshotPath) return;
+  try {
+    const model = await LoadDriftModel(base, currentSnapshotPath);
+    clearReconcile(false);
+    renderModel(model);
+    refreshDevices();
+    logFindings(model);
+  } catch (err) { logLine('drift compare failed: ' + err, 'err'); }
+};
+$('drift-clear').onclick = () => { if (currentSnapshotPath) openSnapshot(currentSnapshotPath); };
 
 async function renderLegend() {
   let items;
@@ -193,6 +238,8 @@ function openSnapshot(path) {
     $('ai-status').textContent = 'ready';
     renderModel(model);
     refreshDevices();
+    refreshDriftBaseline();
+    if (sessionAssetPath) applyReconcile();
   }).catch((err) => logLine('could not load snapshot: ' + err, 'err'));
 }
 

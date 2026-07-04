@@ -50,6 +50,10 @@ export function ListSnapshots() {
   return window['go']['main']['App']['ListSnapshots']();
 }
 
+export function LoadDriftModel(arg1, arg2) {
+  return window['go']['main']['App']['LoadDriftModel'](arg1, arg2);
+}
+
 export function LoadModel(arg1) {
   return window['go']['main']['App']['LoadModel'](arg1);
 }

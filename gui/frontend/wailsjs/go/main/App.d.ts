@@ -32,6 +32,8 @@ export function ListDevices():Promise<devices.Registry>;
 
 export function ListSnapshots():Promise<Array<snapshot.ArtifactEntry>>;
 
+export function LoadDriftModel(arg1:string,arg2:string):Promise<mapview.Model>;
+
 export function LoadModel(arg1:string):Promise<mapview.Model>;
 
 export function RunScan(arg1:main.ScanRequest):Promise<scan.Result>;
