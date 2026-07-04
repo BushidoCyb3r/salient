@@ -16,7 +16,7 @@ import (
 // the CLI's discover wording so operators see one vocabulary.
 // ponytail: gui-local formatter; share with cmd/defilade/discover.go if a
 // third consumer appears.
-func discoverLines(counts, sensors []escli.DatasetCount, fm escli.FieldMap) []string {
+func discoverLines(counts, sensors []escli.DatasetCount, fm escli.FieldMap, cov escli.MACCoverage) []string {
 	var lines []string
 	present := map[string]bool{}
 	var parts []string
@@ -51,6 +51,21 @@ func discoverLines(counts, sensors []escli.DatasetCount, fm escli.FieldMap) []st
 	}
 	if len(missing) > 0 {
 		lines = append(lines, "WARNING: missing datasets: "+strings.Join(missing, ", "))
+	}
+	// L2/MAC coverage decides gateway detection: FetchGatewayCandidates keys
+	// on the destination (responder) MAC, so its presence is what tells the
+	// operator whether they get observed gateways or inferred guesses.
+	if cov.ConnDocs > 0 {
+		pct := cov.DstMACDocs * 100 / cov.ConnDocs
+		if pct == 0 {
+			lines = append(lines, fmt.Sprintf(
+				"WARNING: L2/MAC: %s present in 0%% of conn docs — gateways will be inferred; verify the field map's destination_mac and that sensors capture L2 addresses",
+				fm.DestinationMAC))
+		} else {
+			lines = append(lines, fmt.Sprintf(
+				"L2/MAC: %s in %d%% of conn docs — observed gateway detection available",
+				fm.DestinationMAC, pct))
+		}
 	}
 	parts = parts[:0]
 	for _, s := range sensors {
@@ -87,5 +102,11 @@ func (a *App) DiscoverGrid(window string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return discoverLines(counts, sensors, fm), nil
+	// MAC coverage is best-effort: a probe failure must not blank out the
+	// dataset/sensor discovery the operator connected to see.
+	cov, err := cli.MACCoverage(ctx, fm, w)
+	if err != nil {
+		cov = escli.MACCoverage{}
+	}
+	return discoverLines(counts, sensors, fm, cov), nil
 }
