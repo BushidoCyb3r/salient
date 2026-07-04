@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/netip"
 	"os"
+	"sort"
 
 	"github.com/BushidoCyb3r/defilade/internal/safefile"
 )
@@ -82,4 +83,116 @@ func (r Registry) Validate() error {
 		}
 	}
 	return nil
+}
+
+// DeviceForIP returns the device owning ip, or nil.
+func (r *Registry) DeviceForIP(ip string) *Device {
+	for i := range r.Devices {
+		for _, dip := range r.Devices[i].IPs {
+			if dip == ip {
+				return &r.Devices[i]
+			}
+		}
+	}
+	return nil
+}
+
+// Assign moves ip into the named device, creating the device if needed and
+// removing the ip from any previous owner. moved is the previous owner's
+// name ("" if none, or if this was a same-device no-op).
+func (r *Registry) Assign(name, ip string) (moved string, err error) {
+	if name == "" {
+		return "", fmt.Errorf("device name required")
+	}
+	if _, err := netip.ParseAddr(ip); err != nil {
+		return "", fmt.Errorf("invalid IP %q", ip)
+	}
+	if prev := r.DeviceForIP(ip); prev != nil {
+		if prev.Name == name {
+			return "", nil
+		}
+		moved = prev.Name
+		r.Unassign(ip)
+	}
+	for i := range r.Devices {
+		if r.Devices[i].Name == name {
+			r.Devices[i].IPs = append(r.Devices[i].IPs, ip)
+			sort.Strings(r.Devices[i].IPs)
+			return moved, nil
+		}
+	}
+	r.Devices = append(r.Devices, Device{Name: name, IPs: []string{ip}})
+	sort.Slice(r.Devices, func(i, j int) bool { return r.Devices[i].Name < r.Devices[j].Name })
+	return moved, nil
+}
+
+// Unassign removes ip from whatever device holds it. A device left with no
+// IPs survives — it may carry type/notes the operator wants to keep.
+func (r *Registry) Unassign(ip string) {
+	for i := range r.Devices {
+		kept := r.Devices[i].IPs[:0]
+		for _, dip := range r.Devices[i].IPs {
+			if dip != ip {
+				kept = append(kept, dip)
+			}
+		}
+		r.Devices[i].IPs = kept
+	}
+}
+
+// Upsert creates (originalName == "") or updates/renames the device that
+// currently has originalName. On invariant violation the registry is
+// unchanged.
+func (r *Registry) Upsert(originalName string, d Device) error {
+	next := make([]Device, 0, len(r.Devices)+1)
+	replaced := false
+	for _, ex := range r.Devices {
+		if originalName != "" && ex.Name == originalName {
+			next = append(next, d)
+			replaced = true
+			continue
+		}
+		next = append(next, ex)
+	}
+	if !replaced {
+		if originalName != "" {
+			return fmt.Errorf("no device named %q", originalName)
+		}
+		next = append(next, d)
+	}
+	trial := Registry{Devices: next, Labels: r.Labels, DismissedHints: r.DismissedHints}
+	if err := trial.Validate(); err != nil {
+		return err
+	}
+	sort.Slice(next, func(i, j int) bool { return next[i].Name < next[j].Name })
+	r.Devices = next
+	return nil
+}
+
+// Delete removes the named device; its IPs become unassigned.
+func (r *Registry) Delete(name string) {
+	kept := r.Devices[:0]
+	for _, d := range r.Devices {
+		if d.Name != name {
+			kept = append(kept, d)
+		}
+	}
+	r.Devices = kept
+}
+
+// Dismiss records a hint key so it is never shown again. Idempotent.
+func (r *Registry) Dismiss(key string) {
+	if !r.Dismissed(key) {
+		r.DismissedHints = append(r.DismissedHints, key)
+	}
+}
+
+// Dismissed reports whether the hint key was dismissed.
+func (r *Registry) Dismissed(key string) bool {
+	for _, k := range r.DismissedHints {
+		if k == key {
+			return true
+		}
+	}
+	return false
 }

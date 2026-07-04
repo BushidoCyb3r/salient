@@ -71,6 +71,99 @@ func TestValidateRejectsBadRegistries(t *testing.T) {
 	}
 }
 
+func TestAssignCreatesMovesAndDeduplicates(t *testing.T) {
+	var r Registry
+	if _, err := r.Assign("router", "192.168.20.1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Assign("router", "10.10.40.1"); err != nil {
+		t.Fatal(err)
+	}
+	d := r.DeviceForIP("10.10.40.1")
+	if d == nil || d.Name != "router" || len(d.IPs) != 2 {
+		t.Fatalf("DeviceForIP = %#v", d)
+	}
+	// Re-assigning to the same device is a no-op, not a duplicate.
+	if _, err := r.Assign("router", "10.10.40.1"); err != nil {
+		t.Fatal(err)
+	}
+	if len(r.DeviceForIP("10.10.40.1").IPs) != 2 {
+		t.Fatal("re-assign duplicated the IP")
+	}
+	// Assigning to another device moves it and reports the old owner.
+	moved, err := r.Assign("switch", "10.10.40.1")
+	if err != nil || moved != "router" {
+		t.Fatalf("Assign move = (%q, %v), want (router, nil)", moved, err)
+	}
+	if got := r.DeviceForIP("10.10.40.1"); got == nil || got.Name != "switch" {
+		t.Fatalf("after move DeviceForIP = %#v", got)
+	}
+	if len(r.DeviceForIP("192.168.20.1").IPs) != 1 {
+		t.Fatal("router should have exactly one IP left")
+	}
+	// Bad inputs.
+	if _, err := r.Assign("", "10.0.0.1"); err == nil {
+		t.Fatal("empty device name must error")
+	}
+	if _, err := r.Assign("x", "nope"); err == nil {
+		t.Fatal("bad IP must error")
+	}
+}
+
+func TestUnassignRemovesIPKeepsDevice(t *testing.T) {
+	var r Registry
+	r.Assign("router", "10.0.0.1")
+	r.Unassign("10.0.0.1")
+	if r.DeviceForIP("10.0.0.1") != nil {
+		t.Fatal("IP still owned after Unassign")
+	}
+	if len(r.Devices) != 1 {
+		t.Fatal("empty device must survive (may carry type/notes)")
+	}
+}
+
+func TestUpsertCreateRenameAndInvariants(t *testing.T) {
+	var r Registry
+	if err := r.Upsert("", Device{Name: "router", Type: "gateway", IPs: []string{"10.0.0.1"}}); err != nil {
+		t.Fatal(err)
+	}
+	// Rename keyed by original name.
+	if err := r.Upsert("router", Device{Name: "core-router", Type: "gateway", IPs: []string{"10.0.0.1"}}); err != nil {
+		t.Fatal(err)
+	}
+	if r.DeviceForIP("10.0.0.1").Name != "core-router" {
+		t.Fatal("rename did not stick")
+	}
+	// Unknown original name.
+	if err := r.Upsert("ghost", Device{Name: "x"}); err == nil {
+		t.Fatal("unknown original name must error")
+	}
+	// Invariant violation must not mutate.
+	if err := r.Upsert("", Device{Name: "core-router"}); err == nil {
+		t.Fatal("duplicate name must error")
+	}
+	if len(r.Devices) != 1 {
+		t.Fatal("failed Upsert mutated the registry")
+	}
+}
+
+func TestDeleteAndDismiss(t *testing.T) {
+	var r Registry
+	r.Assign("router", "10.0.0.1")
+	r.Delete("router")
+	if len(r.Devices) != 0 || r.DeviceForIP("10.0.0.1") != nil {
+		t.Fatal("Delete left the device behind")
+	}
+	if r.Dismissed("hostname:unifi") {
+		t.Fatal("nothing dismissed yet")
+	}
+	r.Dismiss("hostname:unifi")
+	r.Dismiss("hostname:unifi") // idempotent
+	if !r.Dismissed("hostname:unifi") || len(r.DismissedHints) != 1 {
+		t.Fatalf("Dismiss bookkeeping wrong: %#v", r.DismissedHints)
+	}
+}
+
 func TestSaveRejectsInvalidRegistry(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "devices.json")
 	r := Registry{Devices: []Device{{Name: ""}}}
