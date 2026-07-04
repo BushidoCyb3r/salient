@@ -24,7 +24,14 @@ Defilade is a **read-only Elasticsearch client**. It queries the Zeek logs alrea
 
 ## 60-second quickstart
 
+Prerequisites: Git, Make, and Go 1.26.4 or newer. The repository includes
+locked Go dependency checksums; `make deps` downloads them without installing
+anything system-wide.
+
 ```sh
+git clone https://github.com/BushidoCyb3r/defilade.git
+cd defilade
+make deps
 make build
 
 # Keep credentials out of shell history:
@@ -64,7 +71,8 @@ field names differ from the defaults, pin them with `--fieldmap custom.yaml`
 (see `docs/FIELDMAP.md`).
 
 A native desktop operator console (Linux/macOS/Windows) is also available — see
-`docs/GUI.md`. It connects to a grid, runs scans with live progress, and browses
+`docs/GUI.md`. Run `make gui-deps` once, then `make gui`. It connects to a grid,
+runs scans with live progress, and browses
 and exports the resulting snapshots and maps in a real window. Model-assisted
 `analyze` remains CLI-only.
 

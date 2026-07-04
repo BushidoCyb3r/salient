@@ -15,14 +15,15 @@ snapshots those and its own scans leave in `<data-dir>/{snapshots,reports,maps}`
 
 ## Building
 
-Requires Go, Node.js/npm, and the Wails CLI
-(`go install github.com/wailsapp/wails/v2/cmd/wails@latest`).
+Requires Go 1.26.4 or newer, Node.js/npm, and the platform packages below.
+The repository installs its pinned Wails CLI version and all Go/npm dependencies:
 
 Linux additionally needs the system webview library:
 - Debian/Ubuntu: `sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev`
 - Fedora/RHEL/Rocky: `sudo dnf install webkit2gtk4.1-devel gtk3-devel`
 
 ```sh
+make gui-deps
 make gui
 ```
 

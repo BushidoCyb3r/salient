@@ -1,12 +1,21 @@
 BINARY  := defilade
 PKG     := ./cmd/defilade
 GO      ?= go
-WAILS   ?= wails
+WAILS_VERSION := v2.12.0
+WAILS   ?= $(shell $(GO) env GOPATH)/bin/wails
 LDFLAGS := -s -w
 GOOS    ?= $(shell $(GO) env GOOS)
 GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
 
-.PHONY: build gui gui-test test lint cross clean integration
+.PHONY: deps gui-deps build gui gui-test test lint cross clean integration
+
+deps:
+	$(GO) mod download
+
+gui-deps: deps
+	cd gui && $(GO) mod download
+	cd gui/frontend && npm ci
+	$(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
 
 build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
