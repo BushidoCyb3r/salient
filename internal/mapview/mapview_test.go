@@ -174,6 +174,20 @@ func TestOverviewRetainsTopRanksAndAggregatesRest(t *testing.T) {
 	if want := len(snap.Nodes) - config.MapOverviewTopNodes; aggregated != want {
 		t.Errorf("aggregate counts sum to %d, want %d omitted hosts", aggregated, want)
 	}
+	// Every collapsed host must be recoverable via AggMembers, and each
+	// aggregate's member list must match its advertised count.
+	memberTotal := 0
+	for _, n := range mm.Nodes {
+		if n.AggCount > 0 {
+			if got := len(mm.AggMembers[n.ID]); got != n.AggCount {
+				t.Errorf("aggregate %s: %d members, AggCount=%d", n.ID, got, n.AggCount)
+			}
+			memberTotal += len(mm.AggMembers[n.ID])
+		}
+	}
+	if memberTotal != aggregated {
+		t.Errorf("AggMembers holds %d hosts, aggregates advertise %d", memberTotal, aggregated)
+	}
 	// Small maps keep the detailed pipeline untouched.
 	if small := mapview.Build(fixture(t), mapview.Options{}); small.Overview {
 		t.Error("small map must not switch to overview mode")
@@ -435,6 +449,21 @@ func TestBuildClientAggregation(t *testing.T) {
 	}
 	if agg.AggCount < 10 {
 		t.Errorf("expected most of the 12 workstations aggregated, got AggCount=%d", agg.AggCount)
+	}
+	// AggMembers must list exactly the hosts each aggregate collapsed.
+	for id, members := range mm.AggMembers {
+		found := false
+		for _, n := range mm.Nodes {
+			if n.ID == id && n.AggCount == len(members) {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("aggregate %s has %d members but no matching node with that AggCount", id, len(members))
+		}
+	}
+	if len(mm.AggMembers[agg.ID]) != agg.AggCount {
+		t.Errorf("aggregate %s: %d members, AggCount=%d", agg.ID, len(mm.AggMembers[agg.ID]), agg.AggCount)
 	}
 	// Server roles must stay individually visible, never aggregated.
 	roles := map[string]bool{}

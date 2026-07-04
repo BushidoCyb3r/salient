@@ -1,15 +1,15 @@
 export namespace assist {
-
+	
 	export class DeviceTag {
 	    node_id: string;
 	    tags: string[];
 	    confidence: number;
 	    rationale: string;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new DeviceTag(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.node_id = source["node_id"];
@@ -20,16 +20,16 @@ export namespace assist {
 	}
 	export class TagResult {
 	    tags: DeviceTag[];
-
+	
 	    static createFrom(source: any = {}) {
 	        return new TagResult(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.tags = this.convertValues(source["tags"], DeviceTag);
 	    }
-
+	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -405,11 +405,11 @@ export namespace main {
 	    Model: string;
 	    APIKey: string;
 	    AllowRemote: boolean;
-
+	
 	    static createFrom(source: any = {}) {
 	        return new TagRequest(source);
 	    }
-
+	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.SnapshotPath = source["SnapshotPath"];
@@ -625,3 +625,4 @@ export namespace snapshot {
 	}
 
 }
+

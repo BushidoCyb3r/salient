@@ -180,9 +180,12 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// ":clients" ID suffix is what bundleEdges routes invisible endpoints
 	// to, so aggregates reuse it even though the label says "other hosts".
 	aggCount := map[string]int{}
-	for _, n := range nodes {
+	for i := range nodes {
+		n := &nodes[i]
 		if !retained[n.IP] {
-			aggCount[resolve(n.Subnet)]++
+			gid := resolve(n.Subnet)
+			aggCount[gid]++
+			m.addAggMember(gid+":clients", n)
 		}
 	}
 	aggGroups := make([]string, 0, len(aggCount))

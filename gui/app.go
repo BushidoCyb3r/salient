@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -117,6 +118,29 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 		}
 	}
 	return model, nil
+}
+
+// AggregateHosts lists the hosts collapsed into an aggregate map node
+// ("N workstations" / "N other hosts"), identified by its node ID
+// ("g:<cidr>:clients"). Ranked hosts come first (best rank leading),
+// unranked hosts follow ordered by IP string, matching the map's own sort.
+func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, error) {
+	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	if err != nil {
+		return nil, err
+	}
+	hosts := mapview.Build(snap, mapview.Options{}).AggMembers[nodeID]
+	sort.Slice(hosts, func(i, j int) bool {
+		x, y := hosts[i], hosts[j]
+		if (x.Rank > 0) != (y.Rank > 0) {
+			return x.Rank > 0
+		}
+		if x.Rank != y.Rank {
+			return x.Rank < y.Rank
+		}
+		return x.ID < y.ID
+	})
+	return hosts, nil
 }
 
 type TagRequest struct {

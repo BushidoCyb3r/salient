@@ -94,6 +94,25 @@ type Model struct {
 	Findings []string           `json:"findings"`
 	Meta     graph.SnapshotMeta `json:"meta"`
 	Overview bool               `json:"overview,omitempty"` // condensed briefing overview, not a complete topology
+
+	// AggMembers lists the hosts collapsed into each aggregate node
+	// ("N workstations" / "N other hosts"), keyed by aggregate node ID.
+	// Excluded from JSON so map exports don't carry thousands of entries;
+	// interactive callers drill in via the GUI's AggregateHosts binding.
+	AggMembers map[string][]MapNode `json:"-"`
+}
+
+// addAggMember records a host collapsed into the aggregate node aggID.
+func (m *Model) addAggMember(aggID string, n *graph.Node) {
+	if m.AggMembers == nil {
+		m.AggMembers = map[string][]MapNode{}
+	}
+	m.AggMembers[aggID] = append(m.AggMembers[aggID], MapNode{
+		ID: n.IP, Label: nodeLabel(n),
+		Role: string(n.TopRole()), Tier: tierOf(n),
+		Composite: n.Scores.Composite, Rank: n.Scores.Rank,
+		Evidence: evidence(n),
+	})
 }
 
 // Elements returns the visible-element count checked against §8.5 targets.
@@ -254,7 +273,9 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		t := tierOf(n)
 		drift := nodeDrift[n.IP]
 		if drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
-			aggCount[resolve(n.Subnet)]++
+			gid := resolve(n.Subnet)
+			aggCount[gid]++
+			m.addAggMember(gid+":clients", n)
 			continue
 		}
 		visible[n.IP] = true

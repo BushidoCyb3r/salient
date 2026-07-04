@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -186,6 +186,7 @@ let currentSnapshotPath = '';
 function openSnapshot(path) {
   LoadModel(path).then((model) => {
     currentSnapshotPath = path;
+    closeHostList();
     $('exportbtn').disabled = false;
     $('ai-tagbtn').disabled = false;
     $('ai-status').textContent = 'ready';
@@ -335,6 +336,7 @@ function renderModel(model) {
 
   cy.on('tap', 'node:childless', (e) => {
     const n = e.target;
+    if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('label')); return; }
     $('ev').textContent =
       n.data('label') + '\nrole: ' + n.data('role') + (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
       '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
@@ -342,6 +344,72 @@ function renderModel(model) {
       (n.data('aiTags') ? '\n\nMODEL SUGGESTION (' + n.data('aiModel') + ', confidence ' + n.data('aiConfidence').toFixed(2) + ')\ntags: ' + n.data('aiTags') + '\n' + n.data('aiRationale') : '');
   });
 }
+
+/* ---------------- aggregate-node host list ---------------- */
+
+// ponytail: 14k+ DOM rows make the webview crawl — render the first 1000
+// matches and let the filter narrow the rest; virtualize if that ever hurts.
+const HL_MAX_ROWS = 1000;
+let hlHosts = [];
+
+async function openHostList(nodeID, title) {
+  let hosts;
+  try {
+    hosts = await AggregateHosts(currentSnapshotPath, nodeID);
+  } catch (err) {
+    logLine('could not load host list: ' + err, 'err');
+    return;
+  }
+  hlHosts = hosts || [];
+  $('hl-title').textContent = title;
+  $('hl-filter').value = '';
+  $('hostlist').style.display = 'flex';
+  renderHostList('');
+  $('hl-filter').focus();
+}
+
+function closeHostList() {
+  $('hostlist').style.display = 'none';
+  hlHosts = [];
+}
+
+function renderHostList(q) {
+  const list = $('hl-list');
+  list.innerHTML = '';
+  const match = q
+    ? hlHosts.filter((h) => (h.id + ' ' + h.label + ' ' + h.role).toLowerCase().includes(q))
+    : hlHosts;
+  for (const h of match.slice(0, HL_MAX_ROWS)) {
+    const li = document.createElement('li');
+    li.textContent = h.label.split('\n')[0];
+    if (h.rank) {
+      const rank = document.createElement('span');
+      rank.className = 'rank';
+      rank.textContent = ' #' + h.rank;
+      li.appendChild(rank);
+    }
+    if (h.role && h.role !== 'Unknown') {
+      const role = document.createElement('span');
+      role.className = 'role';
+      role.textContent = ' — ' + h.role;
+      li.appendChild(role);
+    }
+    li.title = h.id;
+    li.onclick = () => {
+      $('ev').textContent =
+        h.label + '\nrole: ' + h.role + (h.rank ? '\nrank: #' + h.rank : '') +
+        '\ncomposite: ' + (h.composite || 0).toFixed(2) +
+        ((h.evidence || []).length ? '\n\n' + h.evidence.join('\n') : '\n\n(no role evidence)');
+    };
+    list.appendChild(li);
+  }
+  $('hl-note').textContent = match.length > HL_MAX_ROWS
+    ? 'showing ' + HL_MAX_ROWS + ' of ' + match.length + ' hosts — type to narrow'
+    : match.length + ' host' + (match.length === 1 ? '' : 's');
+}
+
+$('hl-close').onclick = closeHostList;
+$('hl-filter').addEventListener('input', (e) => renderHostList(e.target.value.trim().toLowerCase()));
 
 $('search').addEventListener('input', (e) => {
   if (!cy) return;
