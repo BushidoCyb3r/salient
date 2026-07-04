@@ -66,10 +66,12 @@ type MapNode struct {
 	Inferred             bool     `json:"inferred"` // gateway synthesized without L2 evidence
 	AggCount             int      `json:"agg_count,omitempty"`
 	Evidence             []string `json:"evidence,omitempty"`
-	Drift                string   `json:"drift,omitempty"`       // new, vanished, rank-up, rank-down
-	Device               string   `json:"device,omitempty"`      // operator-assigned device name
-	DeviceType           string   `json:"device_type,omitempty"` // operator-assigned device type
-	Labels               []string `json:"labels,omitempty"`      // durable operator labels
+	Drift                string   `json:"drift,omitempty"`         // new, vanished, rank-up, rank-down
+	Device               string   `json:"device,omitempty"`        // operator-assigned device name
+	DeviceType           string   `json:"device_type,omitempty"`   // operator-assigned device type
+	Labels               []string `json:"labels,omitempty"`        // durable operator labels
+	RoleOverride         string   `json:"role_override,omitempty"` // operator-corrected role (overlay)
+	Services             []string `json:"services,omitempty"`      // observed named responder services
 	SuggestedTags        []string `json:"suggested_tags,omitempty"`
 	SuggestionConfidence float64  `json:"suggestion_confidence,omitempty"`
 	SuggestionRationale  string   `json:"suggestion_rationale,omitempty"`
@@ -312,9 +314,54 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 	// as a condensed briefing overview. CIDR --focus keeps full detail;
 	// keyword focus (private/public) is a scope filter and still condenses.
 	if (opts.Focus == "" || FocusKeyword(opts.Focus)) && m.Elements() > config.MapMaxElements {
-		return buildOverview(snap, opts, nodeDrift, edgeDrift, m.Elements())
+		m = buildOverview(snap, opts, nodeDrift, edgeDrift, m.Elements())
 	}
+	attachServices(m, snap.Edges)
 	return m
+}
+
+// attachServices stamps each host's observed named responder services onto
+// its map node and host-list (AggMembers) entries. Derived from the full
+// edge set — what a host serves is a fact about the host, not the focus.
+func attachServices(m *Model, edges []graph.Edge) {
+	byIP := map[string]map[uint16]bool{}
+	for _, e := range edges {
+		if config.KnownService(e.Port) == "" {
+			continue
+		}
+		if byIP[e.Dst] == nil {
+			byIP[e.Dst] = map[uint16]bool{}
+		}
+		byIP[e.Dst][e.Port] = true
+	}
+	names := func(ip string) []string {
+		ports := byIP[ip]
+		if len(ports) == 0 {
+			return nil
+		}
+		ps := make([]uint16, 0, len(ports))
+		for p := range ports {
+			ps = append(ps, p)
+		}
+		sort.Slice(ps, func(i, j int) bool { return ps[i] < ps[j] })
+		var out []string
+		seen := map[string]bool{}
+		for _, p := range ps {
+			if n := config.KnownService(p); !seen[n] {
+				seen[n] = true
+				out = append(out, n)
+			}
+		}
+		return out
+	}
+	for i := range m.Nodes {
+		m.Nodes[i].Services = names(m.Nodes[i].ID)
+	}
+	for _, members := range m.AggMembers {
+		for i := range members {
+			members[i].Services = names(members[i].ID)
+		}
+	}
 }
 
 func sortModel(m *Model) {
@@ -352,7 +399,7 @@ func tierOf(n *graph.Node) Tier {
 	switch n.TopRole() {
 	case graph.RoleDC, graph.RoleDNS:
 		return TierCore
-	case graph.RoleFileServer, graph.RoleDatabase, graph.RoleWebServer, graph.RoleJumpBox:
+	case graph.RoleFileServer, graph.RoleDatabase, graph.RoleWebServer, graph.RoleJumpBox, graph.RoleMail:
 		return TierService
 	}
 	// Score tiebreak: high-composite unknowns still deserve the service band.

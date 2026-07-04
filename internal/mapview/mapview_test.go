@@ -436,6 +436,71 @@ func TestBuildGroupsAndSparseCollapse(t *testing.T) {
 	}
 }
 
+func TestBuildAttachesServices(t *testing.T) {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	node := func(ip string) graph.Node {
+		return graph.Node{IP: ip, Subnet: "10.0.0.0/24", FirstSeen: t0, LastSeen: t0,
+			Scores: graph.ScoreSet{Composite: 0.9, Rank: 1}}
+	}
+	snap := graph.Snapshot{
+		Nodes: []graph.Node{node("10.0.0.1"), node("10.0.0.2"), node("10.0.0.3")},
+		Edges: []graph.Edge{
+			{Src: "10.0.0.2", Dst: "10.0.0.1", Port: 443, ConnCount: 100},
+			{Src: "10.0.0.2", Dst: "10.0.0.1", Port: 22, ConnCount: 100},
+			{Src: "10.0.0.3", Dst: "10.0.0.1", Port: 443, ConnCount: 100}, // dup https — dedupe
+			{Src: "10.0.0.2", Dst: "10.0.0.3", Port: 49200, ConnCount: 100}, // unknown port — no name
+		},
+	}
+	mm := mapview.Build(snap, mapview.Options{})
+	byID := map[string]mapview.MapNode{}
+	for _, n := range mm.Nodes {
+		byID[n.ID] = n
+	}
+	// Port-sorted: 22 (ssh) before 443 (https).
+	if got := byID["10.0.0.1"].Services; len(got) != 2 || got[0] != "ssh" || got[1] != "https" {
+		t.Errorf("Services(10.0.0.1) = %v, want [ssh https]", got)
+	}
+	if got := byID["10.0.0.3"].Services; got != nil {
+		t.Errorf("Services(10.0.0.3) = %v, want nil (unknown port only)", got)
+	}
+}
+
+func TestOverviewAggMembersCarryServices(t *testing.T) {
+	snap := largeFixture()
+	snap.Edges = append(snap.Edges, graph.Edge{Src: snap.Nodes[0].IP, Dst: snap.Nodes[len(snap.Nodes)-1].IP, Port: 631, ConnCount: 5})
+	mm := mapview.Build(snap, mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("expected overview build")
+	}
+	target := snap.Nodes[len(snap.Nodes)-1].IP
+	found := false
+	for _, members := range mm.AggMembers {
+		for _, m := range members {
+			if m.ID == target {
+				found = true
+				if len(m.Services) == 0 || m.Services[0] != "ipp" {
+					t.Errorf("aggregated member services = %v, want [ipp]", m.Services)
+				}
+			}
+		}
+	}
+	if !found {
+		// Target may have been retained instead of aggregated; then the
+		// visible node must carry the service.
+		for _, n := range mm.Nodes {
+			if n.ID == target {
+				found = true
+				if len(n.Services) == 0 || n.Services[0] != "ipp" {
+					t.Errorf("retained node services = %v, want [ipp]", n.Services)
+				}
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("target %s missing from overview entirely", target)
+	}
+}
+
 func TestBuildClientAggregation(t *testing.T) {
 	mm := mapview.Build(fixture(t), mapview.Options{})
 	var agg *mapview.MapNode
