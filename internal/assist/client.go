@@ -63,12 +63,24 @@ type TagResult struct {
 	Tags []DeviceTag `json:"tags"`
 }
 
+// OperatorFacts is operator-confirmed identity for one node, sent alongside
+// observed data so the model grounds its guesses in corrections the operator
+// already made. Device notes are deliberately excluded — free text is the
+// most sensitive registry field and adds no classification signal.
+type OperatorFacts struct {
+	Device       string   `json:"device,omitempty"`        // operator-assigned device name
+	DeviceType   string   `json:"device_type,omitempty"`   // operator-assigned device type
+	RoleOverride string   `json:"role_override,omitempty"` // operator-corrected role
+	Labels       []string `json:"labels,omitempty"`        // durable operator labels
+}
+
 type nodePayload struct {
 	ID        string                `json:"id"`
 	Hostnames []string              `json:"hostnames,omitempty"`
 	Subnet    string                `json:"subnet"`
 	Roles     []graph.RoleAssertion `json:"roles,omitempty"`
 	Scores    graph.ScoreSet        `json:"scores"`
+	Operator  *OperatorFacts        `json:"operator,omitempty"`
 }
 
 type edgePayload struct {
@@ -114,9 +126,10 @@ func Analyze(ctx context.Context, cfg Config, snap graph.Snapshot) (Result, erro
 }
 
 // TagDevices asks a configured model to classify only devices present in the
-// capped snapshot summary. Returned IDs are validated before the caller can
-// display or persist them.
-func TagDevices(ctx context.Context, cfg Config, snap graph.Snapshot) (TagResult, error) {
+// capped snapshot summary. facts carries operator-confirmed identity keyed by
+// IP (nil is fine); only entries for summarized nodes are sent. Returned IDs
+// are validated before the caller can display or persist them.
+func TagDevices(ctx context.Context, cfg Config, snap graph.Snapshot, facts map[string]OperatorFacts) (TagResult, error) {
 	var result TagResult
 	var err error
 	cfg, err = prepareConfig(cfg)
@@ -124,6 +137,12 @@ func TagDevices(ctx context.Context, cfg Config, snap graph.Snapshot) (TagResult
 		return result, err
 	}
 	nodes, edges := summarize(snap, cfg.MaxNodes, cfg.MaxEdges)
+	for i := range nodes {
+		if f, ok := facts[nodes[i].ID]; ok {
+			f := f
+			nodes[i].Operator = &f
+		}
+	}
 	payload, err := json.Marshal(struct {
 		Nodes []nodePayload `json:"nodes"`
 		Edges []edgePayload `json:"edges"`
@@ -132,7 +151,7 @@ func TagDevices(ctx context.Context, cfg Config, snap graph.Snapshot) (TagResult
 		return result, err
 	}
 	content, err := complete(ctx, cfg,
-		`Classify devices from their observed network communications. Return JSON only: {"tags":[{"node_id":"existing node id","tags":["short lowercase tag"],"confidence":0.0,"rationale":"brief communication-based reason"}]}. Use only supplied node IDs. Tags are suggestions, not observed facts. Do not invent devices or topology.`,
+		`Classify devices from their observed network communications. Some nodes carry an "operator" object: operator-confirmed ground truth (device name/type, corrected role, labels). Never contradict operator facts; use them as anchors when classifying related devices. Return JSON only: {"tags":[{"node_id":"existing node id","tags":["short lowercase tag"],"confidence":0.0,"rationale":"brief communication-based reason"}]}. Use only supplied node IDs. Tags are suggestions, not observed facts. Do not invent devices or topology.`,
 		string(payload))
 	if err != nil {
 		return result, err

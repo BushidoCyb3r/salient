@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/BushidoCyb3r/defilade/internal/assist"
 	"github.com/BushidoCyb3r/defilade/internal/devices"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
@@ -174,6 +175,37 @@ func overlayNodes(nodes []mapview.MapNode, reg *devices.Registry) {
 			}
 		}
 	}
+}
+
+// operatorFacts flattens the registry into per-IP ground truth for the AI
+// tagging prompt: device name/type, role overrides, durable labels. Notes
+// never leave the host. A corrupt registry yields nil — tagging proceeds
+// without grounding rather than failing.
+func (a *App) operatorFacts() map[string]assist.OperatorFacts {
+	reg, err := devices.Load(a.registryPath())
+	if err != nil {
+		a.emit("device:warning", "device registry unreadable — AI tagging runs without operator facts: "+err.Error())
+		return nil
+	}
+	facts := map[string]assist.OperatorFacts{}
+	for _, d := range reg.Devices {
+		for _, ip := range d.IPs {
+			f := facts[ip]
+			f.Device, f.DeviceType = d.Name, d.Type
+			facts[ip] = f
+		}
+	}
+	for ip, role := range reg.RoleOverrides {
+		f := facts[ip]
+		f.RoleOverride = role
+		facts[ip] = f
+	}
+	for ip, labels := range reg.Labels {
+		f := facts[ip]
+		f.Labels = labels
+		facts[ip] = f
+	}
+	return facts
 }
 
 // applyDeviceOverlay loads the registry and overlays it; a corrupt

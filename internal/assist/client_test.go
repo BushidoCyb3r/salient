@@ -170,7 +170,7 @@ func TestTagDevicesSupportsProviderAPIs(t *testing.T) {
 
 			result, err := TagDevices(context.Background(), Config{
 				Provider: tt.provider, Endpoint: server.URL, Model: "test-model", APIKey: "secret",
-			}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})
+			}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}}, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -178,6 +178,35 @@ func TestTagDevicesSupportsProviderAPIs(t *testing.T) {
 				t.Fatalf("unexpected tags: %+v", result)
 			}
 		})
+	}
+}
+
+func TestTagDevicesSendsOperatorFacts(t *testing.T) {
+	var captured []byte
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		captured, _ = io.ReadAll(r.Body)
+		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.1\",\"tags\":[\"router\"],\"confidence\":0.9,\"rationale\":\"operator confirmed\"}]}"}}]}`)
+	}))
+	defer server.Close()
+
+	facts := map[string]OperatorFacts{
+		"10.0.0.1": {Device: "router", DeviceType: "gateway", RoleOverride: "Gateway", Labels: []string{"udm"}},
+		"10.9.9.9": {Device: "ghost"}, // not in snapshot — must not be sent
+	}
+	_, err := TagDevices(context.Background(), Config{
+		Provider: ProviderOpenAI, Endpoint: server.URL, Model: "test",
+	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}}, facts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(captured)
+	for _, want := range []string{`"operator"`, `"device":"router"`, `"device_type":"gateway"`, `"role_override":"Gateway"`, `"udm"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("request body missing %s", want)
+		}
+	}
+	if strings.Contains(body, "ghost") {
+		t.Error("facts for nodes outside the summary must not be sent")
 	}
 }
 
@@ -189,7 +218,7 @@ func TestTagDevicesRejectsUnknownNode(t *testing.T) {
 
 	_, err := TagDevices(context.Background(), Config{
 		Provider: ProviderOpenAI, Endpoint: server.URL, Model: "test",
-	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})
+	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}}, nil)
 	if err == nil || !strings.Contains(err.Error(), "unknown node") {
 		t.Fatalf("expected unknown-node error, got %v", err)
 	}
@@ -209,7 +238,7 @@ func TestTagDevicesRejectsCrossHostRedirect(t *testing.T) {
 
 	_, err := TagDevices(context.Background(), Config{
 		Provider: ProviderAnthropic, Endpoint: origin.URL, Model: "test", APIKey: "secret",
-	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})
+	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}}, nil)
 	if err == nil || !strings.Contains(err.Error(), "redirect host") {
 		t.Fatalf("expected cross-host redirect error, got %v", err)
 	}

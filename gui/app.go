@@ -180,7 +180,7 @@ func (a *App) SuggestTags(req TagRequest) (*assist.TagResult, error) {
 		Model:       req.Model,
 		APIKey:      req.APIKey,
 		AllowRemote: req.AllowRemote,
-	}, snap)
+	}, snap, a.operatorFacts())
 	if err != nil {
 		return nil, err
 	}
