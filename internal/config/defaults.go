@@ -160,50 +160,82 @@ const (
 // derived from the port rather than a separate ES sub-agg to keep the
 // composite aggregation cheap.
 var portClass = map[uint16]ServiceClass{
+	// auth (incl. AD global catalog + AD web services)
 	88: ClassAuth, 389: ClassAuth, 636: ClassAuth, 464: ClassAuth,
-	53:  ClassName,
-	445: ClassFile, 139: ClassFile,
+	1812: ClassAuth, 749: ClassAuth, 3268: ClassAuth, 3269: ClassAuth,
+	9389: ClassAuth,
+	// name / discovery
+	53: ClassName, 5353: ClassName, 137: ClassName, 3702: ClassName,
+	// file
+	445: ClassFile, 139: ClassFile, 2049: ClassFile, 548: ClassFile,
+	21: ClassFile, 873: ClassFile,
+	// db / data infrastructure
 	1433: ClassDB, 3306: ClassDB, 5432: ClassDB, 1521: ClassDB,
+	1434: ClassDB, 6379: ClassDB, 27017: ClassDB, 9200: ClassDB,
+	5984: ClassDB, 8086: ClassDB, 9092: ClassDB, 5672: ClassDB,
+	11211: ClassDB,
+	// web (incl. common self-hosted UIs)
 	80: ClassWeb, 443: ClassWeb, 8080: ClassWeb, 8443: ClassWeb,
-	3389: ClassAdmin, 22: ClassAdmin,
+	8000: ClassWeb, 8888: ClassWeb, 3000: ClassWeb, 8006: ClassWeb,
+	32400: ClassWeb, 8123: ClassWeb, 5000: ClassWeb, 9090: ClassWeb,
+	10443: ClassWeb, 8843: ClassWeb, 8530: ClassWeb, 8531: ClassWeb,
+	6443: ClassWeb,
+	// admin
+	3389: ClassAdmin, 22: ClassAdmin, 5900: ClassAdmin, 5901: ClassAdmin,
+	5902: ClassAdmin, 23: ClassAdmin, 5985: ClassAdmin, 5986: ClassAdmin,
+	830: ClassAdmin, 1494: ClassAdmin, 2598: ClassAdmin, 2375: ClassAdmin,
+	2376: ClassAdmin,
+	// named but ClassOther (mail, mgmt, iot, av) — zero value, listed in
+	// portName only.
+}
+
+// portName gives every classified or otherwise notable responder port a
+// short human label. Ports here but absent from portClass are deliberately
+// ClassOther (mail, snmp, iot, av…).
+var portName = map[uint16]string{
+	88: "kerberos", 389: "ldap", 636: "ldaps", 464: "kpasswd",
+	1812: "radius", 749: "kadmin", 3268: "ldap-gc", 3269: "ldaps-gc",
+	9389: "adws",
+	53: "dns", 5353: "mdns", 137: "netbios-ns", 3702: "ws-discovery",
+	445: "smb", 139: "netbios", 2049: "nfs", 548: "afp", 21: "ftp", 873: "rsync",
+	1433: "mssql", 3306: "mysql", 5432: "postgres", 1521: "oracle",
+	1434: "mssql-browser", 6379: "redis", 27017: "mongodb",
+	9200: "elasticsearch", 5984: "couchdb", 8086: "influxdb", 9092: "kafka",
+	5672: "amqp", 11211: "memcached",
+	80: "http", 443: "https", 8080: "http-alt", 8443: "https-alt",
+	8000: "http-alt", 8888: "http-alt", 3000: "grafana", 8006: "proxmox",
+	32400: "plex", 8123: "home-assistant", 5000: "upnp/octoprint", 9090: "prometheus",
+	10443: "unifi", 8843: "unifi-guest", 8530: "wsus", 8531: "wsus-tls",
+	6443: "kubernetes",
+	3389: "rdp", 22: "ssh", 5900: "vnc", 5901: "vnc", 5902: "vnc",
+	23: "telnet", 5985: "winrm", 5986: "winrm-tls", 830: "netconf",
+	1494: "citrix-ica", 2598: "citrix-cgp", 2375: "docker", 2376: "docker-tls",
+	25: "smtp", 465: "smtps", 587: "submission", 110: "pop3", 995: "pop3s",
+	143: "imap", 993: "imaps",
+	123: "ntp", 161: "snmp", 162: "snmp-trap", 514: "syslog", 69: "tftp",
+	67: "dhcp", 68: "dhcp", 1900: "ssdp",
+	631: "ipp", 9100: "jetdirect",
+	554: "rtsp",
+	1883: "mqtt", 8883: "mqtts",
+	5060: "sip", 5061: "sips",
+	135: "msrpc", 593: "rpc-http", 902: "vmware",
+	500: "ike", 4500: "ipsec-nat", 1723: "pptp", 1194: "openvpn", 51820: "wireguard",
+	25565: "minecraft",
 }
 
 // ClassForPort returns the service class of a responder port.
 func ClassForPort(port uint16) ServiceClass { return portClass[port] }
 
-// ServiceName returns a short human label for a responder port.
+// KnownService returns the short label for a recognized responder port, or
+// "" when the port is not notable — callers building service lists use this
+// to skip ephemeral/unknown ports.
+func KnownService(port uint16) string { return portName[port] }
+
+// ServiceName returns a short human label for a responder port, falling
+// back to "port-N" for unrecognized ports.
 func ServiceName(port uint16) string {
-	switch port {
-	case 88:
-		return "kerberos"
-	case 389:
-		return "ldap"
-	case 636:
-		return "ldaps"
-	case 464:
-		return "kpasswd"
-	case 53:
-		return "dns"
-	case 445:
-		return "smb"
-	case 139:
-		return "netbios"
-	case 1433:
-		return "mssql"
-	case 3306:
-		return "mysql"
-	case 5432:
-		return "postgres"
-	case 1521:
-		return "oracle"
-	case 80:
-		return "http"
-	case 443:
-		return "https"
-	case 3389:
-		return "rdp"
-	case 22:
-		return "ssh"
+	if n := portName[port]; n != "" {
+		return n
 	}
 	return "port-" + strconv.Itoa(int(port))
 }
