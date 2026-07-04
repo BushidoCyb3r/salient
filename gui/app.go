@@ -117,6 +117,7 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 			}
 		}
 	}
+	a.applyDeviceOverlay(model.Nodes)
 	return model, nil
 }
 
@@ -140,6 +141,7 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 		}
 		return x.ID < y.ID
 	})
+	a.applyDeviceOverlay(hosts)
 	return hosts, nil
 }
 

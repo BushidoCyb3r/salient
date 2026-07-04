@@ -66,7 +66,10 @@ type MapNode struct {
 	Inferred             bool     `json:"inferred"` // gateway synthesized without L2 evidence
 	AggCount             int      `json:"agg_count,omitempty"`
 	Evidence             []string `json:"evidence,omitempty"`
-	Drift                string   `json:"drift,omitempty"` // new, vanished, rank-up, rank-down
+	Drift                string   `json:"drift,omitempty"`       // new, vanished, rank-up, rank-down
+	Device               string   `json:"device,omitempty"`      // operator-assigned device name
+	DeviceType           string   `json:"device_type,omitempty"` // operator-assigned device type
+	Labels               []string `json:"labels,omitempty"`      // durable operator labels
 	SuggestedTags        []string `json:"suggested_tags,omitempty"`
 	SuggestionConfidence float64  `json:"suggestion_confidence,omitempty"`
 	SuggestionRationale  string   `json:"suggestion_rationale,omitempty"`
