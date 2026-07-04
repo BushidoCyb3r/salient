@@ -14,6 +14,10 @@ export function CancelScan() {
   return window['go']['main']['App']['CancelScan']();
 }
 
+export function Connect(arg1) {
+  return window['go']['main']['App']['Connect'](arg1);
+}
+
 export function DeleteDevice(arg1) {
   return window['go']['main']['App']['DeleteDevice'](arg1);
 }
@@ -24,10 +28,6 @@ export function DeviceHints(arg1) {
 
 export function DismissHint(arg1) {
   return window['go']['main']['App']['DismissHint'](arg1);
-}
-
-export function Connect(arg1) {
-  return window['go']['main']['App']['Connect'](arg1);
 }
 
 export function ExportImage(arg1) {
