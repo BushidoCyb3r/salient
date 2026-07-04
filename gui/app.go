@@ -91,14 +91,11 @@ func (a *App) resolveSnapshotPath(path string) string {
 	return filepath.Join(a.DataDir, path)
 }
 
-// LoadModel loads a snapshot and re-derives its briefing-map model fresh.
-func (a *App) LoadModel(path string) (*mapview.Model, error) {
-	resolved := a.resolveSnapshotPath(path)
-	snap, err := snapshot.Load(resolved)
-	if err != nil {
-		return nil, err
-	}
-	model := mapview.Build(snap, mapview.Options{})
+// finishModel applies the per-snapshot overlays every map view needs:
+// model-assisted tag suggestions (sidecar keyed on the resolved snapshot
+// path) and the operator device registry. Extracted so plain, drift, and
+// reconcile views cannot drift apart in post-processing.
+func (a *App) finishModel(resolved string, model *mapview.Model) (*mapview.Model, error) {
 	artifact, err := loadTagArtifact(resolved)
 	if err != nil {
 		return nil, err
@@ -119,6 +116,38 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	}
 	a.applyDeviceOverlay(model.Nodes)
 	return model, nil
+}
+
+// LoadModel loads a snapshot and re-derives its briefing-map model fresh.
+func (a *App) LoadModel(path string) (*mapview.Model, error) {
+	resolved := a.resolveSnapshotPath(path)
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	return a.finishModel(resolved, mapview.Build(snap, mapview.Options{}))
+}
+
+// LoadDriftModel builds a drift-overlaid map: fromPath is the baseline,
+// toPath the snapshot under review. Drift counts ride Model.Findings.
+func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
+	from, err := snapshot.Load(a.resolveSnapshotPath(fromPath))
+	if err != nil {
+		return nil, fmt.Errorf("baseline snapshot: %w", err)
+	}
+	resolved := a.resolveSnapshotPath(toPath)
+	to, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	d := snapshot.Compare(from, to, snapshot.DiffOptions{})
+	model := mapview.BuildDrift(to, d, mapview.Options{})
+	model.Findings = append(model.Findings, fmt.Sprintf(
+		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges",
+		from.Meta.CreatedAt.UTC().Format("20060102T150405Z"),
+		len(d.AppearedNodes), len(d.DisappearedNodes), len(d.RankChanges),
+		len(d.NewEdgesToTop), len(d.VanishedCriticalEdges)))
+	return a.finishModel(resolved, model)
 }
 
 // AggregateHosts lists the hosts collapsed into an aggregate map node
