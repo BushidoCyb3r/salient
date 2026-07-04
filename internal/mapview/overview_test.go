@@ -2,65 +2,63 @@ package mapview
 
 import (
 	"fmt"
+	"net/netip"
 	"testing"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 )
 
-func nodesInSubnets(subnets []string) []graph.Node {
-	var out []graph.Node
-	for _, s := range subnets {
-		out = append(out, graph.Node{Subnet: s})
+// TestOverviewKeepsTruePrefixGroups guards the reported bug: coarsening
+// blended real VLANs (10.18.61.0/26 hosts) into a phantom "10.18.0.0/16"
+// box. Groups must keep their true grouping prefix; when the cap overflows,
+// the least important groups merge into "other internal networks" instead.
+func TestOverviewKeepsTruePrefixGroups(t *testing.T) {
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: 0.5, Rank: rank}})
 	}
-	return out
-}
+	// Operator VLANs, ranked highest — must keep their true /24 boxes.
+	for i := 0; i < 10; i++ {
+		add(fmt.Sprintf("10.18.61.%d", i+1), "10.18.61.0/24")
+		add(fmt.Sprintf("10.10.40.%d", i+1), "10.10.40.0/24")
+	}
+	// Noise: 30 more /24s so the group count blows well past the cap.
+	for i := 0; i < 30; i++ {
+		add(fmt.Sprintf("10.20.%d.1", i), fmt.Sprintf("10.20.%d.0/24", i))
+		add(fmt.Sprintf("10.20.%d.2", i), fmt.Sprintf("10.20.%d.0/24", i))
+	}
+	m := buildOverview(graph.Snapshot{Nodes: nodes}, Options{GroupPrefix: 24}, nil, nil, 0)
 
-func TestOverviewPrefix(t *testing.T) {
-	var spread, oneSixteen, multiEight []string
-	for i := 0; i < 200; i++ {
-		// 20 /16s with ten /24s each — exceeds the cap at every prefix, so
-		// coarsening bottoms out at /16 and overflow merges into "other".
-		spread = append(spread, fmt.Sprintf("10.%d.%d.0/24", i%20, i/20))
-		// 200 /24s inside one /16 — /20 still yields 13 groups.
-		oneSixteen = append(oneSixteen, fmt.Sprintf("10.99.%d.0/24", i))
+	cidrs := map[string]bool{}
+	other := false
+	for _, g := range m.Groups {
+		cidrs[g.CIDR] = true
+		if g.ID == "g:other" {
+			other = true
+		}
+		if g.CIDR == "" {
+			continue
+		}
+		p, err := netip.ParsePrefix(g.CIDR)
+		if err != nil {
+			t.Fatalf("group CIDR %q does not parse: %v", g.CIDR, err)
+		}
+		if p.Bits() < 24 {
+			t.Errorf("group %q coarser than /24 — phantom supernet", g.CIDR)
+		}
 	}
-	for i := 0; i < 12; i++ {
-		// 12 distinct /8s — never coarsens past /16; caller merges overflow.
-		multiEight = append(multiEight, fmt.Sprintf("%d.0.0.0/24", 10+i*10))
+	if !cidrs["10.18.61.0/24"] || !cidrs["10.10.40.0/24"] {
+		t.Errorf("top VLANs lost their true boxes, groups: %v", cidrs)
 	}
-	cases := []struct {
-		name    string
-		subnets []string
-		start   int
-		want    int
-	}{
-		{"few subnets keep /24", []string{"10.0.1.0/24", "10.0.2.0/24"}, 24, 24},
-		{"one /16 coarsens to /16", oneSixteen, 24, 16},
-		{"spread /16s bottom out at /16", spread, 24, 16},
-		{"explicit start skips finer prefixes", oneSixteen, 16, 16},
-		{"multi-/8 bottoms out at /16", multiEight, 24, 16},
+	if len(m.Groups) > config.MapOverviewMaxGroups {
+		t.Errorf("%d groups, cap %d", len(m.Groups), config.MapOverviewMaxGroups)
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := overviewPrefix(nodesInSubnets(tc.subnets), tc.start, config.MapOverviewMaxGroups); got != tc.want {
-				t.Errorf("overviewPrefix(start=%d) = %d, want %d", tc.start, got, tc.want)
-			}
-		})
-	}
-	// Determinism: same input, same answer, and group count at the chosen
-	// prefix respects the cap whenever a satisfying prefix exists.
-	nodes := nodesInSubnets(oneSixteen)
-	p := overviewPrefix(nodes, 24, config.MapOverviewMaxGroups)
-	if p2 := overviewPrefix(nodes, 24, config.MapOverviewMaxGroups); p2 != p {
-		t.Fatalf("overviewPrefix not deterministic: %d vs %d", p, p2)
-	}
-	distinct := map[string]bool{}
-	for _, n := range nodes {
-		distinct[regroup(n.Subnet, p)] = true
-	}
-	if len(distinct) > config.MapOverviewMaxGroups {
-		t.Errorf("chosen prefix /%d yields %d groups, cap %d", p, len(distinct), config.MapOverviewMaxGroups)
+	if !other {
+		t.Error("expected the overflow 'other internal networks' bucket")
 	}
 }
 

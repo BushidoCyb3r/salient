@@ -9,33 +9,6 @@ import (
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 )
 
-// overviewPrefixes are tried finest-first; the overview picks the first one
-// whose group count fits MapOverviewMaxGroups. Coarsening stops at /16: a /12
-// or /8 group is labeled with its supernet network address (e.g. 10.16.0.0/12
-// holding 10.18.x hosts), which names no segment an operator actually runs and
-// reads as a phantom network. Past /16 the overflow "other internal networks"
-// bucket absorbs the excess instead of inventing a misleading boundary.
-var overviewPrefixes = []int{24, 20, 16}
-
-// overviewPrefix returns the finest grouping prefix, no finer than start,
-// that yields at most max groups. If even /16 exceeds the cap the caller
-// merges overflow groups into one "other networks" group.
-func overviewPrefix(nodes []graph.Node, start, max int) int {
-	for _, p := range overviewPrefixes {
-		if p > start {
-			continue
-		}
-		distinct := map[string]bool{}
-		for _, n := range nodes {
-			distinct[regroup(n.Subnet, p)] = true
-		}
-		if len(distinct) <= max {
-			return p
-		}
-	}
-	return overviewPrefixes[len(overviewPrefixes)-1]
-}
-
 // internalCIDR reports whether a grouping CIDR is private address space —
 // the terrain the briefing is about. Everything else (internet peers,
 // multicast, broadcast) collapses into the single external group.
@@ -109,7 +82,12 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	if external {
 		maxPriv--
 	}
-	prefix := overviewPrefix(internal, opts.GroupPrefix, maxPriv)
+	// Groups always keep the operator's true grouping prefix (/24 default).
+	// Coarsening to /20 or /16 blended distinct VLANs into supernet boxes
+	// that name no segment anyone actually runs (10.18.61.0/26 hosts read as
+	// "10.18.0.0/16"); when the cap overflows, the honest "other internal
+	// networks" bucket absorbs the least important groups instead.
+	prefix := opts.GroupPrefix
 	counts := map[string]int{}
 	retainedIn := map[string]int{}
 	for _, n := range internal {

@@ -67,7 +67,7 @@ const (
 	MapTargetElements     = 60   // §8.5 readability target
 	MapMaxElements        = 120  // above this, unfocused maps condense to an overview
 	MapOverviewTopNodes   = 20   // overview mode: individually retained top-ranked hosts
-	MapOverviewMaxGroups  = 8    // overview mode: max subnet groups after coarsening
+	MapOverviewMaxGroups  = 12   // overview mode: max subnet group boxes (true-prefix, no coarsening)
 )
 
 // Drift detection (DEFILADE_PLAN.md Phase 2).
