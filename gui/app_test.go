@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 	"testing"
 
@@ -106,7 +107,7 @@ func TestExportMapWritesEachFormat(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if info.Mode().Perm() != 0o600 {
+		if goruntime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 			t.Errorf("%s export mode = %o, want 600", tc.format, info.Mode().Perm())
 		}
 	}
@@ -156,7 +157,7 @@ func TestExportImageWritesDecodedPNG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0o600 {
+	if goruntime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 		t.Errorf("ExportImage() mode = %o, want 600", info.Mode().Perm())
 	}
 }

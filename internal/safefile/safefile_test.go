@@ -30,7 +30,7 @@ func TestWritePreservesExistingFileOnError(t *testing.T) {
 	}
 }
 
-func TestWriteRejectsSymlinkedDirectory(t *testing.T) {
+func TestWriteSupportsSymlinkedDirectory(t *testing.T) {
 	root := t.TempDir()
 	realDir := filepath.Join(root, "real")
 	if err := os.Mkdir(realDir, 0o700); err != nil {
@@ -45,11 +45,15 @@ func TestWriteRejectsSymlinkedDirectory(t *testing.T) {
 		_, err := io.WriteString(w, "sensitive")
 		return err
 	})
-	if err == nil {
-		t.Fatal("Write accepted a symlinked output directory")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(realDir, "artifact")); !os.IsNotExist(err) {
-		t.Fatalf("redirected artifact exists or stat failed: %v", err)
+	got, err := os.ReadFile(filepath.Join(realDir, "artifact"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "sensitive" {
+		t.Fatalf("artifact = %q, want sensitive", got)
 	}
 }
 

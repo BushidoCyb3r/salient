@@ -4,7 +4,6 @@ package safefile
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,15 +18,14 @@ func Write(path string, render func(io.Writer) error) error {
 		return err
 	}
 	dir := filepath.Dir(abs)
-	if err := rejectSymlinks(dir); err != nil {
-		return err
-	}
 	if err := os.MkdirAll(dir, config.OutputDirMode); err != nil {
 		return err
 	}
-	if err := rejectSymlinks(dir); err != nil {
+	dir, err = filepath.EvalSymlinks(dir)
+	if err != nil {
 		return err
 	}
+	abs = filepath.Join(dir, filepath.Base(abs))
 
 	f, err := os.CreateTemp(dir, ".defilade-*")
 	if err != nil {
@@ -55,21 +53,4 @@ func WriteFile(path string, data []byte) error {
 		_, err := io.Copy(w, bytes.NewReader(data))
 		return err
 	})
-}
-
-func rejectSymlinks(path string) error {
-	for {
-		info, err := os.Lstat(path)
-		if err == nil && info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("output directory %q is a symbolic link", path)
-		}
-		if err != nil && !os.IsNotExist(err) {
-			return err
-		}
-		parent := filepath.Dir(path)
-		if parent == path {
-			return nil
-		}
-		path = parent
-	}
 }
