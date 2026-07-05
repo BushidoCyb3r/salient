@@ -262,12 +262,38 @@ const layouts = {
   dagre: { name: 'dagre', animate: false, rankDir: 'TB', ranker: 'tight-tree', rankSep: 70, nodeSep: 18, transform: (n, p) => p },
 };
 
+// gridLayout is a deterministic uniform layout for the segment overview: every
+// VLAN box is one cell of a grid, and each box's hosts sit in a fixed 2-column
+// mini-grid inside it. Boxes come out the same size and orderly, instead of the
+// force sim ballooning and scattering compound boxes.
+function gridLayout() {
+  const parents = cy.nodes('.grp').sort((a, b) => {
+    const ac = a.data('cidr') ? 0 : 1, bc = b.data('cidr') ? 0 : 1;
+    if (ac !== bc) return ac - bc; // real VLANs first, then other/external
+    return (a.data('label') || '').localeCompare(b.data('label') || '');
+  });
+  const cols = Math.max(1, Math.ceil(Math.sqrt(parents.length)));
+  const CELLW = 380, CELLH = 240, NODEW = 132, NODEH = 40, GAP = 8, PAD = 34;
+  const pos = {};
+  parents.forEach((p, i) => {
+    const gx = (i % cols) * CELLW;
+    const gy = Math.floor(i / cols) * CELLH;
+    p.children().forEach((k, j) => {
+      pos[k.id()] = { x: gx + PAD + (j % 2) * (NODEW + GAP), y: gy + PAD + Math.floor(j / 2) * (NODEH + GAP) };
+    });
+  });
+  cy.layout({ name: 'preset', positions: (n) => pos[n.id()], fit: true, padding: 40 }).run();
+}
+
 function runLayout(name) {
   curLayout = name;
-  cy.layout(layouts[name]).run();
+  if (name === 'grid') gridLayout();
+  else cy.layout(layouts[name]).run();
+  $('b-grid').classList.toggle('on', name === 'grid');
   $('b-fcose').classList.toggle('on', name === 'fcose');
   $('b-dagre').classList.toggle('on', name === 'dagre');
 }
+$('b-grid').onclick = () => { if (cy) runLayout('grid'); };
 $('b-fcose').onclick = () => { if (cy) runLayout('fcose'); };
 $('b-dagre').onclick = () => { if (cy) runLayout('dagre'); };
 
@@ -371,7 +397,7 @@ function renderModel(model) {
   // Each view gets its best-fit default layout: the segment-flow overview reads
   // as directional flow (tiered/dagre); focused/detail maps use organic. The
   // operator can still toggle freely afterward.
-  curLayout = model.overview ? 'dagre' : 'fcose';
+  curLayout = model.overview ? 'grid' : 'fcose';
   const els = [];
   for (const g of model.groups || []) {
     els.push({ data: { id: g.id, label: g.label, cidr: g.cidr || '' }, classes: 'grp' + (g.blind_spot ? ' blind' : '') + (g.cidr ? ' drillable' : '') });
@@ -427,7 +453,7 @@ function renderModel(model) {
   cy = cytoscape({
     container: $('cy'), elements: els, wheelSensitivity: 0.2,
     style: [
-      { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 12, 'min-width': 150, 'min-height': 70 } },
+      { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 12, 'min-width': 300, 'min-height': 180 } },
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
       { selector: 'node.grp.drillable', style: { label: (ele) => '▸ ' + ele.data('label'), 'border-color': '#3d4450' } },
       { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
