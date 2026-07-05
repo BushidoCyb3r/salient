@@ -283,19 +283,28 @@ function tieredLayout() {
   const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44, CELLW = 240, BANDGAP = 80;
   const pos = {};
   let topH = 0;
-  // Center the external/internet band horizontally over the VLAN row below it.
-  const rowMid = (Math.max(vlans.length, 1) * CELLW) / 2;
+  // Wrap VLAN boxes into rows instead of one wide strip. ~square grid.
+  const cols = Math.max(1, Math.ceil(Math.sqrt(vlans.length)));
+  // Center the external/internet band over the (widest) VLAN row below it.
+  const rowMid = (Math.min(vlans.length, cols) * CELLW) / 2;
   ext.forEach((p) => {
     const kids = p.children();
     const bandW = kids.length * (NODEW + 16);
     const startX = rowMid - bandW / 2;
     kids.forEach((k, j) => { pos[k.id()] = { x: startX + j * (NODEW + 16), y: PADY }; });
-    topH = PADY + NODEH + BANDGAP; // VLAN row sits below the external band
+    topH = PADY + NODEH + BANDGAP; // VLAN grid sits below the external band
   });
+  let rowY = topH, rowMaxKids = 0;
   vlans.forEach((p, i) => {
-    const gx = i * CELLW;
-    p.children().sort(childOrder).forEach((k, j) => {
-      pos[k.id()] = { x: gx + PADX, y: topH + PADY + j * (NODEH + VGAP) };
+    const col = i % cols;
+    if (col === 0 && i > 0) { // new row: advance past the tallest stack in the prior row
+      rowY += PADY + rowMaxKids * (NODEH + VGAP) + BANDGAP;
+      rowMaxKids = 0;
+    }
+    const kids = p.children().sort(childOrder);
+    rowMaxKids = Math.max(rowMaxKids, kids.length);
+    kids.forEach((k, j) => {
+      pos[k.id()] = { x: col * CELLW + PADX, y: rowY + PADY + j * (NODEH + VGAP) };
     });
   });
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
