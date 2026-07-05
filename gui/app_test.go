@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -171,6 +172,49 @@ func TestSuggestTagsForHostsMergesSidecar(t *testing.T) {
 	}
 	if !got["10.0.0.1"] || !got["10.0.0.2"] {
 		t.Fatalf("disjoint targeted runs must both persist: %#v", art.Tags)
+	}
+}
+
+func TestLoadFocusedModelDrillsIntoSegment(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	path := filepath.Join(dataDir, "snapshot.json.gz")
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(rank)*0.001, Rank: rank}})
+	}
+	// Two VLANs, enough hosts to trigger overview at the top level.
+	for v := 0; v < 40; v++ {
+		add(fmt.Sprintf("10.1.1.%d", v+1), "10.1.1.0/24")
+		add(fmt.Sprintf("10.2.2.%d", v+1), "10.2.2.0/24")
+	}
+	writeSnapshot(t, path, graph.Snapshot{Nodes: nodes})
+
+	m, err := a.LoadFocusedModel(path, "10.1.1.0/24")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.Overview {
+		t.Error("focused model must be full detail, not overview")
+	}
+	// Every host of the focused VLAN is present; the other VLAN is filtered out.
+	shown, foreign := 0, 0
+	for _, n := range m.Nodes {
+		if strings.HasPrefix(n.ID, "10.1.1.") {
+			shown++
+		}
+		if strings.HasPrefix(n.ID, "10.2.2.") {
+			foreign++
+		}
+	}
+	if shown != 40 {
+		t.Errorf("focused VLAN shows %d hosts, want all 40", shown)
+	}
+	if foreign != 0 {
+		t.Errorf("focused map leaked %d hosts from another VLAN", foreign)
 	}
 }
 

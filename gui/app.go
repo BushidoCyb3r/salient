@@ -151,6 +151,20 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	return a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
 }
 
+// LoadFocusedModel is the segment drill-down: it re-derives the map focused on
+// one CIDR, so the caller can render every host and intra-segment flow of a
+// single VLAN and offer a "back to overview" return.
+func (a *App) LoadFocusedModel(path, cidr string) (*mapview.Model, error) {
+	resolved := a.resolveSnapshotPath(path)
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	opts := a.mapOptions()
+	opts.Focus = cidr
+	return a.finishModel(resolved, mapview.Build(snap, opts))
+}
+
 // LoadDriftModel builds a drift-overlaid map: fromPath is the baseline,
 // toPath the snapshot under review. Drift counts ride Model.Findings.
 func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
