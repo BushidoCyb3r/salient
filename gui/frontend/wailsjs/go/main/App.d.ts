@@ -42,6 +42,8 @@ export function LoadReconcileModel(arg1:string,arg2:string):Promise<mapview.Mode
 
 export function PickAssetCSV():Promise<string>;
 
+export function PinToMap(arg1:string):Promise<void>;
+
 export function RunScan(arg1:main.ScanRequest):Promise<scan.Result>;
 
 export function SaveDevice(arg1:string,arg2:devices.Device):Promise<void>;
@@ -55,3 +57,5 @@ export function SuggestTags(arg1:main.TagRequest):Promise<assist.TagResult>;
 export function SuggestTagsForHosts(arg1:main.TagRequest,arg2:Array<string>):Promise<assist.TagResult>;
 
 export function UnassignIP(arg1:string):Promise<void>;
+
+export function UnpinFromMap(arg1:string):Promise<void>;

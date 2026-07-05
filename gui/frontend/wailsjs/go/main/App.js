@@ -70,6 +70,10 @@ export function PickAssetCSV() {
   return window['go']['main']['App']['PickAssetCSV']();
 }
 
+export function PinToMap(arg1) {
+  return window['go']['main']['App']['PinToMap'](arg1);
+}
+
 export function RunScan(arg1) {
   return window['go']['main']['App']['RunScan'](arg1);
 }
@@ -96,4 +100,8 @@ export function SuggestTagsForHosts(arg1, arg2) {
 
 export function UnassignIP(arg1) {
   return window['go']['main']['App']['UnassignIP'](arg1);
+}
+
+export function UnpinFromMap(arg1) {
+  return window['go']['main']['App']['UnpinFromMap'](arg1);
 }

@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -369,11 +369,11 @@ function renderModel(model) {
         agg: n.agg_count || 0, drift: n.drift || '', ev: (n.evidence || []).join('\n'),
         device: n.device || '', deviceType: n.device_type || '', labels: (n.labels || []).join(', '),
         services: (n.services || []).join(', '), roleOverride: n.role_override || '',
-        mac: n.mac || '', vendor: n.vendor || '',
+        mac: n.mac || '', vendor: n.vendor || '', pinned: n.pinned ? 1 : 0,
         aiTags: (n.suggested_tags || []).join(', '), aiConfidence: n.suggestion_confidence || 0,
         aiRationale: n.suggestion_rationale || '', aiModel: n.suggestion_model || '',
       },
-      classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.device ? 'dev-linked ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
+      classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.device ? 'dev-linked ' : '') + (n.pinned ? 'pinned ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
     });
   }
   const edges = model.edges || [];
@@ -397,6 +397,7 @@ function renderModel(model) {
       { selector: 'node[agg>0]', style: { shape: 'round-rectangle', 'border-style': 'double', 'border-width': 3 } },
       { selector: 'node.ai-tagged', style: { 'border-color': '#39d3ff', 'border-width': 4 } },
       { selector: 'node.dev-linked', style: { 'border-color': '#a78bfa', 'border-width': 3 } },
+      { selector: 'node.pinned', style: { 'border-color': '#f0b429', 'border-width': 3, 'border-style': 'solid' } },
       { selector: 'node.drift-new', style: { 'border-color': '#3fb950', 'border-width': 4 } },
       { selector: 'node.drift-vanished', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
       { selector: 'node.drift-rank-up,node.drift-rank-down', style: { 'border-color': '#e3a008', 'border-width': 4 } },
@@ -617,7 +618,7 @@ $('hl-tag').onclick = async () => {
 
 /* ---------------- devices ---------------- */
 
-let registry = { devices: [], labels: {}, role_overrides: {}, dismissed_hints: [] };
+let registry = { devices: [], labels: {}, role_overrides: {}, dismissed_hints: [], pinned_ips: [] };
 
 async function refreshDevices() {
   try {
@@ -845,6 +846,17 @@ function openHostMenu(ip, roleOverride, x, y, extra) {
     };
     ctxmenu.appendChild(inp);
     inp.focus();
+  });
+  const pinned = (registry.pinned_ips || []).includes(ip);
+  ctxAddItem(pinned ? 'Unpin from map' : 'Pin to map', async (click) => {
+    click.stopPropagation();
+    try {
+      if (pinned) await UnpinFromMap(ip); else await PinToMap(ip);
+      logLine((pinned ? 'unpinned ' : 'pinned ') + ip + ' — reloading map', 'ok');
+      ctxmenu.style.display = 'none';
+      await refreshDevices();
+      if (currentSnapshotPath) openSnapshot(currentSnapshotPath);
+    } catch (err) { logLine('pin toggle failed: ' + err, 'err'); }
   });
   if (extra) extra(ctxAddItem);
   ctxmenu.style.left = x + 'px';

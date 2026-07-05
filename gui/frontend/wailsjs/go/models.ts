@@ -76,6 +76,7 @@ export namespace devices {
 	    labels?: Record<string, Array<string>>;
 	    role_overrides?: Record<string, string>;
 	    dismissed_hints?: string[];
+	    pinned_ips?: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Registry(source);
@@ -87,6 +88,7 @@ export namespace devices {
 	        this.labels = source["labels"];
 	        this.role_overrides = source["role_overrides"];
 	        this.dismissed_hints = source["dismissed_hints"];
+	        this.pinned_ips = source["pinned_ips"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -572,6 +574,7 @@ export namespace mapview {
 	    services?: string[];
 	    mac?: string;
 	    vendor?: string;
+	    pinned?: boolean;
 	    suggested_tags?: string[];
 	    suggestion_confidence?: number;
 	    suggestion_rationale?: string;
@@ -602,6 +605,7 @@ export namespace mapview {
 	        this.services = source["services"];
 	        this.mac = source["mac"];
 	        this.vendor = source["vendor"];
+	        this.pinned = source["pinned"];
 	        this.suggested_tags = source["suggested_tags"];
 	        this.suggestion_confidence = source["suggestion_confidence"];
 	        this.suggestion_rationale = source["suggestion_rationale"];
