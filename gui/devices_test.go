@@ -178,6 +178,32 @@ func TestHostnameHints(t *testing.T) {
 	}
 }
 
+func TestMACHints(t *testing.T) {
+	nodes := []graph.Node{
+		{IP: "10.0.0.1", MAC: "24:5a:4c:11:22:33"},
+		{IP: "10.0.0.2", MAC: "24:5a:4c:11:22:33"}, // same NIC, two VLAN IPs
+		{IP: "10.0.0.5", MAC: "aa:bb:cc:dd:ee:ff"}, // single IP — no hint
+		{IP: "10.0.0.6"}, // no MAC
+	}
+	var reg devices.Registry
+	hints := macHints(nodes, &reg)
+	if len(hints) != 1 {
+		t.Fatalf("hints = %#v", hints)
+	}
+	if hints[0].Key != "mac:24:5a:4c:11:22:33" || len(hints[0].IPs) != 2 {
+		t.Fatalf("hint = %#v", hints[0])
+	}
+	// Vendor rides the Hostname field for display.
+	if hints[0].Hostname != "Ubiquiti" {
+		t.Errorf("expected vendor Ubiquiti in hint, got %q", hints[0].Hostname)
+	}
+	// Dismissed MAC hints stay dismissed.
+	reg.Dismiss("mac:24:5a:4c:11:22:33")
+	if got := macHints(nodes, &reg); len(got) != 0 {
+		t.Errorf("dismissed MAC hint reappeared: %#v", got)
+	}
+}
+
 func TestLoadModelSurvivesCorruptRegistry(t *testing.T) {
 	dataDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dataDir, "devices.json"), []byte("{corrupt"), 0o600); err != nil {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/BushidoCyb3r/defilade/internal/assist"
+	"github.com/BushidoCyb3r/defilade/internal/config"
 	"github.com/BushidoCyb3r/defilade/internal/devices"
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
@@ -146,7 +147,47 @@ func hostnameHints(nodes []graph.Node, reg *devices.Registry) []Hint {
 	return hints
 }
 
-// DeviceHints returns pending same-device link suggestions for a snapshot.
+// macHints derives same-device suggestions from a shared responder MAC
+// (gateway MACs are already excluded from node data). The Hostname field
+// carries the OUI vendor for display. Suppressed when dismissed or when all
+// IPs already share one device.
+func macHints(nodes []graph.Node, reg *devices.Registry) []Hint {
+	byMAC := map[string][]string{}
+	for _, n := range nodes {
+		if n.MAC != "" {
+			byMAC[n.MAC] = append(byMAC[n.MAC], n.IP)
+		}
+	}
+	var hints []Hint
+	for mac, ips := range byMAC {
+		if len(ips) < 2 {
+			continue
+		}
+		key := "mac:" + mac
+		if reg.Dismissed(key) {
+			continue
+		}
+		owner, allLinked := "", true
+		for _, ip := range ips {
+			d := reg.DeviceForIP(ip)
+			if d == nil || (owner != "" && d.Name != owner) {
+				allLinked = false
+				break
+			}
+			owner = d.Name
+		}
+		if allLinked {
+			continue
+		}
+		sort.Strings(ips)
+		hints = append(hints, Hint{Key: key, Hostname: config.VendorForMAC(mac), IPs: ips})
+	}
+	sort.Slice(hints, func(i, j int) bool { return hints[i].Key < hints[j].Key })
+	return hints
+}
+
+// DeviceHints returns pending same-device link suggestions for a snapshot:
+// hostname-based first, then MAC-based.
 func (a *App) DeviceHints(path string) ([]Hint, error) {
 	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
 	if err != nil {
@@ -156,7 +197,7 @@ func (a *App) DeviceHints(path string) ([]Hint, error) {
 	if err != nil {
 		return nil, err
 	}
-	return hostnameHints(snap.Nodes, &reg), nil
+	return append(hostnameHints(snap.Nodes, &reg), macHints(snap.Nodes, &reg)...), nil
 }
 
 // overlayNodes stamps operator device identity and labels onto map nodes.
