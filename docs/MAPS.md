@@ -59,42 +59,42 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
   CIDR; unlike a CIDR focus, these are scope filters and still condense to an
   overview when oversized.
 
-## Automatic overview mode (broad scopes)
+## Automatic segment-flow map (broad scopes)
 
 An unfocused map that exceeds 120 elements is automatically condensed into a
-**briefing overview** near the 60-element target instead of rendering an
-unreadable wall:
+**segment-flow overview** — a picture of logical flow *between* segments,
+navigable down to host detail — instead of a flat wall of nodes:
 
-- **private (RFC1918) space gets the groups; everything else — internet
-  peers, multicast, broadcast — collapses into one "external" box.** The
-  briefing shows your terrain, not the internet's. Multicast and broadcast
-  addresses are never shown as individual hosts regardless of score rank;
-- internal subnet groups keep the operator's true grouping prefix (`/24` by
-  default) — they are never coarsened into supernet boxes that name no real
-  segment; when the group count overflows the budget, the least important
-  groups merge into an honest "other internal networks" bucket;
-- the top 20 hosts by score rank (excluding multicast/broadcast artifacts)
-  stay individually visible; **every other host — including lower-ranked
-  servers — collapses into one "N other hosts" aggregate per group**;
-- **console overrides:** right-click **Pin to map** forces any collapsed host
-  to stay visible, and the **show all private hosts** checkbox promotes every
-  RFC1918 host to its own node (external peers still collapse), capped at 1500
-  with a finding when it clips. In show-all-private mode every connection
-  between the visible hosts is drawn — the edge budget is not applied — and
-  every private VLAN keeps its own box (no group cap, so a lightly-populated but
-  real segment is never lumped into "other internal networks"), since it is an
-  explicit "show everything" view;
-- at most one gateway per group survives (observed L2 candidates win by
+- **every real internal VLAN keeps its own box.** Segments use the operator's
+  true grouping prefix (`/24` by default) and are never coarsened into supernet
+  boxes or lumped together — a lightly-populated but real segment (e.g. a 2-host
+  `10.10.60.0/24`) still gets its own box. Only a pathological number of VLANs
+  (more than `MapSegmentMaxGroups`, 64) overflows the least-active into "other
+  internal networks". Every public/multicast/broadcast peer collapses into one
+  "external" box so the map shows your terrain, not the internet's;
+- **each box shows its own top hosts, not a global top-N.** The highest-ranked
+  `MapSegmentTopHosts` (5) hosts of *each* segment stay named and individual;
+  the rest collapse into one **"N more hosts"** chip for that segment. A busy
+  VLAN can no longer monopolise the map and leave every other segment a blob;
+- **inter-segment flows are the story and are never trimmed.** Bundled edges
+  between segments (by service class) always survive the element budget, as do
+  drift/overlay-flagged edges; only intra-segment filler is trimmed when space
+  is tight;
+- **drill into a segment:** click a VLAN box (marked ▸) to re-render focused on
+  that CIDR — every host, intra-segment flow, gateways — then **← overview** to
+  return. The overview defaults to the tiered (directional) layout; the organic
+  toggle still applies;
+- at most one gateway per segment survives (observed L2 candidates win by
   distinct-IP count);
-- only the strongest bundled edges that fit the element budget remain, with
-  edges touching top-ranked terrain kept first. Drift/reconcile-flagged nodes
-  and edges are retained ahead of everything else and are never trimmed; if
-  flagged items alone exceed the budget, a finding says how many appear only
-  in the report.
+- **console overrides:** right-click **Pin to map** forces any collapsed host to
+  stay visible in the overview; **show every private host (dense)** is an escape
+  hatch that promotes every RFC1918 host to its own node and draws every
+  connection between them (capped at 1500, off by default — the segment view is
+  usually clearer).
 
-The overview is a briefing product, **not a complete topology**: it never
-shows every host or dependency. The snapshot itself is untouched — re-render
-any enclave in full detail:
+The segment-flow map is a briefing product, **not a complete topology**: the top
+level summarises. The snapshot itself is untouched — drill into a segment, or
+re-render any enclave in full detail from the CLI:
 
 ```sh
 ./bin/defilade map \

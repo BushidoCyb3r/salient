@@ -144,10 +144,13 @@ Artifacts are stored under defilade-data/snapshots, defilade-data/reports, and
 defilade-data/maps. The console can reopen snapshots without reconnecting to the
 grid.
 
-Large unfocused maps are condensed into a briefing overview that retains the
-highest-ranked terrain and strongest dependencies. This is intentional, not a
-complete-topology view. Clicking a condensed "N other hosts" node opens the
-full host list behind it.
+Large unfocused maps are condensed into a **segment-flow overview**: every real
+VLAN gets its own box showing its top hosts (the rest behind an "N more hosts"
+chip), with dependencies bundled between segments. This is intentional, not a
+complete-topology view. **Click a VLAN box (▸) to drill into a full-detail view
+of that segment**, then "← overview" to return; clicking an "N more hosts" chip
+opens the full host list behind it. See [docs/MAPS.md](docs/MAPS.md) for the
+full model.
 
 ## Console workflows
 
