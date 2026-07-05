@@ -280,6 +280,7 @@ export namespace graph {
 	    // Go type: time
 	    last_seen: any;
 	    sensors?: string[];
+	    mac?: string;
 	    scores: ScoreSet;
 	
 	    static createFrom(source: any = {}) {
@@ -295,6 +296,7 @@ export namespace graph {
 	        this.first_seen = this.convertValues(source["first_seen"], null);
 	        this.last_seen = this.convertValues(source["last_seen"], null);
 	        this.sensors = source["sensors"];
+	        this.mac = source["mac"];
 	        this.scores = this.convertValues(source["scores"], ScoreSet);
 	    }
 	
@@ -568,6 +570,8 @@ export namespace mapview {
 	    labels?: string[];
 	    role_override?: string;
 	    services?: string[];
+	    mac?: string;
+	    vendor?: string;
 	    suggested_tags?: string[];
 	    suggestion_confidence?: number;
 	    suggestion_rationale?: string;
@@ -596,6 +600,8 @@ export namespace mapview {
 	        this.labels = source["labels"];
 	        this.role_override = source["role_override"];
 	        this.services = source["services"];
+	        this.mac = source["mac"];
+	        this.vendor = source["vendor"];
 	        this.suggested_tags = source["suggested_tags"];
 	        this.suggestion_confidence = source["suggestion_confidence"];
 	        this.suggestion_rationale = source["suggestion_rationale"];

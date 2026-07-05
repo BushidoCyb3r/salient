@@ -26,13 +26,23 @@ The console provides:
 - Organic and tiered layouts, criticality heat, and optional edge labels.
 - Snapshot browsing and offline map reconstruction.
 - Aggregate drill-in: clicking an "N other hosts" node opens a filterable list
-  of every collapsed host with its rank, role, services, and device.
-- Per-host service lists derived from observed responder ports (~90 recognized
-  services including the full Active Directory protocol set).
+  of every collapsed host with its rank, role, services, device, MAC, and
+  vendor. Right-click any row to assign it to a device or correct its role, and
+  use **Suggest tags for listed hosts** to AI-tag just the filtered set.
+- Per-host service lists derived from observed responder ports (~110 recognized
+  services): the full Active Directory protocol set plus network-vendor
+  protocols for UniFi, Cisco, Aruba, Meraki, and Juniper gear.
+- Network-gear detection: hosts serving controller/switch/AP-only protocols
+  (CAPWAP, Aruba PAPI, Cisco Smart Install, TACACS+) are typed as NetworkGear
+  and promoted to the core tier.
+- Per-node MAC and OUI vendor: each host shows its observed responder MAC and
+  the vendor decoded from it (gateway MACs are excluded so a router's MAC is
+  never mis-attributed to the hosts behind it). Shared-MAC same-device hints
+  complement the hostname-based ones.
 - Device identity: link multiple IPs (for example one router across several
   VLANs) into one named device with type and notes; linked nodes get a shared
-  badge and a device card. Hostname-based same-device hints suggest links; the
-  operator confirms or dismisses.
+  badge and a device card. Hostname- and MAC-based same-device hints suggest
+  links; the operator confirms or dismisses.
 - Role correction: right-click **Set role…** overrides a wrong inference with
   any text; the correction is marked ✎, the original inference stays visible,
   and known roles also move the node to the correct map tier.
@@ -142,9 +152,12 @@ full host list behind it.
 
 Click any node for its evidence: role (with the operator correction and the
 original inference when overridden), rank, composite score, device, labels,
-observed services, and the raw evidence strings behind each role. Click an
-aggregate "N other hosts" node to open the host-list panel — type to filter by
-IP, hostname, role, service, or device; click a row for its evidence.
+observed services, MAC and vendor, and the raw evidence strings behind each
+role. Click an aggregate "N other hosts" node to open the host-list panel —
+type to filter by IP, hostname, role, service, device, MAC, or vendor; click a
+row for its evidence, or right-click it to assign a device or set a role.
+Aggregated hosts are full participants: **Suggest tags for listed hosts** runs
+AI tagging over the currently-filtered set (up to 100 at a time).
 
 ### Linking IPs into devices
 
@@ -275,13 +288,17 @@ endpoint, model, and credentials issued for that environment; Defilade does not
 assume a universal public endpoint.
 
 Only capped node and edge summaries are sent, never raw Zeek events or
-Elasticsearch credentials. The summaries include inferred roles and named
-services per observed responder port (snapshots created before the expanded
-port table carry generic `port-N` names — rescan to give the model the richer
-labels). Operator-confirmed facts — device names and types, role corrections,
-and durable labels — ride along as ground truth the model must not contradict;
-free-text device notes never leave the host. Responses must cite existing
-device IDs and include tags, confidence, and rationale. Invalid IDs or
+Elasticsearch credentials. The summaries include inferred roles, named services
+per observed responder port, and each host's MAC and decoded vendor (snapshots
+created before the expanded port table and MAC capture carry generic `port-N`
+names and no vendor — rescan to give the model the richer labels). Tagging runs
+either over the whole map (**Suggest Tags**) or over just the hosts listed in an
+aggregate panel (**Suggest tags for listed hosts**, capped at 100 per run and
+merged into the sidecar so targeted runs accumulate). Operator-confirmed facts —
+device names and types, role corrections, and durable labels — ride along as
+ground truth the model must not contradict; free-text device notes never leave
+the host. Responses must cite existing device IDs and include tags, confidence,
+and rationale. Invalid IDs or
 malformed suggestions are rejected, and accepted suggestions remain separate
 from observed evidence.
 
