@@ -115,8 +115,25 @@ func TestOverviewRetainAllPrivate(t *testing.T) {
 	for i := 0; i < 30; i++ {
 		add(fmt.Sprintf("8.8.%d.1", i), fmt.Sprintf("8.8.%d.0/24", i))
 	}
-	m := buildOverview(graph.Snapshot{Nodes: nodes},
-		Options{GroupPrefix: 24, RetainAllPrivate: true}, nil, nil, 999)
+	// A connection between two low-ranked private hosts + lots of filler edges
+	// so a normal element budget would trim it. Show-all-private must keep it.
+	var edges []graph.Edge
+	edges = append(edges, graph.Edge{Src: "10.10.40.20", Dst: "192.168.5.20", Port: 445, ConnCount: 1})
+	for i := 0; i < 40; i++ {
+		edges = append(edges, graph.Edge{Src: fmt.Sprintf("10.10.40.%d", i%20+1), Dst: fmt.Sprintf("192.168.5.%d", i%20+1), Port: 80, ConnCount: int64(1000 - i)})
+	}
+	m := buildOverview(graph.Snapshot{Nodes: nodes, Edges: edges},
+		Options{GroupPrefix: 24, RetainAllPrivate: true, MinConns: 1}, nil, nil, 999)
+
+	var haveLowEdge bool
+	for _, e := range m.Edges {
+		if (e.Src == "10.10.40.20" && e.Dst == "192.168.5.20") || (e.Src == "192.168.5.20" && e.Dst == "10.10.40.20") {
+			haveLowEdge = true
+		}
+	}
+	if !haveLowEdge {
+		t.Errorf("connection between visible private hosts was trimmed under show-all-private")
+	}
 
 	own := map[string]bool{}
 	for _, n := range m.Nodes {

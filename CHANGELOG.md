@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Show all private hosts** map toggle: promotes every RFC1918 host to its own
   node instead of collapsing low-ranked ones into aggregates, while external
-  peers still condense. Capped at 1500 promoted hosts (`config.MapAllPrivateCap`)
-  with a finding when the cap clips, so large grids stay renderable. Persisted
-  in the device registry.
+  peers still condense. Every connection between the visible hosts is drawn
+  (the edge budget is bypassed in this explicit "show everything" mode). Capped
+  at 1500 promoted hosts (`config.MapAllPrivateCap`) with a finding when the cap
+  clips, so large grids stay renderable. Persisted in the device registry.
 - **Pin to map / Unpin from map**: force a specific host to always render as its
   own overview node regardless of rank, from the map or a host-list row. Pinned
   nodes get an amber border; pins persist in the device registry.

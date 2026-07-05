@@ -237,6 +237,11 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		groupOf[n.ID] = n.Group
 	}
 	edgeBudget := config.MapTargetElements - len(m.Groups) - len(m.Nodes)
+	if opts.RetainAllPrivate {
+		// Show-all-private is an explicit "show everything" mode: every
+		// connection between the now-visible hosts stays, no budget trim.
+		edgeBudget = len(m.Edges)
+	}
 	m.Edges = trimOverviewEdges(m.Edges, edgeBudget, retained, groupOf)
 
 	// Inferred gateways only when the grid has no observed L2 evidence, only
