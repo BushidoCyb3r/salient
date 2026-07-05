@@ -281,9 +281,9 @@ function tieredLayout() {
   const vlans = parents.filter((p) => p.id() !== 'g:external')
     .sort((a, b) => (a.data('label') || '').localeCompare(b.data('label') || ''));
   const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44;
-  const CELLW = 340;    // wide cells → lots of horizontal space between VLAN boxes
-  const BANDGAP = 90;   // vertical gap between VLAN rows
-  const EXTGAP = 220;   // external band sits far above the internal VLAN rows
+  const CELLW = 480;    // wide cells → lots of horizontal space between VLAN boxes
+  const BANDGAP = 190;  // vertical gap between VLAN rows
+  const EXTGAP = 260;   // external band sits far above the internal VLAN rows
   const pos = {};
 
   // Per-VLAN activity = total traffic volume on its hosts' edges. Three bands:
@@ -334,7 +334,7 @@ function tieredLayout() {
   const zeroX = Math.max(realW, barely.length * CELLW) + CELLW * 1.5;
   zero.forEach((p, i) => {
     p.children().sort(childOrder).forEach((k, j) => {
-      pos[k.id()] = { x: zeroX + PADX, y: topH + i * 260 + PADY + j * (NODEH + VGAP) };
+      pos[k.id()] = { x: zeroX + PADX, y: topH + i * 360 + PADY + j * (NODEH + VGAP) };
     });
   });
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
