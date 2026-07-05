@@ -55,11 +55,16 @@ func TestOverviewKeepsTruePrefixGroups(t *testing.T) {
 	if !cidrs["10.18.61.0/24"] || !cidrs["10.10.40.0/24"] {
 		t.Errorf("top VLANs lost their true boxes, groups: %v", cidrs)
 	}
-	if len(m.Groups) > config.MapOverviewMaxGroups {
-		t.Errorf("%d groups, cap %d", len(m.Groups), config.MapOverviewMaxGroups)
+	// Segment-flow: 32 VLANs is well under MapSegmentMaxGroups, so every real
+	// segment keeps its own box and there is no "other internal networks" lump.
+	if len(m.Groups) > config.MapSegmentMaxGroups {
+		t.Errorf("%d groups, cap %d", len(m.Groups), config.MapSegmentMaxGroups)
 	}
-	if !other {
-		t.Error("expected the overflow 'other internal networks' bucket")
+	if other {
+		t.Error("no VLAN should overflow to 'other internal networks' below the segment cap")
+	}
+	if !cidrs["10.20.5.0/24"] {
+		t.Errorf("a low-traffic VLAN lost its box, groups: %v", cidrs)
 	}
 }
 

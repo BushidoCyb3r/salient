@@ -53,128 +53,57 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		}
 		return rankLess(a, b)
 	})
-	retained := map[string]bool{}
-	// Operator-pinned hosts are retained additively — always their own node,
-	// on top of the rank-based top-N (their explicit choice can push the map
-	// past the element target).
-	for i := range nodes {
-		if opts.Pinned[nodes[i].IP] && graph.TerrainAddr(nodes[i].IP) {
-			retained[nodes[i].IP] = true
-		}
-	}
-	// "Show all private": promote every RFC1918 terrain host to its own node,
-	// rank-ordered, up to the cap so a huge internal grid can't produce an
-	// unrenderable hairball.
-	privateTotal, privatePromoted := 0, 0
-	if opts.RetainAllPrivate {
-		for _, i := range idx {
-			n := &nodes[i]
-			if !graph.TerrainAddr(n.IP) || !internalCIDR(n.Subnet) {
-				continue
-			}
-			privateTotal++
-			if retained[n.IP] {
-				continue
-			}
-			if privatePromoted >= config.MapAllPrivateCap {
-				continue
-			}
-			retained[n.IP] = true
-			privatePromoted++
-		}
-	}
-	omittedMarked := 0
-	topN := 0
+	// Segment-flow map: every real internal VLAN keeps its own box, ordered by
+	// host count. Only a pathological number of VLANs (> MapSegmentMaxGroups)
+	// overflows into "other internal networks"; every public/multicast/broadcast
+	// peer collapses into one external box so the briefing shows the operator's
+	// terrain, not the internet's. Groups keep the operator's true grouping
+	// prefix (/24 default) — never coarsened into supernet boxes.
+	prefix := opts.GroupPrefix
+	external := false
+	segHosts := map[string][]int{} // internal CIDR -> node indices, rank-ordered (idx is rank-sorted)
 	for _, i := range idx {
 		n := &nodes[i]
-		if retained[n.IP] {
-			continue // already pinned or promoted
-		}
-		// With show-all-private on, external hosts always stay in the external
-		// aggregate — never individually promoted by rank.
-		if opts.RetainAllPrivate && !internalCIDR(n.Subnet) {
-			continue
-		}
-		if !graph.TerrainAddr(n.IP) || topN >= config.MapOverviewTopNodes {
-			if nodeDrift[n.IP] != "" {
-				omittedMarked++
-			}
-			continue
-		}
-		retained[n.IP] = true
-		topN++
-	}
-
-	// Internal (private) address space gets the real groups; every public,
-	// multicast, or broadcast peer collapses into one external box so the
-	// briefing shows the operator's terrain, not the internet's.
-	var internal []graph.Node
-	external := false
-	for _, n := range nodes {
 		if internalCIDR(n.Subnet) {
-			internal = append(internal, n)
+			c := regroup(n.Subnet, prefix)
+			segHosts[c] = append(segHosts[c], i)
 		} else {
 			external = true
 		}
 	}
-	maxPriv := config.MapOverviewMaxGroups
-	if external {
-		maxPriv--
-	}
-	// Show-all-private is a full-detail view: every RFC1918 VLAN keeps its own
-	// box, no "other internal networks" overflow that would lump a real segment
-	// (e.g. a lightly-populated 10.10.60.0/24) in with unrelated networks.
-	if opts.RetainAllPrivate {
-		maxPriv = 1 << 30
-	}
-	// Groups always keep the operator's true grouping prefix (/24 default).
-	// Coarsening to /20 or /16 blended distinct VLANs into supernet boxes
-	// that name no segment anyone actually runs (10.18.61.0/26 hosts read as
-	// "10.18.0.0/16"); when the cap overflows, the honest "other internal
-	// networks" bucket absorbs the least important groups instead.
-	prefix := opts.GroupPrefix
-	counts := map[string]int{}
-	retainedIn := map[string]int{}
-	for _, n := range internal {
-		c := regroup(n.Subnet, prefix)
-		counts[c]++
-		if retained[n.IP] {
-			retainedIn[c]++
+	// A segment containing a drift/overlay-flagged host is always kept — a drift
+	// or reconcile map exists to show those segments — so they sort ahead of the
+	// overflow cut, then by host count, then CIDR.
+	segMarked := map[string]bool{}
+	for _, ns := range segHosts {
+		for _, i := range ns {
+			if nodeDrift[nodes[i].IP] != "" {
+				segMarked[regroup(nodes[i].Subnet, prefix)] = true
+				break
+			}
 		}
 	}
-	cidrs := make([]string, 0, len(counts))
-	for c := range counts {
-		cidrs = append(cidrs, c)
+	segCIDRs := make([]string, 0, len(segHosts))
+	for c := range segHosts {
+		segCIDRs = append(segCIDRs, c)
 	}
-	sort.Slice(cidrs, func(i, j int) bool {
-		if retainedIn[cidrs[i]] != retainedIn[cidrs[j]] {
-			return retainedIn[cidrs[i]] > retainedIn[cidrs[j]]
+	sort.Slice(segCIDRs, func(i, j int) bool {
+		if segMarked[segCIDRs[i]] != segMarked[segCIDRs[j]] {
+			return segMarked[segCIDRs[i]]
 		}
-		if counts[cidrs[i]] != counts[cidrs[j]] {
-			return counts[cidrs[i]] > counts[cidrs[j]]
+		if len(segHosts[segCIDRs[i]]) != len(segHosts[segCIDRs[j]]) {
+			return len(segHosts[segCIDRs[i]]) > len(segHosts[segCIDRs[j]])
 		}
-		return cidrs[i] < cidrs[j]
+		return segCIDRs[i] < segCIDRs[j]
 	})
-	overflow := len(cidrs) > maxPriv
+	overflow := len(segCIDRs) > config.MapSegmentMaxGroups
 	if overflow {
-		cidrs = cidrs[:maxPriv-1]
+		segCIDRs = segCIDRs[:config.MapSegmentMaxGroups-1]
 	}
-	kept := make(map[string]bool, len(cidrs))
-	for _, c := range cidrs {
-		label := c
-		if lbl := opts.GroupLabels[c]; lbl != "" {
-			label = c + " — " + lbl
-		}
+	kept := make(map[string]bool, len(segCIDRs))
+	for _, c := range segCIDRs {
 		kept[c] = true
-		m.Groups = append(m.Groups, Group{ID: groupID(c), CIDR: c, Label: label})
 	}
-	if overflow {
-		m.Groups = append(m.Groups, Group{ID: "g:other", Label: "other internal networks"})
-	}
-	if external {
-		m.Groups = append(m.Groups, Group{ID: "g:external", Label: "external (internet / non-private)"})
-	}
-	sort.Slice(m.Groups, func(i, j int) bool { return m.Groups[i].ID < m.Groups[j].ID })
 	resolve := func(subnet string) string {
 		c := regroup(subnet, prefix)
 		if internalCIDR(c) {
@@ -185,6 +114,70 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		}
 		return "g:external"
 	}
+
+	// Retention: the top MapSegmentTopHosts hosts of every kept segment stay
+	// individual, so each VLAN shows its own terrain — a busy segment can no
+	// longer monopolize a global top-N and starve the quiet ones. segHosts is
+	// in drift-first-then-rank order, so drift/overlay-flagged hosts fill a
+	// segment's slots ahead of ordinary hosts. Operator pins are retained
+	// additively. RetainAllPrivate (escape hatch) promotes every internal host,
+	// capped so a huge grid can't hairball.
+	retained := map[string]bool{}
+	for i := range nodes {
+		if opts.Pinned[nodes[i].IP] && graph.TerrainAddr(nodes[i].IP) {
+			retained[nodes[i].IP] = true
+		}
+	}
+	privateTotal, privatePromoted := 0, 0
+	for _, c := range segCIDRs {
+		k := 0
+		for _, i := range segHosts[c] {
+			n := &nodes[i]
+			if !graph.TerrainAddr(n.IP) {
+				continue
+			}
+			privateTotal++
+			if retained[n.IP] {
+				continue // pinned
+			}
+			if opts.RetainAllPrivate {
+				if privatePromoted >= config.MapAllPrivateCap {
+					continue
+				}
+				retained[n.IP] = true
+				privatePromoted++
+				continue
+			}
+			if k >= config.MapSegmentTopHosts {
+				continue
+			}
+			retained[n.IP] = true
+			k++
+		}
+	}
+	// Flagged hosts that didn't fit their segment's top-N appear only in the
+	// aggregate / report — say so, as the drift and reconcile maps rely on it.
+	omittedMarked := 0
+	for i := range nodes {
+		if nodeDrift[nodes[i].IP] != "" && !retained[nodes[i].IP] && graph.TerrainAddr(nodes[i].IP) {
+			omittedMarked++
+		}
+	}
+
+	for _, c := range segCIDRs {
+		label := c
+		if lbl := opts.GroupLabels[c]; lbl != "" {
+			label = c + " — " + lbl
+		}
+		m.Groups = append(m.Groups, Group{ID: groupID(c), CIDR: c, Label: label})
+	}
+	if overflow {
+		m.Groups = append(m.Groups, Group{ID: "g:other", Label: "other internal networks"})
+	}
+	if external {
+		m.Groups = append(m.Groups, Group{ID: "g:external", Label: "external (internet / non-private)"})
+	}
+	sort.Slice(m.Groups, func(i, j int) bool { return m.Groups[i].ID < m.Groups[j].ID })
 
 	groupHasRetained := map[string]bool{}
 	for _, i := range idx {
@@ -203,9 +196,9 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		})
 	}
 
-	// Everything not retained collapses into one aggregate per group. The
-	// ":clients" ID suffix is what bundleEdges routes invisible endpoints
-	// to, so aggregates reuse it even though the label says "other hosts".
+	// The rest of each segment collapses into one "N more hosts" chip — the
+	// drill-in target. The ":clients" ID suffix is what bundleEdges routes
+	// invisible endpoints to, so aggregates reuse it.
 	aggCount := map[string]int{}
 	for i := range nodes {
 		n := &nodes[i]
@@ -223,7 +216,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	for _, gid := range aggGroups {
 		m.Nodes = append(m.Nodes, MapNode{
 			ID: gid + ":clients", Group: gid,
-			Label: fmt.Sprintf("%d other hosts", aggCount[gid]),
+			Label: fmt.Sprintf("%d more hosts", aggCount[gid]),
 			Role:  string(graph.RoleUnknown), Tier: TierClient, AggCount: aggCount[gid],
 		})
 	}
@@ -265,7 +258,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		m.Findings = append(m.Findings, fmt.Sprintf("possible blind spot: %s is in scope but produced zero observed traffic", cidr))
 	}
 	if omittedMarked > 0 {
-		m.Findings = append(m.Findings, fmt.Sprintf("%d flagged hosts did not fit the overview and appear only in the report or a focused map", omittedMarked))
+		m.Findings = append(m.Findings, fmt.Sprintf("%d flagged hosts did not fit their segment and appear only in the report or a focused map", omittedMarked))
 	}
 	if opts.RetainAllPrivate && privateTotal > config.MapAllPrivateCap {
 		m.Findings = append(m.Findings, fmt.Sprintf("show-all-private: %d RFC1918 hosts exceed the %d cap — showing the %d highest-ranked, the rest re-aggregated (map would be too dense otherwise)", privateTotal, config.MapAllPrivateCap, privatePromoted))
@@ -273,7 +266,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	if n := m.Elements(); n > config.MapTargetElements {
 		m.Findings = append(m.Findings, fmt.Sprintf("overview exceeds the %d-element target (%d) because flagged changes are never dropped", config.MapTargetElements, n))
 	}
-	m.Findings = append(m.Findings, fmt.Sprintf("condensed overview: %d elements reduced to %d — only top-ranked terrain and the strongest dependencies are shown individually; use --focus CIDR for full detail", detailedElements, m.Elements()))
+	m.Findings = append(m.Findings, fmt.Sprintf("segment-flow overview: %d elements reduced to %d — each VLAN shows its top hosts and the strongest dependencies; drill into a segment (or use --focus CIDR) for full detail", detailedElements, m.Elements()))
 
 	sortModel(m)
 	return m
@@ -384,7 +377,10 @@ func trimOverviewEdges(edges []MapEdge, budget int, retained map[string]bool, gr
 	kept := 0
 	for _, e := range edges {
 		switch {
-		case e.Drift != "":
+		// Inter-segment (cross-group) bundles are the routed-dependency story
+		// the map exists to show, and drift/overlay marks must always appear —
+		// both are immune to the budget. Only intra-segment filler is trimmed.
+		case e.Drift != "" || crosses(e):
 			out = append(out, e)
 		case kept < budget:
 			out = append(out, e)

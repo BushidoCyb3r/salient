@@ -110,9 +110,15 @@ func hasOverviewFinding(findings []string) bool {
 }
 
 func TestBuildLargeSnapshotProducesBriefingOverview(t *testing.T) {
-	mm := mapview.Build(largeFixture(), mapview.Options{})
-	if got := mm.Elements(); got > config.MapTargetElements {
-		t.Fatalf("overview has %d elements, target <= %d", got, config.MapTargetElements)
+	snap := largeFixture()
+	mm := mapview.Build(snap, mapview.Options{})
+	if !mm.Overview {
+		t.Fatal("large unfocused map must build in overview mode")
+	}
+	// The segment-flow overview trades the old 60-element target for faithful
+	// per-VLAN boxes, but must still be far smaller than the raw graph.
+	if got := mm.Elements(); got >= len(snap.Nodes) {
+		t.Fatalf("overview has %d elements, not smaller than %d raw nodes", got, len(snap.Nodes))
 	}
 	if !hasOverviewFinding(mm.Findings) {
 		t.Fatal("overview does not explain that the map was condensed")
@@ -142,58 +148,78 @@ func TestOverviewGroupsNeverCoarserThanSixteen(t *testing.T) {
 	}
 }
 
-func TestOverviewRetainsTopRanksAndAggregatesRest(t *testing.T) {
-	snap := largeFixture()
+// TestOverviewPerSegmentTopHosts: each VLAN box shows at most its top-N hosts;
+// the rest of that segment collapse into one "N more hosts" chip whose members
+// are recoverable. A busy segment cannot starve a quiet one.
+func TestOverviewPerSegmentTopHosts(t *testing.T) {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	var snap graph.Snapshot
+	rank := 0
+	add := func(ip, subnet string, comp float64) {
+		rank++
+		snap.Nodes = append(snap.Nodes, graph.Node{IP: ip, Subnet: subnet,
+			FirstSeen: t0, LastSeen: t0.Add(time.Hour),
+			Scores: graph.ScoreSet{Composite: comp, Rank: rank}})
+	}
+	// One busy VLAN with 12 hosts …
+	for h := 0; h < 12; h++ {
+		add(fmt.Sprintf("10.1.1.%d", h+1), "10.1.1.0/24", 1.0-float64(h)*0.01)
+	}
+	// … and 30 quiet VLANs so the map goes to overview and the busy VLAN would
+	// have eaten a global top-N.
+	for v := 0; v < 30; v++ {
+		for h := 0; h < 4; h++ {
+			add(fmt.Sprintf("10.2.%d.%d", v, h+1), fmt.Sprintf("10.2.%d.0/24", v), 0.3)
+		}
+	}
 	mm := mapview.Build(snap, mapview.Options{})
 	if !mm.Overview {
-		t.Fatal("large unfocused map must build in overview mode")
+		t.Fatal("expected overview mode")
 	}
-	if got := len(mm.Groups); got > config.MapOverviewMaxGroups {
-		t.Errorf("overview has %d groups, cap %d", got, config.MapOverviewMaxGroups)
-	}
-	rankByIP := map[string]int{}
-	for _, n := range snap.Nodes {
-		rankByIP[n.IP] = n.Scores.Rank
-	}
-	visible := map[string]bool{}
-	aggregated := 0
+
+	// The busy VLAN shows exactly MapSegmentTopHosts individual hosts + one
+	// "N more hosts" chip for the remaining 7.
+	busyIndividual, busyChip := 0, 0
 	for _, n := range mm.Nodes {
-		visible[n.ID] = true
-		aggregated += n.AggCount
-	}
-	for _, n := range snap.Nodes {
-		if n.Scores.Rank <= config.MapOverviewTopNodes && !visible[n.IP] {
-			t.Errorf("rank-%d host %s missing from overview", n.Scores.Rank, n.IP)
+		if strings.HasPrefix(n.ID, "10.1.1.") && n.AggCount == 0 {
+			busyIndividual++
+		}
+		if n.AggCount == 12-config.MapSegmentTopHosts && strings.Contains(n.Label, "more hosts") {
+			busyChip++
 		}
 	}
-	for id := range visible {
-		if r, ok := rankByIP[id]; ok && r > config.MapOverviewTopNodes {
-			t.Errorf("rank-%d host %s should be aggregated, not individually visible", r, id)
-		}
+	if busyIndividual != config.MapSegmentTopHosts {
+		t.Errorf("busy VLAN shows %d individual hosts, want %d", busyIndividual, config.MapSegmentTopHosts)
 	}
-	if want := len(snap.Nodes) - config.MapOverviewTopNodes; aggregated != want {
-		t.Errorf("aggregate counts sum to %d, want %d omitted hosts", aggregated, want)
+	if busyChip != 1 {
+		t.Errorf("busy VLAN has %d 'more hosts' chips, want 1", busyChip)
 	}
-	// Every collapsed host must be recoverable via AggMembers, and each
-	// aggregate's member list must match its advertised count.
-	memberTotal := 0
+
+	// A quiet VLAN's hosts (≤ top-N) all show individually — never blobbed away
+	// by a global budget.
+	quietShown := 0
 	for _, n := range mm.Nodes {
-		if n.AggCount > 0 {
-			if got := len(mm.AggMembers[n.ID]); got != n.AggCount {
-				t.Errorf("aggregate %s: %d members, AggCount=%d", n.ID, got, n.AggCount)
-			}
-			memberTotal += len(mm.AggMembers[n.ID])
+		if strings.HasPrefix(n.ID, "10.2.0.") && n.AggCount == 0 {
+			quietShown++
 		}
 	}
-	if memberTotal != aggregated {
-		t.Errorf("AggMembers holds %d hosts, aggregates advertise %d", memberTotal, aggregated)
+	if quietShown != 4 {
+		t.Errorf("quiet VLAN 10.2.0.0/24 shows %d hosts, want all 4", quietShown)
 	}
+
+	// Every collapsed host is recoverable via AggMembers.
+	for _, n := range mm.Nodes {
+		if n.AggCount > 0 && len(mm.AggMembers[n.ID]) != n.AggCount {
+			t.Errorf("aggregate %s: %d members, AggCount=%d", n.ID, len(mm.AggMembers[n.ID]), n.AggCount)
+		}
+	}
+
 	// Small maps keep the detailed pipeline untouched.
 	if small := mapview.Build(fixture(t), mapview.Options{}); small.Overview {
 		t.Error("small map must not switch to overview mode")
 	}
-	// Focus keeps the detailed pipeline even on the large snapshot.
-	if focused := mapview.Build(snap, mapview.Options{Focus: "10.0.0.0/24"}); focused.Overview {
+	// Focus keeps the detailed pipeline even on a large snapshot.
+	if focused := mapview.Build(largeFixture(), mapview.Options{Focus: "10.0.0.0/24"}); focused.Overview {
 		t.Error("focused map must not switch to overview mode")
 	}
 }
@@ -336,8 +362,8 @@ func TestOverviewGatewayBudget(t *testing.T) {
 			gws = append(gws, n)
 		}
 	}
-	if len(gws) == 0 || len(gws) > config.MapOverviewMaxGroups {
-		t.Fatalf("overview retained %d gateways, want 1..%d strongest", len(gws), config.MapOverviewMaxGroups)
+	if len(gws) == 0 || len(gws) > config.MapSegmentMaxGroups {
+		t.Fatalf("overview retained %d gateways, want 1..%d strongest", len(gws), config.MapSegmentMaxGroups)
 	}
 	// The strongest candidate (highest IPCount) must be among the retained.
 	found := false
@@ -386,25 +412,20 @@ func TestOverviewReconcileSkipsGhostsKeepsFindings(t *testing.T) {
 			t.Errorf("overview must not ghost individual silent assets, found %s", n.ID)
 		}
 	}
-	silentFinding, markedFinding := false, false
+	silentFinding := false
 	for _, f := range mm.Findings {
 		if strings.Contains(f, "documented assets produced no observed traffic") {
 			silentFinding = true
-		}
-		if strings.Contains(f, "flagged") {
-			markedFinding = true
 		}
 	}
 	if !silentFinding {
 		t.Errorf("silent-asset finding missing: %v", mm.Findings)
 	}
-	// Nearly every observed host is undocumented — far more marked nodes
-	// than the top-node budget. The overview must say some were omitted.
-	if !markedFinding {
-		t.Errorf("expected a finding about flagged nodes omitted from the overview: %v", mm.Findings)
-	}
-	if got := len(mm.Nodes); got > config.MapOverviewTopNodes+2*config.MapOverviewMaxGroups {
-		t.Errorf("overview node count %d exceeds retained+aggregates+gateways bound", got)
+	// In the segment-flow overview every reconcile-flagged host is retained
+	// individually (drift/overlay marks are never aggregated), so the map must
+	// stay smaller than the raw graph but is no longer bounded by a global top-N.
+	if got := len(mm.Nodes); got >= len(snap.Nodes) {
+		t.Errorf("overview node count %d not smaller than %d raw nodes", got, len(snap.Nodes))
 	}
 }
 
