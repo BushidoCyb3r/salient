@@ -253,6 +253,56 @@ func TestPinToMapOverlaysAndRetains(t *testing.T) {
 	}
 }
 
+func TestShowAllPrivatePromotesRFC1918(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	path := filepath.Join(dataDir, "snapshot.json.gz")
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(rank)*0.002, Rank: rank}})
+	}
+	// 50 private hosts (past the top-N cut) + enough external to force overview.
+	for i := 0; i < 50; i++ {
+		add(fmt.Sprintf("10.0.0.%d", i+1), "10.0.0.0/24")
+	}
+	for i := 0; i < 100; i++ {
+		add(fmt.Sprintf("8.8.%d.1", i), fmt.Sprintf("8.8.%d.0/24", i))
+	}
+	writeSnapshot(t, path, graph.Snapshot{Nodes: nodes})
+
+	// Off: a low-ranked private host is aggregated.
+	m, err := a.LoadModel(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if nodeInModel(m, "10.0.0.50") {
+		t.Fatal("host 10.0.0.50 should be aggregated by default")
+	}
+
+	// On: every private host is its own node.
+	if err := a.SetShowAllPrivate(true); err != nil {
+		t.Fatal(err)
+	}
+	m, _ = a.LoadModel(path)
+	for i := 0; i < 50; i++ {
+		if !nodeInModel(m, fmt.Sprintf("10.0.0.%d", i+1)) {
+			t.Fatalf("private host 10.0.0.%d not promoted", i+1)
+		}
+	}
+}
+
+func nodeInModel(m *mapview.Model, id string) bool {
+	for _, n := range m.Nodes {
+		if n.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
 func TestLoadModelSurvivesCorruptRegistry(t *testing.T) {
 	dataDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dataDir, "devices.json"), []byte("{corrupt"), 0o600); err != nil {

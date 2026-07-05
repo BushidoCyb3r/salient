@@ -3,6 +3,7 @@ package mapview
 import (
 	"fmt"
 	"net/netip"
+	"strings"
 	"testing"
 
 	"github.com/BushidoCyb3r/defilade/internal/config"
@@ -91,6 +92,45 @@ func TestOverviewPinsLowRankHost(t *testing.T) {
 			if mem.ID == pin {
 				t.Errorf("pinned host also collapsed into aggregate %q", mem.ID)
 			}
+		}
+	}
+}
+
+// TestOverviewRetainAllPrivate promotes every RFC1918 host to its own node
+// while external peers still collapse, and enforces the cap.
+func TestOverviewRetainAllPrivate(t *testing.T) {
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(rank)*0.001, Rank: rank}})
+	}
+	// 40 private hosts across two VLANs (well past the top-N cut).
+	for i := 0; i < 20; i++ {
+		add(fmt.Sprintf("10.10.40.%d", i+1), "10.10.40.0/24")
+		add(fmt.Sprintf("192.168.5.%d", i+1), "192.168.5.0/24")
+	}
+	// External peers — must NOT be promoted.
+	for i := 0; i < 30; i++ {
+		add(fmt.Sprintf("8.8.%d.1", i), fmt.Sprintf("8.8.%d.0/24", i))
+	}
+	m := buildOverview(graph.Snapshot{Nodes: nodes},
+		Options{GroupPrefix: 24, RetainAllPrivate: true}, nil, nil, 999)
+
+	own := map[string]bool{}
+	for _, n := range m.Nodes {
+		own[n.ID] = true
+	}
+	for i := 0; i < 20; i++ {
+		if !own[fmt.Sprintf("10.10.40.%d", i+1)] || !own[fmt.Sprintf("192.168.5.%d", i+1)] {
+			t.Fatalf("private host not promoted: 10.10.40.%d / 192.168.5.%d", i+1, i+1)
+		}
+	}
+	// No external host got its own node.
+	for id := range own {
+		if strings.HasPrefix(id, "8.8.") {
+			t.Errorf("external host %s promoted — should stay in the external aggregate", id)
 		}
 	}
 }

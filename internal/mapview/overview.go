@@ -62,12 +62,38 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 			retained[nodes[i].IP] = true
 		}
 	}
+	// "Show all private": promote every RFC1918 terrain host to its own node,
+	// rank-ordered, up to the cap so a huge internal grid can't produce an
+	// unrenderable hairball.
+	privateTotal, privatePromoted := 0, 0
+	if opts.RetainAllPrivate {
+		for _, i := range idx {
+			n := &nodes[i]
+			if !graph.TerrainAddr(n.IP) || !internalCIDR(n.Subnet) {
+				continue
+			}
+			privateTotal++
+			if retained[n.IP] {
+				continue
+			}
+			if privatePromoted >= config.MapAllPrivateCap {
+				continue
+			}
+			retained[n.IP] = true
+			privatePromoted++
+		}
+	}
 	omittedMarked := 0
 	topN := 0
 	for _, i := range idx {
 		n := &nodes[i]
 		if retained[n.IP] {
-			continue // already pinned in
+			continue // already pinned or promoted
+		}
+		// With show-all-private on, external hosts always stay in the external
+		// aggregate — never individually promoted by rank.
+		if opts.RetainAllPrivate && !internalCIDR(n.Subnet) {
+			continue
 		}
 		if !graph.TerrainAddr(n.IP) || topN >= config.MapOverviewTopNodes {
 			if nodeDrift[n.IP] != "" {
@@ -229,6 +255,9 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	}
 	if omittedMarked > 0 {
 		m.Findings = append(m.Findings, fmt.Sprintf("%d flagged hosts did not fit the overview and appear only in the report or a focused map", omittedMarked))
+	}
+	if opts.RetainAllPrivate && privateTotal > config.MapAllPrivateCap {
+		m.Findings = append(m.Findings, fmt.Sprintf("show-all-private: %d RFC1918 hosts exceed the %d cap — showing the %d highest-ranked, the rest re-aggregated (map would be too dense otherwise)", privateTotal, config.MapAllPrivateCap, privatePromoted))
 	}
 	if n := m.Elements(); n > config.MapTargetElements {
 		m.Findings = append(m.Findings, fmt.Sprintf("overview exceeds the %d-element target (%d) because flagged changes are never dropped", config.MapTargetElements, n))

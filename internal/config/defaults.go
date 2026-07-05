@@ -68,6 +68,7 @@ const (
 	MapMaxElements        = 120  // above this, unfocused maps condense to an overview
 	MapOverviewTopNodes   = 20   // overview mode: individually retained top-ranked hosts
 	MapOverviewMaxGroups  = 12   // overview mode: max subnet group boxes (true-prefix, no coarsening)
+	MapAllPrivateCap      = 1500 // "show all private" ceiling: promote at most this many RFC1918 hosts before the rest re-aggregate
 )
 
 // Drift detection (DEFILADE_PLAN.md Phase 2).

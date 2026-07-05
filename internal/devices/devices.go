@@ -27,10 +27,11 @@ type Device struct {
 // Registry is the whole devices.json document.
 type Registry struct {
 	Devices        []Device            `json:"devices"`
-	Labels         map[string][]string `json:"labels,omitempty"`          // ip -> durable labels
-	RoleOverrides  map[string]string   `json:"role_overrides,omitempty"`  // ip -> operator-corrected role
-	DismissedHints []string            `json:"dismissed_hints,omitempty"` // hint keys never to re-show
-	Pinned         []string            `json:"pinned_ips,omitempty"`      // IPs force-retained as their own map node
+	Labels         map[string][]string `json:"labels,omitempty"`           // ip -> durable labels
+	RoleOverrides  map[string]string   `json:"role_overrides,omitempty"`   // ip -> operator-corrected role
+	DismissedHints []string            `json:"dismissed_hints,omitempty"`  // hint keys never to re-show
+	Pinned         []string            `json:"pinned_ips,omitempty"`       // IPs force-retained as their own map node
+	ShowAllPrivate bool                `json:"show_all_private,omitempty"` // promote every RFC1918 host to its own overview node
 }
 
 // Load reads the registry; a missing file is an empty registry.

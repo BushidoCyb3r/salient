@@ -31,6 +31,10 @@ type Options struct {
 	Focus       string            // optional CIDR: keep only groups intersecting it
 	GroupLabels map[string]string // CIDR → human name (§8.2 asset-doc enrichment)
 	Pinned      map[string]bool   // IPs force-retained as their own overview node
+	// RetainAllPrivate promotes every RFC1918 host to its own overview node
+	// (rank-ordered, capped at config.MapAllPrivateCap). External hosts still
+	// collapse. For grids with a manageable internal host count.
+	RetainAllPrivate bool
 }
 
 func (o Options) withDefaults() Options {

@@ -102,6 +102,12 @@ func (a *App) UnpinFromMap(ip string) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { r.Unpin(ip); return nil })
 }
 
+// SetShowAllPrivate toggles promoting every RFC1918 host to its own overview
+// node. Persisted so the choice survives reloads; the caller reloads the map.
+func (a *App) SetShowAllPrivate(on bool) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { r.ShowAllPrivate = on; return nil })
+}
+
 // overrideTiers maps known override roles (lowercased) to their map tier.
 // Free-text overrides not listed here keep the node's inferred tier.
 var overrideTiers = map[string]mapview.Tier{

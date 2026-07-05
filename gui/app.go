@@ -131,14 +131,14 @@ func (a *App) mapOptions() mapview.Options {
 	if err != nil {
 		return mapview.Options{}
 	}
-	if len(reg.Pinned) == 0 {
-		return mapview.Options{}
+	opts := mapview.Options{RetainAllPrivate: reg.ShowAllPrivate}
+	if len(reg.Pinned) > 0 {
+		opts.Pinned = make(map[string]bool, len(reg.Pinned))
+		for _, ip := range reg.Pinned {
+			opts.Pinned[ip] = true
+		}
 	}
-	pinned := make(map[string]bool, len(reg.Pinned))
-	for _, ip := range reg.Pinned {
-		pinned[ip] = true
-	}
-	return mapview.Options{Pinned: pinned}
+	return opts
 }
 
 // LoadModel loads a snapshot and re-derives its briefing-map model fresh.
