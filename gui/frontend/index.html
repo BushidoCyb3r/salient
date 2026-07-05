@@ -177,12 +177,13 @@
       </div>
       <h2>Layout</h2>
       <button id="b-fcose" class="on">organic</button><button id="b-dagre">tiered</button>
+      <button id="backbtn" style="display:none;margin-top:6px;width:100%" title="Return to the segment-flow overview">← overview</button>
       <h2>Layers</h2>
       <div class="ctl">
         <label><input type="checkbox" id="l-heat"> criticality heat</label>
         <label><input type="checkbox" id="l-lbl" checked> edge labels</label>
         <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
-        <label title="Promote every private (RFC1918) host to its own node instead of collapsing them"><input type="checkbox" id="l-allpriv"> show all private hosts</label>
+        <label title="Escape hatch: promote every private (RFC1918) host to its own node. Dense on large grids — the default segment view is usually clearer; drill into a VLAN box instead."><input type="checkbox" id="l-allpriv"> show every private host (dense)</label>
       </div>
       <h2>Search</h2>
       <input id="search" placeholder="IP, hostname, role...">

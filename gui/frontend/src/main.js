@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -267,6 +267,8 @@ let currentSnapshotPath = '';
 function openSnapshot(path) {
   LoadModel(path).then((model) => {
     currentSnapshotPath = path;
+    drilledCIDR = '';
+    $('backbtn').style.display = 'none';
     closeHostList();
     $('exportbtn').disabled = false;
     $('ai-tagbtn').disabled = false;
@@ -357,9 +359,13 @@ $('ai-tagbtn').onclick = async () => {
 };
 
 function renderModel(model) {
+  // Each view gets its best-fit default layout: the segment-flow overview reads
+  // as directional flow (tiered/dagre); focused/detail maps use organic. The
+  // operator can still toggle freely afterward.
+  curLayout = model.overview ? 'dagre' : 'fcose';
   const els = [];
   for (const g of model.groups || []) {
-    els.push({ data: { id: g.id, label: g.label }, classes: 'grp' + (g.blind_spot ? ' blind' : '') });
+    els.push({ data: { id: g.id, label: g.label, cidr: g.cidr || '' }, classes: 'grp' + (g.blind_spot ? ' blind' : '') + (g.cidr ? ' drillable' : '') });
   }
   for (const n of model.nodes || []) {
     els.push({
@@ -391,6 +397,7 @@ function renderModel(model) {
     style: [
       { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 18 } },
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
+      { selector: 'node.grp.drillable', style: { label: (ele) => '▸ ' + ele.data('label'), 'border-color': '#3d4450' } },
       { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
@@ -436,7 +443,33 @@ function renderModel(model) {
     if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('label')); return; }
     showNodeEvidence(n);
   });
+  // Drill into a segment: tap its VLAN box to re-render focused on that CIDR.
+  cy.on('tap', 'node.drillable', (e) => {
+    const cidr = e.target.data('cidr');
+    if (cidr) drillInto(cidr);
+  });
 }
+
+let drilledCIDR = '';
+
+function drillInto(cidr) {
+  if (!currentSnapshotPath) return;
+  LoadFocusedModel(currentSnapshotPath, cidr).then((model) => {
+    drilledCIDR = cidr;
+    const back = $('backbtn');
+    back.style.display = 'inline-block';
+    back.textContent = '← overview';
+    closeHostList();
+    renderModel(model);
+    logLine('drilled into ' + cidr + ' (full detail)', 'ok');
+  }).catch((err) => logLine('drill-in failed: ' + err, 'err'));
+}
+
+$('backbtn').onclick = () => {
+  drilledCIDR = '';
+  $('backbtn').style.display = 'none';
+  if (currentSnapshotPath) openSnapshot(currentSnapshotPath);
+};
 
 function showNodeEvidence(n) {
   const ev = $('ev');
