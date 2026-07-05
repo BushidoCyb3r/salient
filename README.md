@@ -12,6 +12,8 @@ The desktop console is the primary interface. It connects to the grid, runs scan
 with live progress, browses saved snapshots, investigates role evidence, and
 exports maps from one native window on Linux, macOS, or Windows.
 
+Release history is tracked in [CHANGELOG.md](CHANGELOG.md).
+
 ## Operator console
 
 The console provides:
