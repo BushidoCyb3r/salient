@@ -41,6 +41,16 @@ func TestNamedPortClasses(t *testing.T) {
 		{135, "msrpc", ClassOther},
 		{1883, "mqtt", ClassOther},
 		{161, "snmp", ClassOther},
+		// Network-vendor protocols.
+		{5246, "capwap", ClassOther},
+		{8211, "papi", ClassOther},
+		{4786, "smart-install", ClassOther},
+		{49, "tacacs", ClassOther},
+		{6789, "unifi-speedtest", ClassOther},
+		{4343, "aruba-https", ClassWeb},
+		{7734, "meraki-cloud", ClassOther},
+		{3221, "jms", ClassOther},
+		{2083, "radsec", ClassOther},
 	}
 	for _, c := range checks {
 		if got := KnownService(c.port); got != c.name {
@@ -59,5 +69,18 @@ func TestNamedPortClasses(t *testing.T) {
 	}
 	if got := ServiceName(49152); got != "port-49152" {
 		t.Errorf("ServiceName(49152) = %q", got)
+	}
+}
+
+func TestNetworkGearPorts(t *testing.T) {
+	for _, p := range []uint16{5246, 5247, 8211, 4786, 49, 6789, 8880} {
+		if !IsNetworkGearPort(p) {
+			t.Errorf("port %d should be a network-gear port", p)
+		}
+	}
+	for _, p := range []uint16{161, 1812, 443, 22} { // shared by endpoints
+		if IsNetworkGearPort(p) {
+			t.Errorf("port %d must not trigger NetworkGear (endpoints use it)", p)
+		}
 	}
 }

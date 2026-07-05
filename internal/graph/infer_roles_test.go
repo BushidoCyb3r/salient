@@ -16,6 +16,8 @@ func TestInferDeviceServiceRoles(t *testing.T) {
 		{Src: "10.0.0.3", Dst: "10.0.0.70", Port: 993, ConnCount: 5},   // mail client 2
 		{Src: "10.0.0.2", Dst: "10.0.0.80", Port: 587, ConnCount: 5},   // only 1 client — no mail role
 		{Src: "10.0.0.2", Dst: "10.0.0.90", Port: 49200, ConnCount: 5}, // unknown port — nothing
+		{Src: "10.0.0.9", Dst: "10.0.0.40", Port: 5246, ConnCount: 8},  // capwap → NetworkGear (WLC)
+		{Src: "10.0.0.2", Dst: "10.0.0.41", Port: 161, ConnCount: 8},   // snmp only — not gear
 	}
 	m := graph.Build(edges)
 	m.InferRoles(graph.Evidence{})
@@ -25,13 +27,14 @@ func TestInferDeviceServiceRoles(t *testing.T) {
 		"10.0.0.55": graph.RolePrinter,
 		"10.0.0.60": graph.RoleCamera,
 		"10.0.0.70": graph.RoleMail,
+		"10.0.0.40": graph.RoleNetworkGear,
 	}
 	for ip, role := range wants {
 		if !hasRole(*m.Nodes[ip], role) {
 			t.Errorf("%s: expected role %s, got %+v", ip, role, m.Nodes[ip].Roles)
 		}
 	}
-	for _, ip := range []string{"10.0.0.80", "10.0.0.90"} {
+	for _, ip := range []string{"10.0.0.80", "10.0.0.90", "10.0.0.41"} {
 		if got := m.Nodes[ip].TopRole(); got != graph.RoleUnknown {
 			t.Errorf("%s: expected Unknown, got %s", ip, got)
 		}

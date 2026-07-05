@@ -29,16 +29,17 @@ func TerrainAddr(ip string) bool {
 type Role string
 
 const (
-	RoleDC         Role = "DomainController"
-	RoleDNS        Role = "DNSServer"
-	RoleFileServer Role = "FileServer"
-	RoleDatabase   Role = "Database"
-	RoleJumpBox    Role = "JumpBox"
-	RoleWebServer  Role = "WebServer"
-	RolePrinter    Role = "Printer"
-	RoleCamera     Role = "Camera"
-	RoleMail       Role = "MailServer"
-	RoleUnknown    Role = "Unknown"
+	RoleDC          Role = "DomainController"
+	RoleDNS         Role = "DNSServer"
+	RoleFileServer  Role = "FileServer"
+	RoleDatabase    Role = "Database"
+	RoleJumpBox     Role = "JumpBox"
+	RoleWebServer   Role = "WebServer"
+	RolePrinter     Role = "Printer"
+	RoleCamera      Role = "Camera"
+	RoleMail        Role = "MailServer"
+	RoleNetworkGear Role = "NetworkGear"
+	RoleUnknown     Role = "Unknown"
 )
 
 // RoleAssertion is one inferred role with the evidence that justifies it. A

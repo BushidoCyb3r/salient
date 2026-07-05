@@ -28,6 +28,7 @@ func (m *Model) InferRoles(ev Evidence) {
 	printerClients := m.clientCounts(func(p uint16) bool { return p == 631 || p == 9100 })
 	cameraClients := m.clientCounts(func(p uint16) bool { return p == 554 })
 	mailClients := m.clientCounts(isMailPort)
+	gearClients := m.clientCounts(config.IsNetworkGearPort)
 
 	for ip, n := range m.Nodes {
 		var roles []RoleAssertion
@@ -79,6 +80,12 @@ func (m *Model) InferRoles(ev Evidence) {
 		if c := mailClients[ip]; c >= config.RoleMailMinClients {
 			roles = append(roles, assert(RoleMail, int64(c), config.RoleMailMinClients,
 				fmt.Sprintf("%d distinct hosts connected on mail ports (smtp/imap/pop3)", c)))
+		}
+		// NetworkGear: controller/switch/AP-only protocols (capwap, papi,
+		// smart-install, tacacs) — endpoints never serve these.
+		if c := gearClients[ip]; c >= config.RoleNetworkGearMinClients {
+			roles = append(roles, assert(RoleNetworkGear, int64(c), config.RoleNetworkGearMinClients,
+				fmt.Sprintf("%d host(s) used network-infrastructure protocols (capwap/papi/tacacs/smart-install) to this host", c)))
 		}
 		// JumpBox: few admin sessions in, many out (graph shape).
 		if sh, ok := shape[ip]; ok && sh.inDeg <= config.RoleJumpMaxInDegree && sh.outDeg >= config.RoleJumpMinOutDegree {

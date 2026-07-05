@@ -121,16 +121,17 @@ const (
 
 // Role inference thresholds (DEFILADE_PLAN.md §7). Every magic number here.
 const (
-	RoleDCMinKerberosClients = 5
-	RoleDNSMinClients        = 5
-	RoleFileMinClients       = 3
-	RoleDBMinClients         = 2
-	RoleWebMinClients        = 5
-	RoleJumpMaxInDegree      = 3
-	RoleJumpMinOutDegree     = 5
-	RolePrinterMinClients    = 1
-	RoleCameraMinClients     = 1
-	RoleMailMinClients       = 2
+	RoleDCMinKerberosClients  = 5
+	RoleDNSMinClients         = 5
+	RoleFileMinClients        = 3
+	RoleDBMinClients          = 2
+	RoleWebMinClients         = 5
+	RoleJumpMaxInDegree       = 3
+	RoleJumpMinOutDegree      = 5
+	RolePrinterMinClients     = 1
+	RoleCameraMinClients      = 1
+	RoleMailMinClients        = 2
+	RoleNetworkGearMinClients = 1
 )
 
 // Scoring weights (DEFILADE_PLAN.md §10). Sum ≈ 1.0.
@@ -182,7 +183,7 @@ var portClass = map[uint16]ServiceClass{
 	8000: ClassWeb, 8888: ClassWeb, 3000: ClassWeb, 8006: ClassWeb,
 	32400: ClassWeb, 8123: ClassWeb, 5000: ClassWeb, 9090: ClassWeb,
 	10443: ClassWeb, 8843: ClassWeb, 8530: ClassWeb, 8531: ClassWeb,
-	6443: ClassWeb,
+	6443: ClassWeb, 4343: ClassWeb,
 	// admin
 	3389: ClassAdmin, 22: ClassAdmin, 5900: ClassAdmin, 5901: ClassAdmin,
 	5902: ClassAdmin, 23: ClassAdmin, 5985: ClassAdmin, 5986: ClassAdmin,
@@ -224,7 +225,26 @@ var portName = map[uint16]string{
 	135: "msrpc", 593: "rpc-http", 902: "vmware",
 	500: "ike", 4500: "ipsec-nat", 1723: "pptp", 1194: "openvpn", 51820: "wireguard",
 	25565: "minecraft",
+	// Network-vendor protocols (UniFi, Cisco, Aruba, Meraki, Juniper).
+	5246: "capwap", 5247: "capwap-data", 8211: "papi", 4786: "smart-install",
+	49: "tacacs", 1645: "radius-legacy", 1646: "radius-legacy-acct",
+	6789: "unifi-speedtest", 8880: "unifi-http", 10001: "unifi-discovery", 3478: "stun",
+	4343: "aruba-https", 2083: "radsec", 7734: "meraki-cloud", 9350: "meraki-mtunnel",
+	3221: "jms", 7804: "juniper-space", 546: "dhcpv6", 547: "dhcpv6",
 }
+
+// networkGearPorts are served only by controllers, switches, and APs —
+// never by ordinary endpoints — so a responder here is network gear.
+var networkGearPorts = map[uint16]bool{
+	5246: true, 5247: true, // capwap (WLC <-> AP)
+	8211: true,             // aruba papi
+	4786: true,             // cisco smart-install
+	49:   true,             // tacacs+
+	6789: true, 8880: true, // unifi
+}
+
+// IsNetworkGearPort reports whether a responder port implies network gear.
+func IsNetworkGearPort(port uint16) bool { return networkGearPorts[port] }
 
 // ClassForPort returns the service class of a responder port.
 func ClassForPort(port uint16) ServiceClass { return portClass[port] }

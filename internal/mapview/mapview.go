@@ -397,7 +397,7 @@ func evidence(n *graph.Node) []string {
 
 func tierOf(n *graph.Node) Tier {
 	switch n.TopRole() {
-	case graph.RoleDC, graph.RoleDNS:
+	case graph.RoleDC, graph.RoleDNS, graph.RoleNetworkGear:
 		return TierCore
 	case graph.RoleFileServer, graph.RoleDatabase, graph.RoleWebServer, graph.RoleJumpBox, graph.RoleMail:
 		return TierService
