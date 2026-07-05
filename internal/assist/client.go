@@ -104,7 +104,7 @@ func Analyze(ctx context.Context, cfg Config, snap graph.Snapshot) (Result, erro
 		return result, err
 	}
 
-	nodes, edges := summarize(snap, cfg.MaxNodes, cfg.MaxEdges)
+	nodes, edges := summarize(snap, cfg.MaxNodes, cfg.MaxEdges, nil)
 	payload, err := json.Marshal(struct {
 		Nodes []nodePayload `json:"nodes"`
 		Edges []edgePayload `json:"edges"`
@@ -132,13 +132,33 @@ func Analyze(ctx context.Context, cfg Config, snap graph.Snapshot) (Result, erro
 // IP (nil is fine); only entries for summarized nodes are sent. Returned IDs
 // are validated before the caller can display or persist them.
 func TagDevices(ctx context.Context, cfg Config, snap graph.Snapshot, facts map[string]OperatorFacts) (TagResult, error) {
+	return tagDevices(ctx, cfg, snap, facts, nil)
+}
+
+// TagDevicesForIPs tags only the listed hosts — the on-demand path for
+// aggregated "other hosts". Rejects more than AssistMaxNodes IPs so the
+// operator narrows the group first.
+func TagDevicesForIPs(ctx context.Context, cfg Config, snap graph.Snapshot, facts map[string]OperatorFacts, ips []string) (TagResult, error) {
+	if len(ips) > config.AssistMaxNodes {
+		return TagResult{}, fmt.Errorf("%d hosts requested, cap is %d — filter the list first", len(ips), config.AssistMaxNodes)
+	}
+	allow := make(map[string]bool, len(ips))
+	for _, ip := range ips {
+		allow[ip] = true
+	}
+	return tagDevices(ctx, cfg, snap, facts, allow)
+}
+
+// tagDevices is the shared tagging core; allow (when non-nil) restricts the
+// summarized nodes to exactly those IPs.
+func tagDevices(ctx context.Context, cfg Config, snap graph.Snapshot, facts map[string]OperatorFacts, allow map[string]bool) (TagResult, error) {
 	var result TagResult
 	var err error
 	cfg, err = prepareConfig(cfg)
 	if err != nil {
 		return result, err
 	}
-	nodes, edges := summarize(snap, cfg.MaxNodes, cfg.MaxEdges)
+	nodes, edges := summarize(snap, cfg.MaxNodes, cfg.MaxEdges, allow)
 	for i := range nodes {
 		if f, ok := facts[nodes[i].ID]; ok {
 			f := f
@@ -371,8 +391,13 @@ func validateEndpoint(raw string, allowRemote bool) error {
 	return nil
 }
 
-func summarize(snap graph.Snapshot, maxNodes, maxEdges int) ([]nodePayload, []edgePayload) {
-	nodes := append([]graph.Node(nil), snap.Nodes...)
+func summarize(snap graph.Snapshot, maxNodes, maxEdges int, allow map[string]bool) ([]nodePayload, []edgePayload) {
+	nodes := make([]graph.Node, 0, len(snap.Nodes))
+	for _, n := range snap.Nodes {
+		if allow == nil || allow[n.IP] {
+			nodes = append(nodes, n)
+		}
+	}
 	sort.Slice(nodes, func(i, j int) bool {
 		ri, rj := nodes[i].Scores.Rank, nodes[j].Scores.Rank
 		if ri == 0 {

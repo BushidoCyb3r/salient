@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -209,6 +210,41 @@ func TestTagDevicesSendsOperatorFacts(t *testing.T) {
 	}
 	if strings.Contains(body, "ghost") {
 		t.Error("facts for nodes outside the summary must not be sent")
+	}
+}
+
+func TestTagDevicesForIPsFiltersAndCaps(t *testing.T) {
+	var captured []byte
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		captured, _ = io.ReadAll(r.Body)
+		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.2\",\"tags\":[\"printer\"],\"confidence\":0.8,\"rationale\":\"ipp\"}]}"}}]}`)
+	}))
+	defer server.Close()
+
+	snap := graph.Snapshot{Nodes: []graph.Node{
+		{IP: "10.0.0.1"}, {IP: "10.0.0.2"}, {IP: "10.0.0.3"},
+	}}
+	_, err := TagDevicesForIPs(context.Background(), Config{
+		Provider: ProviderOpenAI, Endpoint: server.URL, Model: "test",
+	}, snap, nil, []string{"10.0.0.2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(captured)
+	if !strings.Contains(body, "10.0.0.2") {
+		t.Error("requested host missing from payload")
+	}
+	if strings.Contains(body, "10.0.0.1") || strings.Contains(body, "10.0.0.3") {
+		t.Error("non-requested hosts leaked into payload")
+	}
+
+	// Over the cap is rejected before any request.
+	many := make([]string, 101)
+	for i := range many {
+		many[i] = "10.0.0." + strconv.Itoa(i)
+	}
+	if _, err := TagDevicesForIPs(context.Background(), Config{Provider: ProviderOpenAI, Endpoint: server.URL, Model: "test"}, snap, nil, many); err == nil {
+		t.Fatal("expected over-cap rejection")
 	}
 }
 
