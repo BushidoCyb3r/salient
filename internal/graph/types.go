@@ -106,6 +106,7 @@ type Node struct {
 	FirstSeen time.Time       `json:"first_seen"`
 	LastSeen  time.Time       `json:"last_seen"`
 	Sensors   []string        `json:"sensors,omitempty"`
+	MAC       string          `json:"mac,omitempty"` // responder MAC (own NIC; gateway MACs excluded)
 	Scores    ScoreSet        `json:"scores"`
 }
 

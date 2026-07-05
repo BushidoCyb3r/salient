@@ -84,6 +84,19 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	}
 
 	m := graph.Build(edges)
+
+	// Per-node responder MAC (gateway MACs excluded) — powers OUI vendor
+	// identification. Best-effort: no MAC fields just means no vendors.
+	if macs, err := cli.FetchNodeMACs(ctx, fm, opts.Window); err != nil {
+		emit("node-mac", fmt.Sprintf("per-node MAC query failed, nodes will have no vendor: %v", err), true)
+	} else {
+		for ip, mac := range macs {
+			if n, ok := m.Nodes[ip]; ok {
+				n.MAC = mac
+			}
+		}
+	}
+
 	res := score.Score(m)
 	scored := fmt.Sprintf("%d nodes scored", res.NodeCount)
 	if res.BetweennessSampled {
