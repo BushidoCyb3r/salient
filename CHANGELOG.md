@@ -10,12 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Segment-flow map** is the new default for large grids: every real internal
   VLAN gets its own box (never lumped into "other internal networks"), each
-  showing its own top hosts plus an "N more hosts" chip; inter-segment
-  dependencies are bundled by service class and never trimmed. Click a VLAN box
-  (▸) to drill into a focused, full-detail view of that segment, then "←
-  overview" to return. The overview defaults to the tiered/directional layout.
-  Replaces the old global top-20 + group-cap condensation, which lumped
-  lightly-populated real segments together and let a busy VLAN starve the rest.
+  showing its own top hosts plus an "N more hosts" chip. The default flow view
+  is a high-level **segment→segment backbone** (one aggregated line per VLAN
+  pair, colored by dominant service class and sized by volume) — logical flow at
+  a glance instead of an N² host-level mesh. **Click a host** to light its own
+  connections, **click a VLAN box** to light everything that segment talks to,
+  **double-click a VLAN** to drill into its full detail (then "← overview"), and
+  **show all flows** draws the full mesh. Overview defaults to the
+  tiered/directional layout. Replaces the old global top-20 + group-cap
+  condensation, which lumped lightly-populated real segments together and let a
+  busy VLAN starve the rest.
 - **Show every private host (dense)** map toggle — an escape hatch that promotes
   every RFC1918 host to its own node instead of collapsing low-ranked ones into
   aggregates, while external peers still condense. Every connection between the visible hosts is drawn

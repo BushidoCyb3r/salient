@@ -387,7 +387,30 @@ function renderModel(model) {
     const e = edges[i];
     els.push({
       data: { id: 'e' + i, source: e.src, target: e.dst, color: e.color, width: e.width, label: e.label, drift: e.drift || '' },
-      classes: e.drift ? 'drift-' + e.drift : '',
+      classes: 'host-edge' + (e.drift ? ' drift-' + e.drift : ''),
+    });
+  }
+  // High-level backbone: collapse the host-level edges into one aggregated
+  // segment→segment line per VLAN pair (colored by the dominant service class,
+  // thickness by volume). This is the default "logical flow" view; host-level
+  // edges stay hidden until a host or segment is selected.
+  const ipGroup = {};
+  for (const n of model.nodes || []) ipGroup[n.id] = n.group || '';
+  const seg = {};
+  for (const e of edges) {
+    const gs = ipGroup[e.src], gd = ipGroup[e.dst];
+    if (!gs || !gd || gs === gd) continue; // inter-segment only
+    const k = gs + '' + gd;
+    const s = seg[k] || (seg[k] = { src: gs, dst: gd, w: 0, best: 0, color: e.color });
+    s.w += e.width || 1;
+    if ((e.width || 0) > s.best) { s.best = e.width || 0; s.color = e.color; }
+  }
+  const segArr = Object.values(seg).sort((a, b) => b.w - a.w).slice(0, 120);
+  for (let i = 0; i < segArr.length; i++) {
+    const s = segArr[i];
+    els.push({
+      data: { id: 'seg' + i, source: s.src, target: s.dst, color: s.color, segw: Math.min(8, 1 + Math.log1p(s.w)) },
+      classes: 'seg-edge',
     });
   }
 
@@ -412,6 +435,7 @@ function renderModel(model) {
       { selector: 'node.drift-silent', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
       { selector: 'node.drift-contradicted', style: { 'border-color': '#e3a008', 'border-width': 4, 'border-style': 'double' } },
       { selector: 'edge', style: { 'curve-style': 'bezier', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)', 'target-arrow-shape': 'triangle', width: 'data(width)', label: 'data(label)', 'font-size': 9, color: '#8b949e', 'text-rotation': 'autorotate', 'text-background-color': '#0b0f14', 'text-background-opacity': 0.85, opacity: 0.85 } },
+      { selector: 'edge.seg-edge', style: { 'curve-style': 'bezier', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)', 'target-arrow-shape': 'triangle', width: 'data(segw)', opacity: 0.55, 'z-index': 1, label: '' } },
       { selector: 'edge.e-hide', style: { display: 'none' } },
       { selector: 'edge.e-lit', style: { opacity: 0.95, width: 'mapData(width, 0, 6, 1.5, 7)', 'z-index': 20 } },
       { selector: 'node.nbr', style: { 'border-color': '#39d3ff', 'border-width': 3 } },
@@ -430,7 +454,7 @@ function renderModel(model) {
   // the host/segment you select. Small focused/detail maps show edges outright.
   edgesHidden = !!model.overview && !$('l-flows').checked;
   applyEdgeVisibility();
-  if (edgesHidden) logLine('flows hidden for readability — click a host or a VLAN box to light up its connections, double-click a VLAN to drill in, or check "show all flows"', 'ok');
+  if (edgesHidden) logLine('showing high-level segment-to-segment flow — click a host or a VLAN box for its detailed connections, double-click a VLAN to drill in, or check "show all flows"', 'ok');
 
   $('l-heat').onchange = function () {
     if (this.checked) {
@@ -482,7 +506,7 @@ let lastSegTap = { id: '', t: 0 };
 // segment-level answer to "what does this VLAN talk to" — and dims the rest.
 function lightEdgesForSegment(g) {
   if (!cy || !edgesHidden) return;
-  const edges = g.children().connectedEdges();
+  const edges = g.children().connectedEdges('.host-edge');
   cy.batch(() => {
     cy.edges().addClass('e-hide').removeClass('e-lit');
     edges.removeClass('e-hide').addClass('e-lit');
@@ -493,23 +517,29 @@ function lightEdgesForSegment(g) {
 
 let edgesHidden = false;
 
-// applyEdgeVisibility resets edges to the current mode: hidden (structure only)
-// in the overview, or fully drawn when "show all flows" is on or in detail views.
+// applyEdgeVisibility resets to the default view: the high-level segment→segment
+// backbone drawn, host-level detail hidden. "show all flows" (!edgesHidden)
+// draws every host edge too; small detail/focused maps have no backbone and
+// just show their edges.
 function applyEdgeVisibility() {
   if (!cy) return;
   cy.batch(() => {
     cy.nodes().removeClass('nbr').removeClass('dim');
     cy.edges().removeClass('e-lit');
-    if (edgesHidden) cy.edges().addClass('e-hide');
-    else cy.edges().removeClass('e-hide');
+    if (edgesHidden) {
+      cy.edges('.host-edge').addClass('e-hide');
+      cy.edges('.seg-edge').removeClass('e-hide');
+    } else {
+      cy.edges().removeClass('e-hide');
+    }
   });
 }
 
-// lightEdgesFor reveals just the selected host's connections (and highlights
-// its neighbors), dimming the rest — focus+context instead of a full mesh.
+// lightEdgesFor reveals just the selected host's real (host-level) connections,
+// hiding the backbone and everything else — focus+context.
 function lightEdgesFor(n) {
   if (!cy || !edgesHidden) return;
-  const edges = n.connectedEdges();
+  const edges = n.connectedEdges('.host-edge');
   cy.batch(() => {
     cy.edges().addClass('e-hide').removeClass('e-lit');
     edges.removeClass('e-hide').addClass('e-lit');
