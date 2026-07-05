@@ -19,6 +19,7 @@ import (
 
 	"github.com/BushidoCyb3r/defilade/internal/assist"
 	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/defilade/internal/devices"
 	"github.com/BushidoCyb3r/defilade/internal/escli"
 	"github.com/BushidoCyb3r/defilade/internal/mapview"
 	"github.com/BushidoCyb3r/defilade/internal/reconcile"
@@ -122,6 +123,24 @@ func (a *App) finishModel(resolved string, model *mapview.Model) (*mapview.Model
 	return model, nil
 }
 
+// mapOptions builds the map Options from the operator registry — currently
+// the pin set that force-retains hosts as their own overview node. A corrupt
+// registry yields empty options rather than failing the map.
+func (a *App) mapOptions() mapview.Options {
+	reg, err := devices.Load(a.registryPath())
+	if err != nil {
+		return mapview.Options{}
+	}
+	if len(reg.Pinned) == 0 {
+		return mapview.Options{}
+	}
+	pinned := make(map[string]bool, len(reg.Pinned))
+	for _, ip := range reg.Pinned {
+		pinned[ip] = true
+	}
+	return mapview.Options{Pinned: pinned}
+}
+
 // LoadModel loads a snapshot and re-derives its briefing-map model fresh.
 func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	resolved := a.resolveSnapshotPath(path)
@@ -129,7 +148,7 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	return a.finishModel(resolved, mapview.Build(snap, mapview.Options{}))
+	return a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
 }
 
 // LoadDriftModel builds a drift-overlaid map: fromPath is the baseline,
@@ -145,7 +164,7 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 		return nil, err
 	}
 	d := snapshot.Compare(from, to, snapshot.DiffOptions{})
-	model := mapview.BuildDrift(to, d, mapview.Options{})
+	model := mapview.BuildDrift(to, d, a.mapOptions())
 	model.Findings = append(model.Findings, fmt.Sprintf(
 		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges",
 		from.Meta.CreatedAt.UTC().Format("20060102T150405Z"),
@@ -163,7 +182,7 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 	if err != nil {
 		return nil, err
 	}
-	hosts := mapview.Build(snap, mapview.Options{}).AggMembers[nodeID]
+	hosts := mapview.Build(snap, a.mapOptions()).AggMembers[nodeID]
 	sort.Slice(hosts, func(i, j int) bool {
 		x, y := hosts[i], hosts[j]
 		if (x.Rank > 0) != (y.Rank > 0) {
@@ -212,7 +231,7 @@ func (a *App) LoadReconcileModel(snapshotPath, assetsPath string) (*mapview.Mode
 		return nil, fmt.Errorf("asset CSV: %w", err)
 	}
 	res := reconcile.Compare(snap, assets)
-	model := mapview.BuildReconcile(snap, res, assets, mapview.Options{})
+	model := mapview.BuildReconcile(snap, res, assets, a.mapOptions())
 	for _, w := range warnings {
 		model.Findings = append(model.Findings, "asset CSV: "+w)
 	}
@@ -361,7 +380,7 @@ func (a *App) ExportMap(path string, format string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	mm := mapview.Build(snap, mapview.Options{})
+	mm := mapview.Build(snap, a.mapOptions())
 
 	var ext, filterName string
 	var render func(io.Writer, *mapview.Model) error

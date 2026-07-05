@@ -30,6 +30,7 @@ type Registry struct {
 	Labels         map[string][]string `json:"labels,omitempty"`          // ip -> durable labels
 	RoleOverrides  map[string]string   `json:"role_overrides,omitempty"`  // ip -> operator-corrected role
 	DismissedHints []string            `json:"dismissed_hints,omitempty"` // hint keys never to re-show
+	Pinned         []string            `json:"pinned_ips,omitempty"`      // IPs force-retained as their own map node
 }
 
 // Load reads the registry; a missing file is an empty registry.
@@ -214,6 +215,34 @@ func (r *Registry) Dismiss(key string) {
 func (r *Registry) Dismissed(key string) bool {
 	for _, k := range r.DismissedHints {
 		if k == key {
+			return true
+		}
+	}
+	return false
+}
+
+// Pin force-retains an IP as its own map node even when its rank would
+// otherwise collapse it into an aggregate. Idempotent.
+func (r *Registry) Pin(ip string) {
+	if !r.IsPinned(ip) {
+		r.Pinned = append(r.Pinned, ip)
+	}
+}
+
+// Unpin removes an IP from the pin set.
+func (r *Registry) Unpin(ip string) {
+	for i, p := range r.Pinned {
+		if p == ip {
+			r.Pinned = append(r.Pinned[:i], r.Pinned[i+1:]...)
+			return
+		}
+	}
+}
+
+// IsPinned reports whether an IP is force-retained.
+func (r *Registry) IsPinned(ip string) bool {
+	for _, p := range r.Pinned {
+		if p == ip {
 			return true
 		}
 	}

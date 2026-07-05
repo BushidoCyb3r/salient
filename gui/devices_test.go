@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -201,6 +202,54 @@ func TestMACHints(t *testing.T) {
 	reg.Dismiss("mac:24:5a:4c:11:22:33")
 	if got := macHints(nodes, &reg); len(got) != 0 {
 		t.Errorf("dismissed MAC hint reappeared: %#v", got)
+	}
+}
+
+func TestPinToMapOverlaysAndRetains(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	path := filepath.Join(dataDir, "snapshot.json.gz")
+	// >120 elements forces briefing-overview mode, where retention (and thus
+	// pinning) matters; a smaller map shows every node in detail regardless.
+	var nodes []graph.Node
+	for i := 0; i < 130; i++ {
+		nodes = append(nodes, graph.Node{
+			IP: fmt.Sprintf("10.0.%d.%d", i/250, i%250+1), Subnet: "10.0.0.0/24",
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(i)*0.005, Rank: i + 1},
+		})
+	}
+	writeSnapshot(t, path, graph.Snapshot{Nodes: nodes})
+
+	pin := "10.0.0.55" // below the top-N cut — normally aggregated
+	if err := a.PinToMap(pin); err != nil {
+		t.Fatal(err)
+	}
+	m, err := a.LoadModel(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var found bool
+	for _, n := range m.Nodes {
+		if n.ID == pin {
+			found = true
+			if !n.Pinned {
+				t.Error("pinned node not flagged Pinned in overlay")
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("pinned host %s not retained as its own node", pin)
+	}
+
+	// Unpin returns it to the aggregate.
+	if err := a.UnpinFromMap(pin); err != nil {
+		t.Fatal(err)
+	}
+	m, _ = a.LoadModel(path)
+	for _, n := range m.Nodes {
+		if n.ID == pin {
+			t.Fatalf("unpinned host still its own node")
+		}
 	}
 }
 

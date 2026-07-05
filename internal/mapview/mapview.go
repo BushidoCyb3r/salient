@@ -30,6 +30,7 @@ type Options struct {
 	MinConns    int64             // §8.5 noise floor for briefing edges
 	Focus       string            // optional CIDR: keep only groups intersecting it
 	GroupLabels map[string]string // CIDR → human name (§8.2 asset-doc enrichment)
+	Pinned      map[string]bool   // IPs force-retained as their own overview node
 }
 
 func (o Options) withDefaults() Options {
@@ -74,6 +75,7 @@ type MapNode struct {
 	Services             []string `json:"services,omitempty"`      // observed named responder services
 	MAC                  string   `json:"mac,omitempty"`           // observed responder MAC
 	Vendor               string   `json:"vendor,omitempty"`        // OUI vendor for the MAC
+	Pinned               bool     `json:"pinned,omitempty"`        // operator force-retained this host
 	SuggestedTags        []string `json:"suggested_tags,omitempty"`
 	SuggestionConfidence float64  `json:"suggestion_confidence,omitempty"`
 	SuggestionRationale  string   `json:"suggestion_rationale,omitempty"`

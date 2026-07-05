@@ -164,6 +164,22 @@ func TestDeleteAndDismiss(t *testing.T) {
 	}
 }
 
+func TestPinUnpin(t *testing.T) {
+	var r Registry
+	if r.IsPinned("10.0.0.9") {
+		t.Fatal("nothing pinned yet")
+	}
+	r.Pin("10.0.0.9")
+	r.Pin("10.0.0.9") // idempotent
+	if !r.IsPinned("10.0.0.9") || len(r.Pinned) != 1 {
+		t.Fatalf("Pin bookkeeping wrong: %#v", r.Pinned)
+	}
+	r.Unpin("10.0.0.9")
+	if r.IsPinned("10.0.0.9") || len(r.Pinned) != 0 {
+		t.Fatalf("Unpin left state: %#v", r.Pinned)
+	}
+}
+
 func TestSetRoleSetClearValidate(t *testing.T) {
 	var r Registry
 	if err := r.SetRole("10.0.0.1", "Camera"); err != nil {

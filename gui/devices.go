@@ -91,6 +91,17 @@ func (a *App) SetRole(ip, role string) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { return r.SetRole(ip, role) })
 }
 
+// PinToMap force-retains an IP as its own overview node; UnpinFromMap undoes
+// it. Both are idempotent; the caller reloads the map to see the change.
+func (a *App) PinToMap(ip string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { r.Pin(ip); return nil })
+}
+
+// UnpinFromMap removes an IP from the pin set.
+func (a *App) UnpinFromMap(ip string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { r.Unpin(ip); return nil })
+}
+
 // overrideTiers maps known override roles (lowercased) to their map tier.
 // Free-text overrides not listed here keep the node's inferred tier.
 var overrideTiers = map[string]mapview.Tier{
@@ -215,6 +226,7 @@ func overlayNodes(nodes []mapview.MapNode, reg *devices.Registry) {
 				nodes[i].Tier = t
 			}
 		}
+		nodes[i].Pinned = reg.IsPinned(nodes[i].ID)
 	}
 }
 

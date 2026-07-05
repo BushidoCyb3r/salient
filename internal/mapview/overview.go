@@ -54,16 +54,29 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		return rankLess(a, b)
 	})
 	retained := map[string]bool{}
+	// Operator-pinned hosts are retained additively — always their own node,
+	// on top of the rank-based top-N (their explicit choice can push the map
+	// past the element target).
+	for i := range nodes {
+		if opts.Pinned[nodes[i].IP] && graph.TerrainAddr(nodes[i].IP) {
+			retained[nodes[i].IP] = true
+		}
+	}
 	omittedMarked := 0
+	topN := 0
 	for _, i := range idx {
 		n := &nodes[i]
-		if !graph.TerrainAddr(n.IP) || len(retained) >= config.MapOverviewTopNodes {
+		if retained[n.IP] {
+			continue // already pinned in
+		}
+		if !graph.TerrainAddr(n.IP) || topN >= config.MapOverviewTopNodes {
 			if nodeDrift[n.IP] != "" {
 				omittedMarked++
 			}
 			continue
 		}
 		retained[n.IP] = true
+		topN++
 	}
 
 	// Internal (private) address space gets the real groups; every public,

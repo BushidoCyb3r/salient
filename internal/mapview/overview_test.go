@@ -62,6 +62,39 @@ func TestOverviewKeepsTruePrefixGroups(t *testing.T) {
 	}
 }
 
+// TestOverviewPinsLowRankHost: a pinned host far below the top-N cut still
+// gets its own map node instead of collapsing into the aggregate.
+func TestOverviewPinsLowRankHost(t *testing.T) {
+	var nodes []graph.Node
+	for i := 0; i < 60; i++ {
+		nodes = append(nodes, graph.Node{
+			IP: fmt.Sprintf("10.0.0.%d", i+1), Subnet: "10.0.0.0/24",
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(i)*0.01, Rank: i + 1},
+		})
+	}
+	pin := "10.0.0.55" // rank 55 — well below MapOverviewTopNodes
+	opts := Options{GroupPrefix: 24, Pinned: map[string]bool{pin: true}}
+	m := buildOverview(graph.Snapshot{Nodes: nodes}, opts, nil, nil, 0)
+
+	var found bool
+	for _, n := range m.Nodes {
+		if n.ID == pin {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("pinned host %s not retained as its own node", pin)
+	}
+	// It must not also appear inside an aggregate's members.
+	for _, members := range m.AggMembers {
+		for _, mem := range members {
+			if mem.ID == pin {
+				t.Errorf("pinned host also collapsed into aggregate %q", mem.ID)
+			}
+		}
+	}
+}
+
 // TestOverviewKeepsCrossVLANEdges guards the reported regression: after the
 // group cap rose, per-VLAN aggregate + inferred-gateway nodes starved the
 // element budget and trimOverviewEdges dropped the cross-VLAN dependencies
