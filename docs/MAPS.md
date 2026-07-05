@@ -22,10 +22,18 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
 - **Boxes** are subnet groups (default `/24`, `--group-prefix` to change).
   Hatched red boxes are **blind spots**: in scope, zero observed traffic.
 - **Rows within a box** are tiers, top to bottom: **Core** (gateways, DCs,
-  DNS) → **Service** (file/db/web/jump) → **Client** (everything else).
+  DNS, network gear) → **Service** (file/db/web/jump/mail) → **Client**
+  (printers, cameras, workstations, everything else).
 - **Diamond/dashed nodes** are gateways. Solid = MAC-convergence evidence
   observed on this grid. Dashed "gateway (inferred)" = synthesized from
   cross-subnet traffic because no MAC evidence exists — never observed fact.
+- **Node roles** include `NetworkGear` for hosts serving controller/switch/AP
+  protocols (CAPWAP, PAPI, Smart Install, TACACS+). Clicking a node also shows
+  its observed **MAC** and decoded **vendor** when captured (a host's own NIC;
+  gateway MACs are excluded so a router's MAC is never mis-attributed).
+- **Amber-bordered nodes** are operator-**pinned** (console): a host forced to
+  render individually regardless of rank. **Violet border** = linked to a named
+  device.
 - **"N workstations" nodes** are aggregated: `Unknown`-role, low-composite
   clients collapse into one meta-node per subnet so the map stays readable.
   Full detail is always in the analyst HTML report, one click away in the
@@ -61,12 +69,17 @@ unreadable wall:
   peers, multicast, broadcast — collapses into one "external" box.** The
   briefing shows your terrain, not the internet's. Multicast and broadcast
   addresses are never shown as individual hosts regardless of score rank;
-- internal subnet groups coarsen (`/24` → `/20` → `/16` → `/12` → `/8`)
-  until they fit the group budget, keeping the groups that contain
-  top-ranked terrain first; overflow merges into "other internal networks";
+- internal subnet groups keep the operator's true grouping prefix (`/24` by
+  default) — they are never coarsened into supernet boxes that name no real
+  segment; when the group count overflows the budget, the least important
+  groups merge into an honest "other internal networks" bucket;
 - the top 20 hosts by score rank (excluding multicast/broadcast artifacts)
   stay individually visible; **every other host — including lower-ranked
   servers — collapses into one "N other hosts" aggregate per group**;
+- **console overrides:** right-click **Pin to map** forces any collapsed host
+  to stay visible, and the **show all private hosts** checkbox promotes every
+  RFC1918 host to its own node (external peers still collapse), capped at 1500
+  with a finding when it clips;
 - at most one gateway per group survives (observed L2 candidates win by
   distinct-IP count);
 - only the strongest bundled edges that fit the element budget remain, with

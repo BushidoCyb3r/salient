@@ -24,6 +24,12 @@ a scan is only trustworthy once this table is filled in and the defaults match.
 | Orig MAC | `source.mac` | | | ☐ |
 | Resp MAC | `destination.mac` | | | ☐ |
 
+The responder MAC drives two features: L2 gateway detection (a MAC answering
+for many IPs = that segment's router) and per-node vendor identification (OUI
+lookup on each host's own MAC). Both degrade gracefully — absent MAC fields
+just mean inferred gateways and no vendor labels, never an error — but verify
+`destination.mac` against a real grid to enable them.
+
 ## Dataset values observed (`discover` output)
 
 | Log type | Candidates | Found on grid |

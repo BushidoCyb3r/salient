@@ -91,3 +91,13 @@ Exercise against the fake grid: `go run ./testdata/fakees -port 9299`, connect t
       MODEL SUGGESTION in the evidence panel
 - [ ] Restarting the console reloads suggestions from the `.tags.json` sidecar;
       the sidecar contains no API key
+- [ ] Node evidence shows MAC and vendor when present; a UniFi/Cisco/etc. host
+      shows a NetworkGear role and its vendor
+- [ ] Aggregate "N other hosts" list shows MAC/vendor and filters by them;
+      right-click a row for Assign to device / Set role / Pin to map
+- [ ] **Suggest tags for listed hosts** tags only the filtered aggregate rows
+      (≤100) and merges into the sidecar without clobbering other groups' tags
+- [ ] Right-click a host → Pin to map: it renders as its own amber-bordered
+      node; Unpin returns it to the aggregate; the pin survives a reload
+- [ ] **show all private hosts** checkbox promotes RFC1918 hosts to their own
+      nodes (external still collapses) and the choice persists across reloads
