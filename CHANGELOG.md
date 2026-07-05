@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   *organic* and *tiered*): each VLAN box is one cell of a grid with its hosts in
   a fixed mini-grid, so boxes come out the same size and orderly instead of the
   force sim ballooning and scattering them.
+- **Realistic tiered layout**: the *tiered* view now reads like a network
+  diagram — the external/internet box spans the top, VLAN boxes sit in a row
+  below, and inside every box the router (gateway) is pinned to the top with
+  hosts stacked beneath it (core → service → client). The chosen layout now
+  persists across re-renders, so the ordering holds when drilling into a VLAN.
 - **Segment-flow map** is the new default for large grids: every real internal
   VLAN gets its own box (never lumped into "other internal networks"), each
   showing its own top hosts plus an "N more hosts" chip. The default flow view

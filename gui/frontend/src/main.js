@@ -259,8 +259,42 @@ const layouts = {
     tilingPaddingVertical: 6, tilingPaddingHorizontal: 6,
     packComponents: true, nodeDimensionsIncludeLabels: true,
   },
-  dagre: { name: 'dagre', animate: false, rankDir: 'TB', ranker: 'tight-tree', rankSep: 70, nodeSep: 18, transform: (n, p) => p },
 };
+
+// tieredLayout is a deterministic "realistic network map": the external/internet
+// box spans the top, VLAN boxes sit in a row below it, and inside every box the
+// router (gateway) is pinned to the top with the rest of the hosts stacked under
+// it (core → service → client, then rank). Holds in the focused VLAN view too —
+// one box, router on top. ponytail: single VLAN row scrolls horizontally on wide
+// grids; fine, the canvas pans.
+function tieredLayout() {
+  const tierRank = { core: 0, service: 1, client: 2 };
+  const childOrder = (a, b) => {
+    const ga = a.data('gw') ? 0 : 1, gb = b.data('gw') ? 0 : 1;
+    if (ga !== gb) return ga - gb; // router/gateway first
+    const ta = tierRank[a.data('tier')] ?? 3, tb = tierRank[b.data('tier')] ?? 3;
+    if (ta !== tb) return ta - tb; // core → service → client
+    return (a.data('rank') || 1e9) - (b.data('rank') || 1e9);
+  };
+  const parents = cy.nodes('.grp');
+  const ext = parents.filter((p) => p.id() === 'g:external');
+  const vlans = parents.filter((p) => p.id() !== 'g:external')
+    .sort((a, b) => (a.data('label') || '').localeCompare(b.data('label') || ''));
+  const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44, CELLW = 240, BANDGAP = 80;
+  const pos = {};
+  let topH = 0;
+  ext.forEach((p) => {
+    p.children().forEach((k, j) => { pos[k.id()] = { x: PADX + j * (NODEW + 16), y: PADY }; });
+    topH = PADY + NODEH + BANDGAP; // VLAN row sits below the external band
+  });
+  vlans.forEach((p, i) => {
+    const gx = i * CELLW;
+    p.children().sort(childOrder).forEach((k, j) => {
+      pos[k.id()] = { x: gx + PADX, y: topH + PADY + j * (NODEH + VGAP) };
+    });
+  });
+  cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
+}
 
 // gridLayout is a deterministic uniform layout for the segment overview: every
 // VLAN box is one cell of a grid, and each box's hosts sit in a fixed 2-column
@@ -288,14 +322,18 @@ function gridLayout() {
 function runLayout(name) {
   curLayout = name;
   if (name === 'grid') gridLayout();
+  else if (name === 'dagre') tieredLayout();
   else cy.layout(layouts[name]).run();
   $('b-grid').classList.toggle('on', name === 'grid');
   $('b-fcose').classList.toggle('on', name === 'fcose');
   $('b-dagre').classList.toggle('on', name === 'dagre');
 }
-$('b-grid').onclick = () => { if (cy) runLayout('grid'); };
-$('b-fcose').onclick = () => { if (cy) runLayout('fcose'); };
-$('b-dagre').onclick = () => { if (cy) runLayout('dagre'); };
+// layoutPref remembers an explicit operator choice so it survives re-renders
+// (e.g. drilling into a VLAN keeps the tiered/realistic layout).
+let layoutPref = null;
+$('b-grid').onclick = () => { if (cy) { layoutPref = 'grid'; runLayout('grid'); } };
+$('b-fcose').onclick = () => { if (cy) { layoutPref = 'fcose'; runLayout('fcose'); } };
+$('b-dagre').onclick = () => { if (cy) { layoutPref = 'dagre'; runLayout('dagre'); } };
 
 let currentSnapshotPath = '';
 
@@ -394,10 +432,11 @@ $('ai-tagbtn').onclick = async () => {
 };
 
 function renderModel(model) {
-  // Each view gets its best-fit default layout: the segment-flow overview reads
-  // as directional flow (tiered/dagre); focused/detail maps use organic. The
-  // operator can still toggle freely afterward.
-  curLayout = model.overview ? 'grid' : 'fcose';
+  // Each view gets its best-fit default layout unless the operator picked one
+  // explicitly (layoutPref) — that choice persists across re-renders, so a
+  // tiered/realistic layout holds when drilling into a VLAN. Default: grid for
+  // the segment overview, organic for focused/detail.
+  curLayout = layoutPref || (model.overview ? 'grid' : 'fcose');
   const els = [];
   for (const g of model.groups || []) {
     els.push({ data: { id: g.id, label: g.label, cidr: g.cidr || '' }, classes: 'grp' + (g.blind_spot ? ' blind' : '') + (g.cidr ? ' drillable' : '') });
