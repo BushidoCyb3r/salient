@@ -266,14 +266,67 @@ func (a *App) SuggestTags(req TagRequest) (*assist.TagResult, error) {
 		GeneratedAt: time.Now().UTC(), Provider: req.Provider,
 		EndpointHost: u.Host, Model: req.Model, Tags: result.Tags,
 	}
-	raw, err := json.MarshalIndent(artifact, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-	if err := safefile.WriteFile(tagArtifactPath(resolved), raw); err != nil {
+	if err := writeTagArtifact(resolved, artifact); err != nil {
 		return nil, err
 	}
 	return &result, nil
+}
+
+// SuggestTagsForHosts tags only the given IPs — the on-demand path for
+// aggregated "other hosts". Results merge into the existing sidecar: tags for
+// the listed IPs are replaced, all others kept, so repeated targeted runs
+// accumulate rather than clobber.
+func (a *App) SuggestTagsForHosts(req TagRequest, ips []string) (*assist.TagResult, error) {
+	resolved := a.resolveSnapshotPath(req.SnapshotPath)
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	result, err := assist.TagDevicesForIPs(ctx, assist.Config{
+		Provider:    assist.Provider(req.Provider),
+		Endpoint:    req.Endpoint,
+		Model:       req.Model,
+		APIKey:      req.APIKey,
+		AllowRemote: req.AllowRemote,
+	}, snap, a.operatorFacts(), ips)
+	if err != nil {
+		return nil, err
+	}
+	u, err := url.Parse(req.Endpoint)
+	if err != nil {
+		return nil, err
+	}
+	targeted := make(map[string]bool, len(ips))
+	for _, ip := range ips {
+		targeted[ip] = true
+	}
+	merged := result.Tags
+	if prev, err := loadTagArtifact(resolved); err == nil && prev != nil {
+		for _, t := range prev.Tags {
+			if !targeted[t.NodeID] {
+				merged = append(merged, t)
+			}
+		}
+	}
+	if err := writeTagArtifact(resolved, TagArtifact{
+		GeneratedAt: time.Now().UTC(), Provider: req.Provider,
+		EndpointHost: u.Host, Model: req.Model, Tags: merged,
+	}); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func writeTagArtifact(snapshotPath string, artifact TagArtifact) error {
+	raw, err := json.MarshalIndent(artifact, "", "  ")
+	if err != nil {
+		return err
+	}
+	return safefile.WriteFile(tagArtifactPath(snapshotPath), raw)
 }
 
 func tagArtifactPath(snapshotPath string) string { return snapshotPath + ".tags.json" }

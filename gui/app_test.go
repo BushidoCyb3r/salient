@@ -137,6 +137,43 @@ func TestSuggestTagsPersistsSafeSidecarAndLoadModelOverlaysIt(t *testing.T) {
 	}
 }
 
+func TestSuggestTagsForHostsMergesSidecar(t *testing.T) {
+	reply := func(nodeID, tag string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"`+nodeID+`\",\"tags\":[\"`+tag+`\"],\"confidence\":0.8,\"rationale\":\"obs\"}]}"}}]}`)
+		}
+	}
+	path := filepath.Join(t.TempDir(), "snapshot.json.gz")
+	writeSnapshot(t, path, graph.Snapshot{Nodes: []graph.Node{
+		{IP: "10.0.0.1", Subnet: "10.0.0.0/24"},
+		{IP: "10.0.0.2", Subnet: "10.0.0.0/24"},
+	}})
+	a := &App{ctx: context.Background()}
+
+	s1 := httptest.NewServer(reply("10.0.0.1", "camera"))
+	defer s1.Close()
+	if _, err := a.SuggestTagsForHosts(TagRequest{SnapshotPath: path, Provider: "openai", Endpoint: s1.URL, Model: "m"}, []string{"10.0.0.1"}); err != nil {
+		t.Fatal(err)
+	}
+	s2 := httptest.NewServer(reply("10.0.0.2", "printer"))
+	defer s2.Close()
+	if _, err := a.SuggestTagsForHosts(TagRequest{SnapshotPath: path, Provider: "openai", Endpoint: s2.URL, Model: "m"}, []string{"10.0.0.2"}); err != nil {
+		t.Fatal(err)
+	}
+
+	art, err := loadTagArtifact(path)
+	if err != nil || art == nil {
+		t.Fatalf("load artifact: %v %v", art, err)
+	}
+	got := map[string]bool{}
+	for _, tg := range art.Tags {
+		got[tg.NodeID] = true
+	}
+	if !got["10.0.0.1"] || !got["10.0.0.2"] {
+		t.Fatalf("disjoint targeted runs must both persist: %#v", art.Tags)
+	}
+}
+
 func TestExportMapWritesEachFormat(t *testing.T) {
 	snapPath := filepath.Join(t.TempDir(), "snapshot.json.gz")
 	writeSnapshot(t, snapPath, graph.Snapshot{
