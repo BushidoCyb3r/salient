@@ -46,6 +46,8 @@ export function PickAssetCSV():Promise<string>;
 
 export function PinToMap(arg1:string):Promise<void>;
 
+export function RemoveSegment(arg1:string):Promise<void>;
+
 export function RunScan(arg1:main.ScanRequest):Promise<scan.Result>;
 
 export function SaveDevice(arg1:string,arg2:devices.Device):Promise<void>;
@@ -53,6 +55,8 @@ export function SaveDevice(arg1:string,arg2:devices.Device):Promise<void>;
 export function SetLabels(arg1:string,arg2:Array<string>):Promise<void>;
 
 export function SetRole(arg1:string,arg2:string):Promise<void>;
+
+export function SetSegment(arg1:string,arg2:string):Promise<void>;
 
 export function SetShowAllPrivate(arg1:boolean):Promise<void>;
 

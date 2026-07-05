@@ -31,10 +31,59 @@ type Options struct {
 	Focus       string            // optional CIDR: keep only groups intersecting it
 	GroupLabels map[string]string // CIDR → human name (§8.2 asset-doc enrichment)
 	Pinned      map[string]bool   // IPs force-retained as their own overview node
+	// Segments are operator-declared real subnets that override the auto-/24
+	// grouping: a host falls into the most-specific segment containing it, so a
+	// /24 can be split into /25s (or several /24s merged into a supernet). IPs
+	// matching no segment fall back to GroupPrefix. Makes the map true to the
+	// actual VLAN layout instead of assuming one /24 == one segment.
+	Segments []Segment
 	// RetainAllPrivate promotes every RFC1918 host to its own overview node
 	// (rank-ordered, capped at config.MapAllPrivateCap). External hosts still
 	// collapse. For grids with a manageable internal host count.
 	RetainAllPrivate bool
+}
+
+// Segment is one operator-declared subnet with an optional display name.
+type Segment struct {
+	CIDR string `json:"cidr"`
+	Name string `json:"name,omitempty"`
+}
+
+// segmentGrouper returns a function mapping an IP to its operator-declared
+// segment CIDR (most-specific match wins), plus a CIDR→name map for labels.
+// Invalid CIDRs are skipped. When no segment matches, the returned bool is
+// false and the caller falls back to prefix grouping.
+func segmentGrouper(segs []Segment) (func(ip string) (string, bool), map[string]string) {
+	type parsed struct {
+		p    netip.Prefix
+		cidr string
+	}
+	var ps []parsed
+	names := map[string]string{}
+	for _, s := range segs {
+		p, err := netip.ParsePrefix(s.CIDR)
+		if err != nil {
+			continue
+		}
+		ps = append(ps, parsed{p.Masked(), s.CIDR})
+		if s.Name != "" {
+			names[s.CIDR] = s.Name
+		}
+	}
+	// Most-specific (longest prefix) first so a /25 override beats an enclosing /24.
+	sort.Slice(ps, func(i, j int) bool { return ps[i].p.Bits() > ps[j].p.Bits() })
+	return func(ip string) (string, bool) {
+		a, err := netip.ParseAddr(ip)
+		if err != nil {
+			return "", false
+		}
+		for _, x := range ps {
+			if x.p.Contains(a) {
+				return x.cidr, true
+			}
+		}
+		return "", false
+	}, names
 }
 
 func (o Options) withDefaults() Options {
@@ -268,12 +317,7 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 	m := &Model{Meta: snap.Meta}
 
 	nodes := filterFocus(snap.Nodes, opts.Focus)
-	groups, resolve := groupNodes(nodes, opts.GroupPrefix)
-	for i := range groups {
-		if lbl := opts.GroupLabels[groups[i].CIDR]; lbl != "" && groups[i].CIDR != "" {
-			groups[i].Label = groups[i].CIDR + " — " + lbl
-		}
-	}
+	groups, resolve := groupNodes(nodes, opts)
 	byIP := make(map[string]*graph.Node, len(nodes))
 	for i := range nodes {
 		byIP[nodes[i].IP] = &nodes[i]
@@ -287,14 +331,14 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		t := tierOf(n)
 		drift := nodeDrift[n.IP]
 		if !opts.RetainAllPrivate && drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
-			gid := resolve(n.Subnet)
+			gid := resolve(n.IP)
 			aggCount[gid]++
 			m.addAggMember(gid+":clients", n)
 			continue
 		}
 		visible[n.IP] = true
 		m.Nodes = append(m.Nodes, MapNode{
-			ID: n.IP, Group: resolve(n.Subnet), Label: nodeLabel(n),
+			ID: n.IP, Group: resolve(n.IP), Label: nodeLabel(n),
 			Role: string(n.TopRole()), Tier: t,
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 			Evidence: evidence(n), Drift: drift,
@@ -423,11 +467,21 @@ func tierOf(n *graph.Node) Tier {
 // SparseGroupMinHosts merge into one "sparse hosts" group (§8.2). The
 // returned resolver maps any node's stored Subnet to its final group ID —
 // the single place regrouping and sparse-collapse are decided.
-func groupNodes(nodes []graph.Node, prefix int) ([]Group, func(subnet string) string) {
+func groupNodes(nodes []graph.Node, opts Options) ([]Group, func(ip string) string) {
+	prefix := opts.GroupPrefix
+	segFor, segNames := segmentGrouper(opts.Segments)
+	// groupCIDR resolves a host to its grouping CIDR: an operator segment if one
+	// contains it, else the auto /prefix of its address.
+	groupCIDR := func(ip string) string {
+		if c, ok := segFor(ip); ok {
+			return c
+		}
+		return regroup(graph.Subnet(ip), prefix)
+	}
 	counts := map[string][]string{}
 	sensors := map[string]map[string]bool{}
 	for _, n := range nodes {
-		cidr := regroup(n.Subnet, prefix)
+		cidr := groupCIDR(n.IP)
 		counts[cidr] = append(counts[cidr], n.IP)
 		if sensors[cidr] == nil {
 			sensors[cidr] = map[string]bool{}
@@ -446,21 +500,33 @@ func groupNodes(nodes []graph.Node, prefix int) ([]Group, func(subnet string) st
 			continue
 		}
 		groups = append(groups, Group{
-			ID: groupID(cidr), CIDR: cidr, Label: cidr, Sensors: setToSlice(sensors[cidr]),
+			ID: groupID(cidr), CIDR: cidr, Label: segmentLabel(cidr, segNames, opts.GroupLabels), Sensors: setToSlice(sensors[cidr]),
 		})
 	}
 	if sparse > 0 {
 		groups = append(groups, Group{ID: "g:sparse", CIDR: "", Label: fmt.Sprintf("sparse hosts (%d)", sparse), Sparse: true})
 	}
 	sort.Slice(groups, func(i, j int) bool { return groups[i].ID < groups[j].ID })
-	resolve := func(subnet string) string {
-		cidr := regroup(subnet, prefix)
+	resolve := func(ip string) string {
+		cidr := groupCIDR(ip)
 		if sparseCIDRs[cidr] {
 			return "g:sparse"
 		}
 		return groupID(cidr)
 	}
 	return groups, resolve
+}
+
+// segmentLabel names a group box: operator segment name if declared, else an
+// asset-doc GroupLabel, else the bare CIDR.
+func segmentLabel(cidr string, segNames, groupLabels map[string]string) string {
+	if n := segNames[cidr]; n != "" {
+		return cidr + " — " + n
+	}
+	if n := groupLabels[cidr]; n != "" {
+		return cidr + " — " + n
+	}
+	return cidr
 }
 
 // regroup re-derives the grouping CIDR at the requested prefix. Node.Subnet
@@ -500,7 +566,7 @@ func (m *Model) addGateways(snap graph.Snapshot, groups []Group, byIP map[string
 		if !sOK || !dOK {
 			continue
 		}
-		gs, gd := resolve(s.Subnet), resolve(d.Subnet)
+		gs, gd := resolve(s.IP), resolve(d.IP)
 		if gs != gd {
 			crossGroup[gs], crossGroup[gd] = true, true
 		}
@@ -532,8 +598,8 @@ func (m *Model) bundleEdges(edges []graph.Edge, visible map[string]bool, byIP ma
 		if visible[ip] {
 			return ip
 		}
-		if n, ok := byIP[ip]; ok {
-			return resolve(n.Subnet) + ":clients"
+		if _, ok := byIP[ip]; ok {
+			return resolve(ip) + ":clients"
 		}
 		return ""
 	}

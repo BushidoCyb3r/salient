@@ -19,8 +19,14 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
 
 ## Reading the map
 
-- **Boxes** are subnet groups (default `/24`, `--group-prefix` to change).
-  Hatched red boxes are **blind spots**: in scope, zero observed traffic.
+- **Boxes** are subnet groups (default `/24`, `--group-prefix` to change). In
+  the desktop app the **Segments** panel overrides this with your real subnets:
+  declare CIDRs (e.g. split `10.10.40.0/24` into `10.10.40.0/25` +
+  `10.10.40.128/25`, or merge several `/24`s into one supernet) and each host
+  falls into the most-specific declared segment; undeclared hosts still group by
+  `/24`. Hatched red boxes are **blind spots**: in scope, zero observed traffic.
+- **Layouts** (desktop): *grid* (default — uniform boxes on a grid), *organic*
+  (force-directed), *tiered* (directional). Boxes are sized uniformly in grid.
 - **Rows within a box** are tiers, top to bottom: **Core** (gateways, DCs,
   DNS, network gear) → **Service** (file/db/web/jump/mail) → **Client**
   (printers, cameras, workstations, everything else).

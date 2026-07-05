@@ -469,6 +469,53 @@ func TestDetailedBuildRetainAllPrivateShowsEveryClient(t *testing.T) {
 	}
 }
 
+// TestOperatorSegmentsSplitAndMerge: operator-declared subnets override the
+// auto-/24 grouping — a /24 splits into /25s, and undeclared IPs still auto-/24.
+func TestOperatorSegmentsSplitAndMerge(t *testing.T) {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	mk := func(ip string) graph.Node {
+		return graph.Node{IP: ip, Subnet: graph.Subnet(ip), FirstSeen: t0, LastSeen: t0,
+			Scores: graph.ScoreSet{Composite: 0.5, Rank: 1}}
+	}
+	snap := graph.Snapshot{Nodes: []graph.Node{
+		mk("10.10.40.10"), mk("10.10.40.20"), // lower /25
+		mk("10.10.40.130"), mk("10.10.40.140"), // upper /25
+		mk("10.99.0.5"), mk("10.99.0.6"), // undeclared → auto /24
+	}}
+	opts := mapview.Options{Segments: []mapview.Segment{
+		{CIDR: "10.10.40.0/25", Name: "Servers"},
+		{CIDR: "10.10.40.128/25", Name: "Workstations"},
+	}}
+	m := mapview.Build(snap, opts)
+
+	byIP := map[string]string{}
+	for _, n := range m.Nodes {
+		byIP[n.ID] = n.Group
+	}
+	if byIP["10.10.40.10"] != "g:10.10.40.0/25" {
+		t.Errorf("10.10.40.10 group = %q, want the /25 override", byIP["10.10.40.10"])
+	}
+	if byIP["10.10.40.130"] != "g:10.10.40.128/25" {
+		t.Errorf("10.10.40.130 group = %q, want the upper /25", byIP["10.10.40.130"])
+	}
+	if byIP["10.10.40.10"] == byIP["10.10.40.130"] {
+		t.Error("the /24 was not split into two /25 segments")
+	}
+	if byIP["10.99.0.5"] != "g:10.99.0.0/24" {
+		t.Errorf("undeclared host group = %q, want auto /24 fallback", byIP["10.99.0.5"])
+	}
+	// The operator name rides the box label.
+	var named bool
+	for _, g := range m.Groups {
+		if g.CIDR == "10.10.40.0/25" && strings.Contains(g.Label, "Servers") {
+			named = true
+		}
+	}
+	if !named {
+		t.Error("operator segment name missing from group label")
+	}
+}
+
 func TestBuildGroupsAndSparseCollapse(t *testing.T) {
 	mm := mapview.Build(fixture(t), mapview.Options{})
 	var main, sparse *mapview.Group

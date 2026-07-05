@@ -186,6 +186,16 @@
         <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
         <label title="Escape hatch: promote every private (RFC1918) host to its own node. Dense on large grids — the default segment view is usually clearer; drill into a VLAN box instead."><input type="checkbox" id="l-allpriv"> show every private host (dense)</label>
       </div>
+      <h2 title="Override the auto-/24 grouping with your real subnets. Declare a CIDR (e.g. 10.10.40.0/25) and hosts fall into the most-specific one you defined; anything undeclared still groups by /24.">Segments</h2>
+      <div class="ctl">
+        <div style="display:flex;gap:6px">
+          <input id="seg-cidr" placeholder="CIDR e.g. 10.10.40.0/25" style="flex:2;min-width:0">
+          <input id="seg-name" placeholder="name" style="flex:1;min-width:0">
+          <button id="seg-add">add</button>
+        </div>
+        <ul id="seglist"></ul>
+        <div id="segempty" class="hint">no overrides — grouping by /24</div>
+      </div>
       <h2>Search</h2>
       <input id="search" placeholder="IP, hostname, role...">
       <h2>Devices</h2>

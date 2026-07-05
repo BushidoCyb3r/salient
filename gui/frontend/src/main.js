@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -784,7 +784,7 @@ $('hl-tag').onclick = async () => {
 
 /* ---------------- devices ---------------- */
 
-let registry = { devices: [], labels: {}, role_overrides: {}, dismissed_hints: [], pinned_ips: [] };
+let registry = { devices: [], labels: {}, role_overrides: {}, dismissed_hints: [], pinned_ips: [], segments: [] };
 
 async function refreshDevices() {
   try {
@@ -796,6 +796,7 @@ async function refreshDevices() {
       dismissed_hints: (reg && reg.dismissed_hints) || [],
       pinned_ips: (reg && reg.pinned_ips) || [],
       show_all_private: !!(reg && reg.show_all_private),
+      segments: (reg && reg.segments) || [],
     };
   } catch (err) {
     logLine('could not load device registry: ' + err, 'err');
@@ -804,8 +805,44 @@ async function refreshDevices() {
   $('l-allpriv').checked = registry.show_all_private;
   renderDevices();
   renderHints();
+  renderSegments();
   applyDeviceBadges();
 }
+
+function renderSegments() {
+  const list = $('seglist');
+  list.innerHTML = '';
+  const segs = registry.segments || [];
+  $('segempty').style.display = segs.length ? 'none' : 'block';
+  for (const s of segs) {
+    const li = document.createElement('li');
+    li.textContent = s.cidr + (s.name ? ' — ' + s.name : '') + ' ';
+    const rm = document.createElement('button');
+    rm.textContent = '✕';
+    rm.title = 'remove override';
+    rm.onclick = async () => {
+      try {
+        await RemoveSegment(s.cidr);
+        await refreshDevices();
+        if (currentSnapshotPath) await openSnapshot(currentSnapshotPath);
+      } catch (err) { logLine('remove segment failed: ' + err, 'err'); }
+    };
+    li.appendChild(rm);
+    list.appendChild(li);
+  }
+}
+
+$('seg-add').onclick = async function () {
+  const cidr = $('seg-cidr').value.trim();
+  if (!cidr) return;
+  try {
+    await SetSegment(cidr, $('seg-name').value.trim());
+    $('seg-cidr').value = ''; $('seg-name').value = '';
+    logLine('segment ' + cidr + ' declared — reloading map', 'ok');
+    await refreshDevices();
+    if (currentSnapshotPath) await openSnapshot(currentSnapshotPath);
+  } catch (err) { logLine('add segment failed: ' + err, 'err'); }
+};
 
 $('l-allpriv').onchange = async function () {
   try {

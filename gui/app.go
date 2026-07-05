@@ -138,6 +138,9 @@ func (a *App) mapOptions() mapview.Options {
 			opts.Pinned[ip] = true
 		}
 	}
+	for _, s := range reg.Segments {
+		opts.Segments = append(opts.Segments, mapview.Segment{CIDR: s.CIDR, Name: s.Name})
+	}
 	return opts
 }
 

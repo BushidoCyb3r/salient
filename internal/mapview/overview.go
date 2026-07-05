@@ -60,12 +60,21 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// terrain, not the internet's. Groups keep the operator's true grouping
 	// prefix (/24 default) — never coarsened into supernet boxes.
 	prefix := opts.GroupPrefix
+	segFor, segNames := segmentGrouper(opts.Segments)
+	// groupCIDR resolves a host to its grouping CIDR: an operator-declared
+	// segment if one contains it, else the auto /prefix.
+	groupCIDR := func(ip, subnet string) string {
+		if c, ok := segFor(ip); ok {
+			return c
+		}
+		return regroup(subnet, prefix)
+	}
 	external := false
-	segHosts := map[string][]int{} // internal CIDR -> node indices, rank-ordered (idx is rank-sorted)
+	segHosts := map[string][]int{} // internal grouping CIDR -> node indices, rank-ordered (idx is rank-sorted)
 	for _, i := range idx {
 		n := &nodes[i]
-		if internalCIDR(n.Subnet) {
-			c := regroup(n.Subnet, prefix)
+		c := groupCIDR(n.IP, n.Subnet)
+		if internalCIDR(c) {
 			segHosts[c] = append(segHosts[c], i)
 		} else {
 			external = true
@@ -78,7 +87,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	for _, ns := range segHosts {
 		for _, i := range ns {
 			if nodeDrift[nodes[i].IP] != "" {
-				segMarked[regroup(nodes[i].Subnet, prefix)] = true
+				segMarked[groupCIDR(nodes[i].IP, nodes[i].Subnet)] = true
 				break
 			}
 		}
@@ -104,8 +113,8 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	for _, c := range segCIDRs {
 		kept[c] = true
 	}
-	resolve := func(subnet string) string {
-		c := regroup(subnet, prefix)
+	resolve := func(ip string) string {
+		c := groupCIDR(ip, graph.Subnet(ip))
 		if internalCIDR(c) {
 			if kept[c] {
 				return groupID(c)
@@ -165,11 +174,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	}
 
 	for _, c := range segCIDRs {
-		label := c
-		if lbl := opts.GroupLabels[c]; lbl != "" {
-			label = c + " — " + lbl
-		}
-		m.Groups = append(m.Groups, Group{ID: groupID(c), CIDR: c, Label: label})
+		m.Groups = append(m.Groups, Group{ID: groupID(c), CIDR: c, Label: segmentLabel(c, segNames, opts.GroupLabels)})
 	}
 	if overflow {
 		m.Groups = append(m.Groups, Group{ID: "g:other", Label: "other internal networks"})
@@ -185,7 +190,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		if !retained[n.IP] {
 			continue
 		}
-		gid := resolve(n.Subnet)
+		gid := resolve(n.IP)
 		groupHasRetained[gid] = true
 		m.Nodes = append(m.Nodes, MapNode{
 			ID: n.IP, Group: gid, Label: nodeLabel(n),
@@ -203,7 +208,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	for i := range nodes {
 		n := &nodes[i]
 		if !retained[n.IP] {
-			gid := resolve(n.Subnet)
+			gid := resolve(n.IP)
 			aggCount[gid]++
 			m.addAggMember(gid+":clients", n)
 		}
@@ -317,7 +322,7 @@ func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.
 		if !sOK || !dOK {
 			continue
 		}
-		if gs, gd := resolve(s.Subnet), resolve(d.Subnet); gs != gd {
+		if gs, gd := resolve(s.IP), resolve(d.IP); gs != gd {
 			crossGroup[gs], crossGroup[gd] = true, true
 		}
 	}

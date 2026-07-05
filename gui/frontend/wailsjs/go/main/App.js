@@ -78,6 +78,10 @@ export function PinToMap(arg1) {
   return window['go']['main']['App']['PinToMap'](arg1);
 }
 
+export function RemoveSegment(arg1) {
+  return window['go']['main']['App']['RemoveSegment'](arg1);
+}
+
 export function RunScan(arg1) {
   return window['go']['main']['App']['RunScan'](arg1);
 }
@@ -92,6 +96,10 @@ export function SetLabels(arg1, arg2) {
 
 export function SetRole(arg1, arg2) {
   return window['go']['main']['App']['SetRole'](arg1, arg2);
+}
+
+export function SetSegment(arg1, arg2) {
+  return window['go']['main']['App']['SetSegment'](arg1, arg2);
 }
 
 export function SetShowAllPrivate(arg1) {

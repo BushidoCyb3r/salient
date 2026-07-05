@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Operator-declared segments**: a **Segments** panel to override the naive
+  auto-`/24` grouping with the real subnet layout. Declare CIDRs (with optional
+  names) — e.g. split a `/24` into two `/25`s, or merge several `/24`s into one
+  supernet box — and each host falls into the most-specific segment containing
+  it; anything undeclared still groups by `/24`. Persisted in the device
+  registry and applied to every view (overview, drill-in, gateways, edges).
+- **Uniform grid layout** for the segment overview (new default, alongside
+  *organic* and *tiered*): each VLAN box is one cell of a grid with its hosts in
+  a fixed mini-grid, so boxes come out the same size and orderly instead of the
+  force sim ballooning and scattering them.
 - **Segment-flow map** is the new default for large grids: every real internal
   VLAN gets its own box (never lumped into "other internal networks"), each
   showing its own top hosts plus an "N more hosts" chip. The default flow view
@@ -55,6 +65,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   overflow groups collapse into an honest "other internal networks" bucket.
 
 ### Fixed
+- **Drilling into a VLAN now shows every host** instead of still collapsing
+  low-value clients into an "N workstations" aggregate — the detailed build
+  honors the "show everything" intent, so drill-in is true full detail and the
+  **show every private host** toggle expands hosts in every view (previously it
+  only affected the overview). Fixes the aggregate that listed zero hosts on
+  click in the drilled-in view.
 - Cross-VLAN dependency edges were dropped from condensed overviews when the
   element budget was tight; they are now protected, and confusing inferred-gateway
   diamonds are de-cluttered.

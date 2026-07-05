@@ -108,6 +108,17 @@ func (a *App) SetShowAllPrivate(on bool) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { r.ShowAllPrivate = on; return nil })
 }
 
+// SetSegment declares (or renames) a real subnet that overrides auto-/24
+// grouping; RemoveSegment drops it. The caller reloads the map to apply.
+func (a *App) SetSegment(cidr, name string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { return r.SetSegment(cidr, name) })
+}
+
+// RemoveSegment drops an operator-declared subnet.
+func (a *App) RemoveSegment(cidr string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { r.RemoveSegment(cidr); return nil })
+}
+
 // overrideTiers maps known override roles (lowercased) to their map tier.
 // Free-text overrides not listed here keep the node's inferred tier.
 var overrideTiers = map[string]mapview.Tier{

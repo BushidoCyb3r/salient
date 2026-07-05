@@ -32,6 +32,46 @@ type Registry struct {
 	DismissedHints []string            `json:"dismissed_hints,omitempty"`  // hint keys never to re-show
 	Pinned         []string            `json:"pinned_ips,omitempty"`       // IPs force-retained as their own map node
 	ShowAllPrivate bool                `json:"show_all_private,omitempty"` // promote every RFC1918 host to its own overview node
+	Segments       []Segment           `json:"segments,omitempty"`         // operator-declared real subnets overriding auto-/24 grouping
+}
+
+// Segment is an operator-declared real subnet with an optional display name.
+type Segment struct {
+	CIDR string `json:"cidr"`
+	Name string `json:"name,omitempty"`
+}
+
+// SetSegment adds or updates (by CIDR) an operator segment; an empty name just
+// declares the subnet. The CIDR must parse.
+func (r *Registry) SetSegment(cidr, name string) error {
+	p, err := netip.ParsePrefix(cidr)
+	if err != nil {
+		return fmt.Errorf("invalid segment CIDR %q", cidr)
+	}
+	cidr = p.Masked().String()
+	for i := range r.Segments {
+		if r.Segments[i].CIDR == cidr {
+			r.Segments[i].Name = name
+			return nil
+		}
+	}
+	r.Segments = append(r.Segments, Segment{CIDR: cidr, Name: name})
+	sort.Slice(r.Segments, func(i, j int) bool { return r.Segments[i].CIDR < r.Segments[j].CIDR })
+	return nil
+}
+
+// RemoveSegment drops an operator segment by CIDR (masked or not).
+func (r *Registry) RemoveSegment(cidr string) {
+	if p, err := netip.ParsePrefix(cidr); err == nil {
+		cidr = p.Masked().String()
+	}
+	kept := r.Segments[:0]
+	for _, s := range r.Segments {
+		if s.CIDR != cidr {
+			kept = append(kept, s)
+		}
+	}
+	r.Segments = kept
 }
 
 // Load reads the registry; a missing file is an empty registry.

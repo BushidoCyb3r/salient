@@ -71,6 +71,20 @@ export namespace devices {
 	        this.ips = source["ips"];
 	    }
 	}
+	export class Segment {
+	    cidr: string;
+	    name?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Segment(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cidr = source["cidr"];
+	        this.name = source["name"];
+	    }
+	}
 	export class Registry {
 	    devices: Device[];
 	    labels?: Record<string, Array<string>>;
@@ -78,6 +92,7 @@ export namespace devices {
 	    dismissed_hints?: string[];
 	    pinned_ips?: string[];
 	    show_all_private?: boolean;
+	    segments?: Segment[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Registry(source);
@@ -91,6 +106,7 @@ export namespace devices {
 	        this.dismissed_hints = source["dismissed_hints"];
 	        this.pinned_ips = source["pinned_ips"];
 	        this.show_all_private = source["show_all_private"];
+	        this.segments = this.convertValues(source["segments"], Segment);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
