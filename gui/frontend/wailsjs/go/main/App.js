@@ -90,6 +90,10 @@ export function SuggestTags(arg1) {
   return window['go']['main']['App']['SuggestTags'](arg1);
 }
 
+export function SuggestTagsForHosts(arg1, arg2) {
+  return window['go']['main']['App']['SuggestTagsForHosts'](arg1, arg2);
+}
+
 export function UnassignIP(arg1) {
   return window['go']['main']['App']['UnassignIP'](arg1);
 }

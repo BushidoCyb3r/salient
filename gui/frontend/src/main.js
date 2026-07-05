@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -315,27 +315,35 @@ $('ai-provider').onchange = (e) => {
   $('ai-model').value = defaults.model;
 };
 
-$('ai-tagbtn').onclick = async () => {
-  if (!currentSnapshotPath) return;
-  const button = $('ai-tagbtn');
+// tagRequest builds the shared AI-tag request from the AI panel fields, or
+// returns null after setting a status message when required fields are unset.
+function tagRequest() {
+  if (!currentSnapshotPath) return null;
   const model = $('ai-model').value.trim();
   let endpoint = $('ai-endpoint').value.trim();
   if (!model || !endpoint) {
     $('ai-status').textContent = 'endpoint and model are required';
-    return;
+    return null;
   }
   endpoint = endpoint.replace('{model}', encodeURIComponent(model));
+  return {
+    SnapshotPath: currentSnapshotPath,
+    Provider: $('ai-provider').value,
+    Endpoint: endpoint,
+    Model: model,
+    APIKey: $('ai-key').value,
+    AllowRemote: $('ai-egress').checked,
+  };
+}
+
+$('ai-tagbtn').onclick = async () => {
+  const req = tagRequest();
+  if (!req) return;
+  const button = $('ai-tagbtn');
   button.disabled = true;
   $('ai-status').textContent = 'requesting suggestions…';
   try {
-    const result = await SuggestTags({
-      SnapshotPath: currentSnapshotPath,
-      Provider: $('ai-provider').value,
-      Endpoint: endpoint,
-      Model: model,
-      APIKey: $('ai-key').value,
-      AllowRemote: $('ai-egress').checked,
-    });
+    const result = await SuggestTags(req);
     const count = (result.tags || []).length;
     $('ai-status').textContent = count + ' device suggestion' + (count === 1 ? '' : 's') + ' saved';
     logLine('saved ' + count + ' model-assisted device tag suggestion' + (count === 1 ? '' : 's'), 'ok');
@@ -361,6 +369,7 @@ function renderModel(model) {
         agg: n.agg_count || 0, drift: n.drift || '', ev: (n.evidence || []).join('\n'),
         device: n.device || '', deviceType: n.device_type || '', labels: (n.labels || []).join(', '),
         services: (n.services || []).join(', '), roleOverride: n.role_override || '',
+        mac: n.mac || '', vendor: n.vendor || '',
         aiTags: (n.suggested_tags || []).join(', '), aiConfidence: n.suggestion_confidence || 0,
         aiRationale: n.suggestion_rationale || '', aiModel: n.suggestion_model || '',
       },
@@ -442,6 +451,7 @@ function showNodeEvidence(n) {
     (n.data('device') ? '\ndevice: ◈ ' + n.data('device') : '') +
     (n.data('labels') ? '\nlabels: ' + n.data('labels') : '') +
     (n.data('services') ? '\nservices: ' + n.data('services') : '') +
+    (n.data('mac') ? '\nMAC: ' + n.data('mac') + (n.data('vendor') ? ' (' + n.data('vendor') + ')' : '') : '') +
     (n.data('ev') ? '\n\n' + n.data('ev') : '\n\n(no role evidence)');
   if (n.data('aiTags') && !aiDismissed) {
     text += '\n\nMODEL SUGGESTION (' + n.data('aiModel') + ', confidence ' + n.data('aiConfidence').toFixed(2) + ')\ntags: ' + n.data('aiTags') + '\n' + n.data('aiRationale');
@@ -481,7 +491,10 @@ function showNodeEvidence(n) {
 // ponytail: 14k+ DOM rows make the webview crawl — render the first 1000
 // matches and let the filter narrow the rest; virtualize if that ever hurts.
 const HL_MAX_ROWS = 1000;
+const HL_TAG_CAP = 100; // assist.AssistMaxNodes — per-group tagging cap
 let hlHosts = [];
+let hlShown = []; // rows currently visible (post-filter, capped)
+let aggListNode = ''; // aggregate node id the host list is showing
 
 async function openHostList(nodeID, title) {
   let hosts;
@@ -492,6 +505,7 @@ async function openHostList(nodeID, title) {
     return;
   }
   hlHosts = hosts || [];
+  aggListNode = nodeID;
   $('hl-title').textContent = title;
   $('hl-filter').value = '';
   $('hostlist').style.display = 'flex';
@@ -508,8 +522,9 @@ function renderHostList(q) {
   const list = $('hl-list');
   list.innerHTML = '';
   const match = q
-    ? hlHosts.filter((h) => (h.id + ' ' + h.label + ' ' + h.role + ' ' + (h.role_override || '') + ' ' + (h.services || []).join(' ') + ' ' + (h.device || '')).toLowerCase().includes(q))
+    ? hlHosts.filter((h) => (h.id + ' ' + h.label + ' ' + h.role + ' ' + (h.role_override || '') + ' ' + (h.services || []).join(' ') + ' ' + (h.device || '') + ' ' + (h.mac || '') + ' ' + (h.vendor || '')).toLowerCase().includes(q))
     : hlHosts;
+  hlShown = match.slice(0, HL_MAX_ROWS);
   for (const h of match.slice(0, HL_MAX_ROWS)) {
     const li = document.createElement('li');
     li.textContent = h.label.split('\n')[0];
@@ -542,6 +557,12 @@ function renderHostList(q) {
       dev.textContent = ' ◈ ' + h.device;
       li.appendChild(dev);
     }
+    if (h.vendor) {
+      const ven = document.createElement('span');
+      ven.className = 'role';
+      ven.textContent = ' · ' + h.vendor;
+      li.appendChild(ven);
+    }
     li.title = h.id;
     li.onclick = () => {
       $('ev').textContent =
@@ -552,8 +573,10 @@ function renderHostList(q) {
         (h.device ? '\ndevice: ◈ ' + h.device : '') +
         ((h.labels || []).length ? '\nlabels: ' + h.labels.join(', ') : '') +
         ((h.services || []).length ? '\nservices: ' + h.services.join(', ') : '') +
+        (h.mac ? '\nMAC: ' + h.mac + (h.vendor ? ' (' + h.vendor + ')' : '') : '') +
         ((h.evidence || []).length ? '\n\n' + h.evidence.join('\n') : '\n\n(no role evidence)');
     };
+    li.oncontextmenu = (ev) => { ev.preventDefault(); openHostMenu(h.id, h.role_override || '', ev.clientX, ev.clientY); };
     list.appendChild(li);
   }
   $('hl-note').textContent = match.length > HL_MAX_ROWS
@@ -563,6 +586,34 @@ function renderHostList(q) {
 
 $('hl-close').onclick = closeHostList;
 $('hl-filter').addEventListener('input', (e) => renderHostList(e.target.value.trim().toLowerCase()));
+
+$('hl-tag').onclick = async () => {
+  const req = tagRequest();
+  if (!req) { logLine('AI tagging: set endpoint and model in the AI panel first', 'warn'); return; }
+  let ips = hlShown.map((h) => h.id);
+  if (!ips.length) return;
+  if (ips.length > HL_TAG_CAP) {
+    logLine('tagging first ' + HL_TAG_CAP + ' of ' + ips.length + ' listed hosts — filter to narrow', 'warn');
+    ips = ips.slice(0, HL_TAG_CAP);
+  }
+  const button = $('hl-tag');
+  button.disabled = true;
+  $('hl-note').textContent = 'requesting suggestions for ' + ips.length + ' host' + (ips.length === 1 ? '' : 's') + '…';
+  try {
+    const result = await SuggestTagsForHosts(req, ips);
+    const count = (result.tags || []).length;
+    logLine('saved ' + count + ' model-assisted tag suggestion' + (count === 1 ? '' : 's') + ' for listed hosts', 'ok');
+    const title = $('hl-title').textContent;
+    await openSnapshot(currentSnapshotPath);
+    // openSnapshot rebuilds the map; reopen the same aggregate list.
+    if (aggListNode) openHostList(aggListNode, title);
+  } catch (err) {
+    logLine('per-group tagging failed: ' + err, 'err');
+    $('hl-note').textContent = 'tagging failed';
+  } finally {
+    button.disabled = false;
+  }
+};
 
 /* ---------------- devices ---------------- */
 
@@ -734,79 +785,100 @@ document.addEventListener('click', (e) => {
   if (cfg.style.display === 'block' && !cfg.contains(e.target) && e.target !== $('scanbtn')) cfg.style.display = 'none';
 });
 
+function ctxAddItem(label, fn) {
+  const d = document.createElement('div');
+  d.textContent = label;
+  d.onclick = fn;
+  ctxmenu.appendChild(d);
+}
+
+// openHostMenu shows the shared per-host actions (Copy IP / Assign to device /
+// Set role) at x,y. Used by both map nodes and host-list rows. extra(addItem)
+// appends caller-specific items (map nodes add focus controls).
+function openHostMenu(ip, roleOverride, x, y, extra) {
+  ctxmenu.innerHTML = '';
+  ctxAddItem('Copy IP', () => navigator.clipboard.writeText(ip));
+  ctxAddItem('Assign to device…', (click) => {
+    // The rebuild below detaches this menu item; without this the same click
+    // bubbles to the document close handler, which no longer sees the target
+    // inside #ctxmenu and hides the picker instantly.
+    click.stopPropagation();
+    ctxmenu.innerHTML = '';
+    const doAssign = async (name) => {
+      try {
+        const moved = await AssignIP(name, ip);
+        logLine('assigned ' + ip + ' to ' + name + (moved ? ' (moved from ' + moved + ')' : ''), 'ok');
+        ctxmenu.style.display = 'none';
+        await refreshDevices();
+      } catch (err) { logLine('assign failed: ' + err, 'err'); }
+    };
+    for (const d of registry.devices) ctxAddItem('→ ' + d.name, () => doAssign(d.name));
+    const inp = document.createElement('input');
+    inp.placeholder = 'new device name…';
+    inp.style.margin = '6px';
+    inp.style.width = 'calc(100% - 12px)';
+    inp.onclick = (ev) => ev.stopPropagation();
+    inp.onkeydown = (ev) => { if (ev.key === 'Enter' && inp.value.trim()) doAssign(inp.value.trim()); };
+    ctxmenu.appendChild(inp);
+    inp.focus();
+  });
+  ctxAddItem('Set role…', (click) => {
+    // Same detach-vs-document-close race as the device picker.
+    click.stopPropagation();
+    ctxmenu.innerHTML = '';
+    const inp = document.createElement('input');
+    inp.setAttribute('list', 'role-list');
+    inp.placeholder = 'role — empty clears…';
+    inp.value = roleOverride || '';
+    inp.style.margin = '6px';
+    inp.style.width = 'calc(100% - 12px)';
+    inp.onclick = (ev) => ev.stopPropagation();
+    inp.onkeydown = async (ev) => {
+      if (ev.key !== 'Enter') return;
+      const role = inp.value.trim();
+      try {
+        await SetRole(ip, role);
+        logLine(role ? 'set role of ' + ip + ' to ' + role : 'cleared role override on ' + ip, 'ok');
+        ctxmenu.style.display = 'none';
+        await refreshDevices();
+      } catch (err) { logLine('set role failed: ' + err, 'err'); }
+    };
+    ctxmenu.appendChild(inp);
+    inp.focus();
+  });
+  if (extra) extra(ctxAddItem);
+  ctxmenu.style.left = x + 'px';
+  ctxmenu.style.top = y + 'px';
+  ctxmenu.style.display = 'block';
+}
+
 function bindContextMenu() {
   cy.on('cxttap', 'node:childless', (e) => {
     const n = e.target;
     const pos = e.renderedPosition || e.position;
-    ctxmenu.innerHTML = '';
-    const addItem = (label, fn) => {
-      const d = document.createElement('div');
-      d.textContent = label;
-      d.onclick = fn;
-      ctxmenu.appendChild(d);
-    };
-    addItem('Copy IP', () => navigator.clipboard.writeText(n.data('id')));
-    if (!n.data('agg') && !n.data('gw')) {
-      addItem('Assign to device…', (click) => {
-        // The rebuild below detaches this menu item; without this the same
-        // click bubbles to the document close handler, which no longer sees
-        // the target inside #ctxmenu and hides the picker instantly.
-        click.stopPropagation();
-        ctxmenu.innerHTML = '';
-        const ip = n.data('id');
-        const doAssign = async (name) => {
-          try {
-            const moved = await AssignIP(name, ip);
-            logLine('assigned ' + ip + ' to ' + name + (moved ? ' (moved from ' + moved + ')' : ''), 'ok');
-            ctxmenu.style.display = 'none';
-            await refreshDevices();
-          } catch (err) { logLine('assign failed: ' + err, 'err'); }
-        };
-        for (const d of registry.devices) addItem('→ ' + d.name, () => doAssign(d.name));
-        const inp = document.createElement('input');
-        inp.placeholder = 'new device name…';
-        inp.style.margin = '6px';
-        inp.style.width = 'calc(100% - 12px)';
-        inp.onclick = (ev) => ev.stopPropagation();
-        inp.onkeydown = (ev) => { if (ev.key === 'Enter' && inp.value.trim()) doAssign(inp.value.trim()); };
-        ctxmenu.appendChild(inp);
-        inp.focus();
+    // Aggregate and gateway nodes aren't real single hosts: only offer focus.
+    if (n.data('agg') || n.data('gw')) {
+      ctxmenu.innerHTML = '';
+      ctxAddItem('Copy IP', () => navigator.clipboard.writeText(n.data('id')));
+      ctxAddItem('Show evidence', () => cy.emit('tap', [n]));
+      ctxAddItem('Focus this group', () => {
+        const group = n.data('parent');
+        cy.nodes(':childless').forEach((m) => m.toggleClass('dim', m.data('parent') !== group));
       });
-      addItem('Set role…', (click) => {
-        // Same detach-vs-document-close race as the device picker.
-        click.stopPropagation();
-        ctxmenu.innerHTML = '';
-        const ip = n.data('id');
-        const inp = document.createElement('input');
-        inp.setAttribute('list', 'role-list');
-        inp.placeholder = 'role — empty clears…';
-        inp.value = n.data('roleOverride') || '';
-        inp.style.margin = '6px';
-        inp.style.width = 'calc(100% - 12px)';
-        inp.onclick = (ev) => ev.stopPropagation();
-        inp.onkeydown = async (ev) => {
-          if (ev.key !== 'Enter') return;
-          const role = inp.value.trim();
-          try {
-            await SetRole(ip, role);
-            logLine(role ? 'set role of ' + ip + ' to ' + role : 'cleared role override on ' + ip, 'ok');
-            ctxmenu.style.display = 'none';
-            await refreshDevices();
-          } catch (err) { logLine('set role failed: ' + err, 'err'); }
-        };
-        ctxmenu.appendChild(inp);
-        inp.focus();
-      });
+      ctxAddItem('Clear focus', () => cy.nodes(':childless').removeClass('dim'));
+      ctxmenu.style.left = pos.x + 'px';
+      ctxmenu.style.top = pos.y + 'px';
+      ctxmenu.style.display = 'block';
+      return;
     }
-    addItem('Show evidence', () => cy.emit('tap', [n]));
-    addItem('Focus this group', () => {
-      const group = n.data('parent');
-      cy.nodes(':childless').forEach((m) => m.toggleClass('dim', m.data('parent') !== group));
+    openHostMenu(n.data('id'), n.data('roleOverride') || '', pos.x, pos.y, (addItem) => {
+      addItem('Show evidence', () => cy.emit('tap', [n]));
+      addItem('Focus this group', () => {
+        const group = n.data('parent');
+        cy.nodes(':childless').forEach((m) => m.toggleClass('dim', m.data('parent') !== group));
+      });
+      addItem('Clear focus', () => cy.nodes(':childless').removeClass('dim'));
     });
-    addItem('Clear focus', () => cy.nodes(':childless').removeClass('dim'));
-    ctxmenu.style.left = pos.x + 'px';
-    ctxmenu.style.top = pos.y + 'px';
-    ctxmenu.style.display = 'block';
   });
 }
 
