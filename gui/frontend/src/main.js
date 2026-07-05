@@ -280,12 +280,15 @@ function tieredLayout() {
   const ext = parents.filter((p) => p.id() === 'g:external');
   const vlans = parents.filter((p) => p.id() !== 'g:external')
     .sort((a, b) => (a.data('label') || '').localeCompare(b.data('label') || ''));
-  const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44, CELLW = 240, BANDGAP = 80;
+  const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44;
+  const CELLW = 340;    // wide cells → lots of horizontal space between VLAN boxes
+  const BANDGAP = 90;   // vertical gap between VLAN rows
+  const EXTGAP = 220;   // external band sits far above the internal VLAN rows
   const pos = {};
 
-  // Per-VLAN activity = total traffic volume on its hosts' edges. Band the VLANs:
-  // near-zero traffic is "dead" (isolated off to the side); the rest split by
-  // median into a quiet band (upper) and a busy band (lower).
+  // Per-VLAN activity = total traffic volume on its hosts' edges. Three bands:
+  // real traffic (upper row), barely-any traffic (bottom row), and zero
+  // connections (a column off to the side so they don't clutter the map).
   const act = {};
   cy.edges('.host-edge').forEach((e) => {
     const w = e.data('width') || 1;
@@ -296,23 +299,10 @@ function tieredLayout() {
   });
   const A = (p) => act[p.id()] || 0;
   const maxAct = vlans.reduce((m, p) => Math.max(m, A(p)), 0);
-  const deadCut = maxAct * 0.03; // ponytail: bottom 3% of peak = "dead"; tune if the cut feels off
-  const live = vlans.filter((p) => A(p) > deadCut).sort((a, b) => A(a) - A(b));
-  const dead = vlans.filter((p) => A(p) <= deadCut);
-  const half = Math.ceil(live.length / 2);
-  const quiet = live.slice(0, half); // less active → upper band
-  const busy = live.slice(half);     // most active → lower band
-
-  // External/internet band centered over the widest live band.
-  const bandW = Math.max(quiet.length, busy.length, 1) * CELLW;
-  let topH = 0;
-  ext.forEach((p) => {
-    const kids = p.children();
-    const w = kids.length * (NODEW + 16);
-    const startX = bandW / 2 - w / 2;
-    kids.forEach((k, j) => { pos[k.id()] = { x: startX + j * (NODEW + 16), y: PADY }; });
-    topH = PADY + NODEH + BANDGAP;
-  });
+  const barelyCut = maxAct * 0.1; // ponytail: <10% of peak = "barely any"; tune to taste
+  const zero = vlans.filter((p) => A(p) <= 0);
+  const barely = vlans.filter((p) => A(p) > 0 && A(p) <= barelyCut).sort((a, b) => A(a) - A(b));
+  const real = vlans.filter((p) => A(p) > barelyCut).sort((a, b) => A(b) - A(a)); // busiest first
 
   // placeBand lays one activity band as a horizontal row of vertical stacks
   // (router on top of each box) and returns the Y for the next band.
@@ -325,15 +315,26 @@ function tieredLayout() {
     });
     return y + PADY + maxK * (NODEH + VGAP) + BANDGAP;
   };
-  let y = placeBand(quiet, topH);
-  placeBand(busy, y);
 
-  // Dead VLANs sit off on their own — a spaced column to the right of the live
-  // grid, each isolated rather than clustered.
-  const deadX = bandW + CELLW;
-  dead.forEach((p, i) => {
+  // External/internet band centered over the real-traffic row, far above it.
+  const realW = Math.max(real.length, 1) * CELLW;
+  ext.forEach((p) => {
+    const kids = p.children();
+    const w = kids.length * (NODEW + 16);
+    const startX = realW / 2 - w / 2;
+    kids.forEach((k, j) => { pos[k.id()] = { x: startX + j * (NODEW + 16), y: PADY }; });
+  });
+  const topH = ext.length ? PADY + NODEH + EXTGAP : 0;
+
+  let y = placeBand(real, topH);   // real traffic (upper)
+  placeBand(barely, y);            // barely any (bottom)
+
+  // Zero-connection VLANs: a spaced column far off to the right, isolated so
+  // they add no visual noise to the live map.
+  const zeroX = Math.max(realW, barely.length * CELLW) + CELLW * 1.5;
+  zero.forEach((p, i) => {
     p.children().sort(childOrder).forEach((k, j) => {
-      pos[k.id()] = { x: deadX + PADX, y: topH + i * 260 + PADY + j * (NODEH + VGAP) };
+      pos[k.id()] = { x: zeroX + PADX, y: topH + i * 260 + PADY + j * (NODEH + VGAP) };
     });
   });
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
