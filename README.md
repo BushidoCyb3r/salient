@@ -28,7 +28,8 @@ The console provides:
 - Aggregate drill-in: clicking an "N other hosts" node opens a filterable list
   of every collapsed host with its rank, role, services, device, MAC, and
   vendor. Right-click any row to assign it to a device or correct its role, and
-  use **Suggest tags for listed hosts** to AI-tag just the filtered set.
+  use **Suggest tags for listed hosts** to AI-tag just the filtered set, or
+  **Pin to map** to promote a collapsed host to its own node.
 - Per-host service lists derived from observed responder ports (~110 recognized
   services): the full Active Directory protocol set plus network-vendor
   protocols for UniFi, Cisco, Aruba, Meraki, and Juniper gear.
@@ -157,7 +158,18 @@ role. Click an aggregate "N other hosts" node to open the host-list panel —
 type to filter by IP, hostname, role, service, device, MAC, or vendor; click a
 row for its evidence, or right-click it to assign a device or set a role.
 Aggregated hosts are full participants: **Suggest tags for listed hosts** runs
-AI tagging over the currently-filtered set (up to 100 at a time).
+AI tagging over the currently-filtered set (up to 100 at a time), and
+right-click **Pin to map** promotes any collapsed host to its own node.
+
+### Pinning a host onto the map
+
+Condensed briefing maps keep only the top-ranked hosts and collapse the rest
+into "N other hosts" aggregates. To force a specific host to always show as its
+own node — a low-traffic but important box you want to watch — right-click it
+(on the map or in a host-list row) → **Pin to map**. Pinned nodes get an amber
+border and are retained additively (they show even if that pushes the map past
+its element target). **Unpin from map** returns the host to its aggregate. Pins
+persist in the device registry.
 
 ### Linking IPs into devices
 
