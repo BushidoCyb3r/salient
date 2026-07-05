@@ -283,8 +283,13 @@ function tieredLayout() {
   const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44, CELLW = 240, BANDGAP = 80;
   const pos = {};
   let topH = 0;
+  // Center the external/internet band horizontally over the VLAN row below it.
+  const rowMid = (Math.max(vlans.length, 1) * CELLW) / 2;
   ext.forEach((p) => {
-    p.children().forEach((k, j) => { pos[k.id()] = { x: PADX + j * (NODEW + 16), y: PADY }; });
+    const kids = p.children();
+    const bandW = kids.length * (NODEW + 16);
+    const startX = rowMid - bandW / 2;
+    kids.forEach((k, j) => { pos[k.id()] = { x: startX + j * (NODEW + 16), y: PADY }; });
     topH = PADY + NODEH + BANDGAP; // VLAN row sits below the external band
   });
   vlans.forEach((p, i) => {
