@@ -412,6 +412,9 @@ function renderModel(model) {
       { selector: 'node.drift-silent', style: { opacity: 0.35, 'border-style': 'dashed', 'border-color': '#8b949e' } },
       { selector: 'node.drift-contradicted', style: { 'border-color': '#e3a008', 'border-width': 4, 'border-style': 'double' } },
       { selector: 'edge', style: { 'curve-style': 'bezier', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)', 'target-arrow-shape': 'triangle', width: 'data(width)', label: 'data(label)', 'font-size': 9, color: '#8b949e', 'text-rotation': 'autorotate', 'text-background-color': '#0b0f14', 'text-background-opacity': 0.85, opacity: 0.85 } },
+      { selector: 'edge.e-hide', style: { display: 'none' } },
+      { selector: 'edge.e-lit', style: { opacity: 0.95, width: 'mapData(width, 0, 6, 1.5, 7)', 'z-index': 20 } },
+      { selector: 'node.nbr', style: { 'border-color': '#39d3ff', 'border-width': 3 } },
       { selector: 'edge.drift-new', style: { 'line-color': '#3fb950', 'target-arrow-color': '#3fb950', 'line-style': 'solid', opacity: 1 } },
       { selector: 'edge.drift-vanished', style: { 'line-color': '#8b949e', 'target-arrow-color': '#8b949e', 'line-style': 'dashed', opacity: 0.35 } },
       { selector: 'node.drift-off', style: { opacity: 1, 'border-width': 1.6, 'border-style': 'solid', 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
@@ -421,6 +424,13 @@ function renderModel(model) {
   });
   runLayout(curLayout);
   bindContextMenu();
+
+  // Flow reveal: a full mesh of inter-segment edges is an unreadable hairball,
+  // so in the segment-flow overview edges start hidden and light up only for
+  // the host/segment you select. Small focused/detail maps show edges outright.
+  edgesHidden = !!model.overview && !$('l-flows').checked;
+  applyEdgeVisibility();
+  if (edgesHidden) logLine('flows hidden for readability — click a host or VLAN to light up its connections, or check "show all flows"', 'ok');
 
   $('l-heat').onchange = function () {
     if (this.checked) {
@@ -433,6 +443,10 @@ function renderModel(model) {
     }
   };
   $('l-lbl').onchange = function () { cy.edges().style('text-opacity', this.checked ? 1 : 0); };
+  $('l-flows').onchange = function () {
+    edgesHidden = !!model.overview && !this.checked;
+    applyEdgeVisibility();
+  };
   $('l-drift').onchange = function () {
     cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed,.drift-undocumented,.drift-silent,.drift-contradicted')
       .toggleClass('drift-off', !this.checked);
@@ -440,6 +454,7 @@ function renderModel(model) {
 
   cy.on('tap', 'node:childless', (e) => {
     const n = e.target;
+    lightEdgesFor(n);
     if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('label')); return; }
     showNodeEvidence(n);
   });
@@ -447,6 +462,35 @@ function renderModel(model) {
   cy.on('tap', 'node.drillable', (e) => {
     const cidr = e.target.data('cidr');
     if (cidr) drillInto(cidr);
+  });
+  // Tap empty canvas → back to the clean structure-only view.
+  cy.on('tap', (e) => { if (e.target === cy) applyEdgeVisibility(); });
+}
+
+let edgesHidden = false;
+
+// applyEdgeVisibility resets edges to the current mode: hidden (structure only)
+// in the overview, or fully drawn when "show all flows" is on or in detail views.
+function applyEdgeVisibility() {
+  if (!cy) return;
+  cy.batch(() => {
+    cy.nodes().removeClass('nbr').removeClass('dim');
+    cy.edges().removeClass('e-lit');
+    if (edgesHidden) cy.edges().addClass('e-hide');
+    else cy.edges().removeClass('e-hide');
+  });
+}
+
+// lightEdgesFor reveals just the selected host's connections (and highlights
+// its neighbors), dimming the rest — focus+context instead of a full mesh.
+function lightEdgesFor(n) {
+  if (!cy || !edgesHidden) return;
+  const edges = n.connectedEdges();
+  cy.batch(() => {
+    cy.edges().addClass('e-hide').removeClass('e-lit');
+    edges.removeClass('e-hide').addClass('e-lit');
+    cy.nodes().removeClass('nbr');
+    edges.connectedNodes().addClass('nbr');
   });
 }
 
