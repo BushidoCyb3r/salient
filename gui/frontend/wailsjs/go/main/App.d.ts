@@ -52,6 +52,8 @@ export function SetLabels(arg1:string,arg2:Array<string>):Promise<void>;
 
 export function SetRole(arg1:string,arg2:string):Promise<void>;
 
+export function SetShowAllPrivate(arg1:boolean):Promise<void>;
+
 export function SuggestTags(arg1:main.TagRequest):Promise<assist.TagResult>;
 
 export function SuggestTagsForHosts(arg1:main.TagRequest,arg2:Array<string>):Promise<assist.TagResult>;

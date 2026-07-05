@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -628,15 +628,30 @@ async function refreshDevices() {
       labels: (reg && reg.labels) || {},
       role_overrides: (reg && reg.role_overrides) || {},
       dismissed_hints: (reg && reg.dismissed_hints) || [],
+      pinned_ips: (reg && reg.pinned_ips) || [],
+      show_all_private: !!(reg && reg.show_all_private),
     };
   } catch (err) {
     logLine('could not load device registry: ' + err, 'err');
     return;
   }
+  $('l-allpriv').checked = registry.show_all_private;
   renderDevices();
   renderHints();
   applyDeviceBadges();
 }
+
+$('l-allpriv').onchange = async function () {
+  try {
+    await SetShowAllPrivate(this.checked);
+    registry.show_all_private = this.checked;
+    logLine(this.checked ? 'showing all private hosts — reloading map' : 'collapsing private hosts to overview — reloading map', 'ok');
+    if (currentSnapshotPath) await openSnapshot(currentSnapshotPath);
+  } catch (err) {
+    logLine('show-all-private toggle failed: ' + err, 'err');
+    this.checked = !this.checked; // revert on failure
+  }
+};
 
 function renderDevices() {
   const list = $('devlist');

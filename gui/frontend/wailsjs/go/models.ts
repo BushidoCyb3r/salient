@@ -77,6 +77,7 @@ export namespace devices {
 	    role_overrides?: Record<string, string>;
 	    dismissed_hints?: string[];
 	    pinned_ips?: string[];
+	    show_all_private?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Registry(source);
@@ -89,6 +90,7 @@ export namespace devices {
 	        this.role_overrides = source["role_overrides"];
 	        this.dismissed_hints = source["dismissed_hints"];
 	        this.pinned_ips = source["pinned_ips"];
+	        this.show_all_private = source["show_all_private"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

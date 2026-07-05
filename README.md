@@ -161,6 +161,17 @@ Aggregated hosts are full participants: **Suggest tags for listed hosts** runs
 AI tagging over the currently-filtered set (up to 100 at a time), and
 right-click **Pin to map** promotes any collapsed host to its own node.
 
+### Showing every private host
+
+Condensed maps keep only top-ranked hosts. The **show all private hosts**
+checkbox (map controls) instead promotes every RFC1918 (private) host to its own
+node while external peers still collapse into one box — a fuller, more accurate
+picture on grids with a manageable internal host count. A cap
+(`config.MapAllPrivateCap`, 1500) bounds it: past that, the highest-ranked
+private hosts are shown and the rest re-aggregate, with a finding noting the
+count so a very large grid can't produce an unrenderable map. The setting
+persists in the device registry.
+
 ### Pinning a host onto the map
 
 Condensed briefing maps keep only the top-ranked hosts and collapse the rest

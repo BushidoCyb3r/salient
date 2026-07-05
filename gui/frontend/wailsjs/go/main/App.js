@@ -90,6 +90,10 @@ export function SetRole(arg1, arg2) {
   return window['go']['main']['App']['SetRole'](arg1, arg2);
 }
 
+export function SetShowAllPrivate(arg1) {
+  return window['go']['main']['App']['SetShowAllPrivate'](arg1);
+}
+
 export function SuggestTags(arg1) {
   return window['go']['main']['App']['SuggestTags'](arg1);
 }
