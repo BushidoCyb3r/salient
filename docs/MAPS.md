@@ -80,8 +80,10 @@ unreadable wall:
   to stay visible, and the **show all private hosts** checkbox promotes every
   RFC1918 host to its own node (external peers still collapse), capped at 1500
   with a finding when it clips. In show-all-private mode every connection
-  between the visible hosts is drawn — the edge budget is not applied, since it
-  is an explicit "show everything" view;
+  between the visible hosts is drawn — the edge budget is not applied — and
+  every private VLAN keeps its own box (no group cap, so a lightly-populated but
+  real segment is never lumped into "other internal networks"), since it is an
+  explicit "show everything" view;
 - at most one gateway per group survives (observed L2 candidates win by
   distinct-IP count);
 - only the strongest bundled edges that fit the element budget remain, with

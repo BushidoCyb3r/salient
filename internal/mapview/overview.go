@@ -121,6 +121,12 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	if external {
 		maxPriv--
 	}
+	// Show-all-private is a full-detail view: every RFC1918 VLAN keeps its own
+	// box, no "other internal networks" overflow that would lump a real segment
+	// (e.g. a lightly-populated 10.10.60.0/24) in with unrelated networks.
+	if opts.RetainAllPrivate {
+		maxPriv = 1 << 30
+	}
 	// Groups always keep the operator's true grouping prefix (/24 default).
 	// Coarsening to /20 or /16 blended distinct VLANs into supernet boxes
 	// that name no segment anyone actually runs (10.18.61.0/26 hosts read as

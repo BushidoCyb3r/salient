@@ -152,6 +152,54 @@ func TestOverviewRetainAllPrivate(t *testing.T) {
 	}
 }
 
+// TestOverviewRetainAllPrivateKeepsEveryVLANBox: a lightly-populated real VLAN
+// must keep its own group box under show-all-private, never lumped into the
+// "other internal networks" overflow bucket.
+func TestOverviewRetainAllPrivateKeepsEveryVLANBox(t *testing.T) {
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(rank)*0.001, Rank: rank}})
+	}
+	// 20 busy /24 VLANs (enough to overflow the group cap) …
+	for v := 0; v < 20; v++ {
+		for h := 0; h < 4; h++ {
+			add(fmt.Sprintf("10.10.%d.%d", v, h+1), fmt.Sprintf("10.10.%d.0/24", v))
+		}
+	}
+	// … plus one sparse, real VLAN the cap would otherwise overflow.
+	add("10.10.60.1", "10.10.60.0/24")
+	add("10.10.60.2", "10.10.60.0/24")
+
+	m := buildOverview(graph.Snapshot{Nodes: nodes},
+		Options{GroupPrefix: 24, RetainAllPrivate: true}, nil, nil, 999)
+
+	haveVLAN, haveOverflow := false, false
+	nodeShown := map[string]bool{}
+	for _, g := range m.Groups {
+		if g.CIDR == "10.10.60.0/24" {
+			haveVLAN = true
+		}
+		if g.ID == "g:other" {
+			haveOverflow = true
+		}
+	}
+	for _, n := range m.Nodes {
+		nodeShown[n.ID] = true
+	}
+	if !haveVLAN {
+		t.Error("10.10.60.0/24 lost its own box under show-all-private")
+	}
+	if haveOverflow {
+		t.Error("show-all-private must not produce an 'other internal networks' bucket")
+	}
+	if !nodeShown["10.10.60.1"] || !nodeShown["10.10.60.2"] {
+		t.Error("10.10.60 hosts not shown individually")
+	}
+}
+
 // TestOverviewKeepsCrossVLANEdges guards the reported regression: after the
 // group cap rose, per-VLAN aggregate + inferred-gateway nodes starved the
 // element budget and trimOverviewEdges dropped the cross-VLAN dependencies
