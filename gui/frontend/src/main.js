@@ -430,7 +430,7 @@ function renderModel(model) {
   // the host/segment you select. Small focused/detail maps show edges outright.
   edgesHidden = !!model.overview && !$('l-flows').checked;
   applyEdgeVisibility();
-  if (edgesHidden) logLine('flows hidden for readability — click a host or VLAN to light up its connections, or check "show all flows"', 'ok');
+  if (edgesHidden) logLine('flows hidden for readability — click a host or a VLAN box to light up its connections, double-click a VLAN to drill in, or check "show all flows"', 'ok');
 
   $('l-heat').onchange = function () {
     if (this.checked) {
@@ -458,13 +458,37 @@ function renderModel(model) {
     if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('label')); return; }
     showNodeEvidence(n);
   });
-  // Drill into a segment: tap its VLAN box to re-render focused on that CIDR.
+  // Segment interaction: single-tap a VLAN box lights up that whole segment's
+  // flows (what it talks to); double-tap drills into its full detail.
   cy.on('tap', 'node.drillable', (e) => {
-    const cidr = e.target.data('cidr');
-    if (cidr) drillInto(cidr);
+    const g = e.target;
+    const now = Date.now();
+    if (lastSegTap.id === g.id() && now - lastSegTap.t < 350) {
+      lastSegTap = { id: '', t: 0 };
+      const cidr = g.data('cidr');
+      if (cidr) drillInto(cidr);
+      return;
+    }
+    lastSegTap = { id: g.id(), t: now };
+    lightEdgesForSegment(g);
   });
   // Tap empty canvas → back to the clean structure-only view.
   cy.on('tap', (e) => { if (e.target === cy) applyEdgeVisibility(); });
+}
+
+let lastSegTap = { id: '', t: 0 };
+
+// lightEdgesForSegment reveals every flow touching a VLAN box's hosts — the
+// segment-level answer to "what does this VLAN talk to" — and dims the rest.
+function lightEdgesForSegment(g) {
+  if (!cy || !edgesHidden) return;
+  const edges = g.children().connectedEdges();
+  cy.batch(() => {
+    cy.edges().addClass('e-hide').removeClass('e-lit');
+    edges.removeClass('e-hide').addClass('e-lit');
+    cy.nodes().removeClass('nbr');
+    edges.connectedNodes().addClass('nbr');
+  });
 }
 
 let edgesHidden = false;

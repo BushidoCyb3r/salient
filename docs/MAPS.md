@@ -76,14 +76,17 @@ navigable down to host detail — instead of a flat wall of nodes:
   `MapSegmentTopHosts` (5) hosts of *each* segment stay named and individual;
   the rest collapse into one **"N more hosts"** chip for that segment. A busy
   VLAN can no longer monopolise the map and leave every other segment a blob;
-- **inter-segment flows are the story and are never trimmed.** Bundled edges
-  between segments (by service class) always survive the element budget, as do
-  drift/overlay-flagged edges; only intra-segment filler is trimmed when space
-  is tight;
-- **drill into a segment:** click a VLAN box (marked ▸) to re-render focused on
-  that CIDR — every host, intra-segment flow, gateways — then **← overview** to
-  return. The overview defaults to the tiered (directional) layout; the organic
-  toggle still applies;
+- **flows are revealed on demand, not all at once.** Drawing every
+  inter-segment dependency simultaneously is an unreadable hairball, so the
+  overview shows clean structure and lights up connections when you select
+  something: **click a host** to light its flows, **click a VLAN box** to light
+  everything that segment talks to, **click empty canvas** to clear. The
+  **show all flows** layer draws the full mesh at once (dense). Edges still
+  drive the layout even while hidden;
+- **drill into a segment:** double-click a VLAN box (marked ▸) to re-render
+  focused on that CIDR — every host, intra-segment flow, gateways — then
+  **← overview** to return. The overview defaults to the tiered (directional)
+  layout; the organic toggle still applies;
 - at most one gateway per segment survives (observed L2 candidates win by
   distinct-IP count);
 - **console overrides:** right-click **Pin to map** forces any collapsed host to
