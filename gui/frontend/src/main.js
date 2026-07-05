@@ -282,29 +282,58 @@ function tieredLayout() {
     .sort((a, b) => (a.data('label') || '').localeCompare(b.data('label') || ''));
   const NODEW = 150, NODEH = 42, VGAP = 8, PADX = 40, PADY = 44, CELLW = 240, BANDGAP = 80;
   const pos = {};
+
+  // Per-VLAN activity = total traffic volume on its hosts' edges. Band the VLANs:
+  // near-zero traffic is "dead" (isolated off to the side); the rest split by
+  // median into a quiet band (upper) and a busy band (lower).
+  const act = {};
+  cy.edges('.host-edge').forEach((e) => {
+    const w = e.data('width') || 1;
+    const sp = e.source().parent().id();
+    const dp = e.target().parent().id();
+    if (sp) act[sp] = (act[sp] || 0) + w;
+    if (dp && dp !== sp) act[dp] = (act[dp] || 0) + w;
+  });
+  const A = (p) => act[p.id()] || 0;
+  const maxAct = vlans.reduce((m, p) => Math.max(m, A(p)), 0);
+  const deadCut = maxAct * 0.03; // ponytail: bottom 3% of peak = "dead"; tune if the cut feels off
+  const live = vlans.filter((p) => A(p) > deadCut).sort((a, b) => A(a) - A(b));
+  const dead = vlans.filter((p) => A(p) <= deadCut);
+  const half = Math.ceil(live.length / 2);
+  const quiet = live.slice(0, half); // less active → upper band
+  const busy = live.slice(half);     // most active → lower band
+
+  // External/internet band centered over the widest live band.
+  const bandW = Math.max(quiet.length, busy.length, 1) * CELLW;
   let topH = 0;
-  // Wrap VLAN boxes into rows instead of one wide strip. ~square grid.
-  const cols = Math.max(1, Math.ceil(Math.sqrt(vlans.length)));
-  // Center the external/internet band over the (widest) VLAN row below it.
-  const rowMid = (Math.min(vlans.length, cols) * CELLW) / 2;
   ext.forEach((p) => {
     const kids = p.children();
-    const bandW = kids.length * (NODEW + 16);
-    const startX = rowMid - bandW / 2;
+    const w = kids.length * (NODEW + 16);
+    const startX = bandW / 2 - w / 2;
     kids.forEach((k, j) => { pos[k.id()] = { x: startX + j * (NODEW + 16), y: PADY }; });
-    topH = PADY + NODEH + BANDGAP; // VLAN grid sits below the external band
+    topH = PADY + NODEH + BANDGAP;
   });
-  let rowY = topH, rowMaxKids = 0;
-  vlans.forEach((p, i) => {
-    const col = i % cols;
-    if (col === 0 && i > 0) { // new row: advance past the tallest stack in the prior row
-      rowY += PADY + rowMaxKids * (NODEH + VGAP) + BANDGAP;
-      rowMaxKids = 0;
-    }
-    const kids = p.children().sort(childOrder);
-    rowMaxKids = Math.max(rowMaxKids, kids.length);
-    kids.forEach((k, j) => {
-      pos[k.id()] = { x: col * CELLW + PADX, y: rowY + PADY + j * (NODEH + VGAP) };
+
+  // placeBand lays one activity band as a horizontal row of vertical stacks
+  // (router on top of each box) and returns the Y for the next band.
+  const placeBand = (band, y) => {
+    let maxK = 0;
+    band.forEach((p, i) => {
+      const kids = p.children().sort(childOrder);
+      maxK = Math.max(maxK, kids.length);
+      kids.forEach((k, j) => { pos[k.id()] = { x: i * CELLW + PADX, y: y + PADY + j * (NODEH + VGAP) }; });
+    });
+    return y + PADY + maxK * (NODEH + VGAP) + BANDGAP;
+  };
+  let y = placeBand(quiet, topH);
+  placeBand(busy, y);
+
+  // Dead VLANs sit off on their own — a spaced column to the right of the live
+  // grid, each isolated rather than clustered.
+  const deadX = bandW + CELLW;
+  dead.forEach((p, i) => {
+    p.children().sort(childOrder).forEach((k, j) => {
+      pos[k.id()] = { x: deadX + PADX, y: topH + i * 260 + PADY + j * (NODEH + VGAP) };
     });
   });
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
