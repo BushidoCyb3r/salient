@@ -249,8 +249,17 @@ let curLayout = 'fcose';
 const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
 const tierBorder = { core: '#d9773f', service: '#4d8fe0', client: '#586274' };
 const layouts = {
-  fcose: { name: 'fcose', animate: false, nodeSeparation: 120, idealEdgeLength: () => 140 },
-  dagre: { name: 'dagre', animate: false, rankDir: 'TB', ranker: 'tight-tree', rankSep: 90, nodeSep: 30, transform: (n, p) => p },
+  // Tight, tiled fcose: pack each segment's hosts into a compact grid inside its
+  // box (so boxes come out small and uniform, not ballooned by wide separation),
+  // and pack the boxes rather than letting the physics scatter them.
+  fcose: {
+    name: 'fcose', animate: false, quality: 'proof', randomize: true,
+    nodeSeparation: 18, idealEdgeLength: () => 60, nodeRepulsion: () => 3500,
+    gravity: 0.9, gravityCompound: 1.2, tile: true,
+    tilingPaddingVertical: 6, tilingPaddingHorizontal: 6,
+    packComponents: true, nodeDimensionsIncludeLabels: true,
+  },
+  dagre: { name: 'dagre', animate: false, rankDir: 'TB', ranker: 'tight-tree', rankSep: 70, nodeSep: 18, transform: (n, p) => p },
 };
 
 function runLayout(name) {
@@ -418,7 +427,7 @@ function renderModel(model) {
   cy = cytoscape({
     container: $('cy'), elements: els, wheelSensitivity: 0.2,
     style: [
-      { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 18 } },
+      { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 12, 'min-width': 150, 'min-height': 70 } },
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
       { selector: 'node.grp.drillable', style: { label: (ele) => '▸ ' + ele.data('label'), 'border-color': '#3d4450' } },
       { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
