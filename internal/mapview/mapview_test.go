@@ -436,6 +436,26 @@ func TestBuildGroupsAndSparseCollapse(t *testing.T) {
 	}
 }
 
+func TestBuildAttachesMACAndVendor(t *testing.T) {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	snap := graph.Snapshot{
+		Nodes: []graph.Node{{
+			IP: "10.0.0.1", Subnet: "10.0.0.0/24", MAC: "24:5a:4c:11:22:33",
+			FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.9, Rank: 1},
+		}},
+	}
+	mm := mapview.Build(snap, mapview.Options{})
+	for _, n := range mm.Nodes {
+		if n.ID == "10.0.0.1" {
+			if n.MAC != "24:5a:4c:11:22:33" || n.Vendor != "Ubiquiti" {
+				t.Fatalf("MAC/vendor not surfaced: mac=%q vendor=%q", n.MAC, n.Vendor)
+			}
+			return
+		}
+	}
+	t.Fatal("node 10.0.0.1 missing from model")
+}
+
 func TestBuildAttachesServices(t *testing.T) {
 	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
 	node := func(ip string) graph.Node {

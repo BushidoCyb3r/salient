@@ -72,6 +72,8 @@ type MapNode struct {
 	Labels               []string `json:"labels,omitempty"`        // durable operator labels
 	RoleOverride         string   `json:"role_override,omitempty"` // operator-corrected role (overlay)
 	Services             []string `json:"services,omitempty"`      // observed named responder services
+	MAC                  string   `json:"mac,omitempty"`           // observed responder MAC
+	Vendor               string   `json:"vendor,omitempty"`        // OUI vendor for the MAC
 	SuggestedTags        []string `json:"suggested_tags,omitempty"`
 	SuggestionConfidence float64  `json:"suggestion_confidence,omitempty"`
 	SuggestionRationale  string   `json:"suggestion_rationale,omitempty"`
@@ -117,6 +119,7 @@ func (m *Model) addAggMember(aggID string, n *graph.Node) {
 		Role: string(n.TopRole()), Tier: tierOf(n),
 		Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 		Evidence: evidence(n),
+		MAC:      n.MAC, Vendor: config.VendorForMAC(n.MAC),
 	})
 }
 
@@ -289,6 +292,7 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 			Role: string(n.TopRole()), Tier: t,
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 			Evidence: evidence(n), Drift: drift,
+			MAC: n.MAC, Vendor: config.VendorForMAC(n.MAC),
 		})
 	}
 	for gid, count := range aggCount {

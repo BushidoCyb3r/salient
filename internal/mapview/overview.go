@@ -154,6 +154,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 			Role: string(n.TopRole()), Tier: tierOf(n),
 			Composite: n.Scores.Composite, Rank: n.Scores.Rank,
 			Evidence: evidence(n), Drift: nodeDrift[n.IP],
+			MAC: n.MAC, Vendor: config.VendorForMAC(n.MAC),
 		})
 	}
 

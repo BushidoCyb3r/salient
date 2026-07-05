@@ -195,14 +195,14 @@ func TestTagDevicesSendsOperatorFacts(t *testing.T) {
 	}
 	_, err := TagDevices(context.Background(), Config{
 		Provider: ProviderOpenAI, Endpoint: server.URL, Model: "test",
-	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}}, facts)
+	}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1", MAC: "24:5a:4c:11:22:33"}}}, facts)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// The graph payload rides inside a JSON-escaped message string, so
 	// quotes arrive backslash-escaped — assert on bare tokens.
 	body := string(captured)
-	for _, want := range []string{"operator", "router", "gateway", "Gateway", "udm"} {
+	for _, want := range []string{"operator", "router", "gateway", "Gateway", "udm", "Ubiquiti"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("request body missing %s", want)
 		}

@@ -80,6 +80,8 @@ type nodePayload struct {
 	Subnet    string                `json:"subnet"`
 	Roles     []graph.RoleAssertion `json:"roles,omitempty"`
 	Scores    graph.ScoreSet        `json:"scores"`
+	MAC       string                `json:"mac,omitempty"`
+	Vendor    string                `json:"vendor,omitempty"`
 	Operator  *OperatorFacts        `json:"operator,omitempty"`
 }
 
@@ -391,7 +393,7 @@ func summarize(snap graph.Snapshot, maxNodes, maxEdges int) ([]nodePayload, []ed
 	outNodes := make([]nodePayload, 0, len(nodes))
 	for _, n := range nodes {
 		selected[n.IP] = true
-		outNodes = append(outNodes, nodePayload{ID: n.IP, Hostnames: n.Hostnames, Subnet: n.Subnet, Roles: n.Roles, Scores: n.Scores})
+		outNodes = append(outNodes, nodePayload{ID: n.IP, Hostnames: n.Hostnames, Subnet: n.Subnet, Roles: n.Roles, Scores: n.Scores, MAC: n.MAC, Vendor: config.VendorForMAC(n.MAC)})
 	}
 	edges := append([]graph.Edge(nil), snap.Edges...)
 	// Stable, fully-ordered: equal ConnCount must not select a different edge
