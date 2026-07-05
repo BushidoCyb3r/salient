@@ -429,6 +429,46 @@ func TestOverviewReconcileSkipsGhostsKeepsFindings(t *testing.T) {
 	}
 }
 
+// TestDetailedBuildRetainAllPrivateShowsEveryClient: with RetainAllPrivate
+// (drill-in / show-all-private) the detailed build must not collapse low-value
+// clients into an "N workstations" aggregate — every host is individual.
+func TestDetailedBuildRetainAllPrivateShowsEveryClient(t *testing.T) {
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	var snap graph.Snapshot
+	for i := 0; i < 8; i++ {
+		snap.Nodes = append(snap.Nodes, graph.Node{
+			IP: fmt.Sprintf("10.10.40.%d", i+2), Subnet: "10.10.40.0/24",
+			FirstSeen: t0, LastSeen: t0.Add(time.Hour),
+			Scores: graph.ScoreSet{Composite: 0.01, Rank: i + 1}, // below ClientAggMaxComposite
+		})
+	}
+	// Default: low-value clients aggregate into "N workstations".
+	base := mapview.Build(snap, mapview.Options{})
+	agg := false
+	for _, n := range base.Nodes {
+		if n.AggCount > 0 {
+			agg = true
+		}
+	}
+	if !agg {
+		t.Fatal("baseline should aggregate low-value clients")
+	}
+	// RetainAllPrivate: every client shown individually, no aggregate.
+	full := mapview.Build(snap, mapview.Options{RetainAllPrivate: true})
+	shown := 0
+	for _, n := range full.Nodes {
+		if n.AggCount > 0 {
+			t.Errorf("RetainAllPrivate must not aggregate: found %s (%d)", n.ID, n.AggCount)
+		}
+		if strings.HasPrefix(n.ID, "10.10.40.") {
+			shown++
+		}
+	}
+	if shown != 8 {
+		t.Errorf("show %d clients, want all 8 individual", shown)
+	}
+}
+
 func TestBuildGroupsAndSparseCollapse(t *testing.T) {
 	mm := mapview.Build(fixture(t), mapview.Options{})
 	var main, sparse *mapview.Group

@@ -162,6 +162,9 @@ func (a *App) LoadFocusedModel(path, cidr string) (*mapview.Model, error) {
 	}
 	opts := a.mapOptions()
 	opts.Focus = cidr
+	// Drilling in means "show me everything in this VLAN": no client
+	// aggregation, every host individual — that is the point of the drill.
+	opts.RetainAllPrivate = true
 	return a.finishModel(resolved, mapview.Build(snap, opts))
 }
 

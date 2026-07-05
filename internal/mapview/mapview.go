@@ -286,7 +286,7 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		n := &nodes[i]
 		t := tierOf(n)
 		drift := nodeDrift[n.IP]
-		if drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
+		if !opts.RetainAllPrivate && drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
 			gid := resolve(n.Subnet)
 			aggCount[gid]++
 			m.addAggMember(gid+":clients", n)
