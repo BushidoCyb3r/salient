@@ -448,9 +448,22 @@ function tieredLayout() {
   // ranges it owns) collapses to ONE focus node regardless of how many IPs/VLANs
   // it spans, and every VLAN whose range it owns is routed up through it with a
   // dashed (declared, never observed) edge. Layer order supplies the tiers.
-  const devs = (registry.devices || [])
-    .map((d) => ({ name: d.name, layer: deviceLayer(d.type), owns: (d.owns_cidrs || []).map(parseCidr).filter(Boolean) }))
-    .filter((d) => d.layer && d.owns.length);
+  // A device's routed ranges are derived from its own linked IPs — if a device
+  // has interfaces in several VLANs, those VLANs are a given, no need to type
+  // them. Explicit owns_cidrs only add ranges the device routes but has no IP in
+  // (e.g. a firewall). Each member IP contributes the CIDR of the VLAN box it
+  // sits in, falling back to its /24 when the host isn't individually on the map.
+  const ipGroupCidr = {};
+  vlans.forEach((p) => {
+    const c = p.data('cidr');
+    if (c) p.children().forEach((k) => { ipGroupCidr[k.id()] = c; });
+  });
+  const slash24 = (ip) => { const m = /^(\d+)\.(\d+)\.(\d+)\./.exec(ip || ''); return m ? m[1] + '.' + m[2] + '.' + m[3] + '.0/24' : null; };
+  const devs = (registry.devices || []).map((d) => {
+    const set = new Set(d.owns_cidrs || []);
+    (d.ips || []).forEach((ip) => { const c = ipGroupCidr[ip] || slash24(ip); if (c) set.add(c); });
+    return { name: d.name, layer: deviceLayer(d.type), owns: [...set].map(parseCidr).filter(Boolean) };
+  }).filter((d) => d.layer && d.owns.length);
   const devNodes = {};
   devs.forEach((d) => {
     const n = cy.add({ group: 'nodes', data: { id: 'topo:' + d.name, label: d.name, topoLayer: d.layer }, classes: 'topo-added topo-dev' });
@@ -1271,7 +1284,7 @@ function showDeviceCard(name) {
   };
   topo.appendChild(lay);
   const ownsLbl = document.createElement('label');
-  ownsLbl.textContent = 'owns ranges (CIDRs, comma-separated) — traffic routes through this device';
+  ownsLbl.textContent = 'extra ranges (optional) — its own linked IPs’ VLANs route through it automatically; add CIDRs it routes but has no IP in';
   ownsLbl.style.marginTop = '4px';
   topo.appendChild(ownsLbl);
   const owns = document.createElement('input');
