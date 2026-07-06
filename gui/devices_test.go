@@ -142,6 +142,75 @@ func TestRoleOverrideOverlayAndTierRemap(t *testing.T) {
 	}
 }
 
+func TestLoadModelCollapsesSameDeviceRole(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	ips := []string{"192.168.20.1", "10.10.40.1", "10.18.61.1"}
+	roles := []graph.Role{graph.RoleNetworkGear, graph.RoleDNS, graph.RoleWebServer}
+	for _, ip := range ips {
+		if _, err := a.AssignIP("UDM Pro", ip); err != nil {
+			t.Fatal(err)
+		}
+		if err := a.SetRole(ip, "Router"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var nodes []graph.Node
+	for i, ip := range ips {
+		nodes = append(nodes, graph.Node{
+			IP: ip, Subnet: graph.Subnet(ip),
+			Roles:  []graph.RoleAssertion{{Role: roles[i], Confidence: 0.7}},
+			Scores: graph.ScoreSet{Composite: 1 - float64(i)*0.1, Rank: i + 1},
+		})
+	}
+	path := filepath.Join(dataDir, "snapshot.json.gz")
+	writeSnapshot(t, path, graph.Snapshot{Nodes: nodes})
+
+	m, err := a.LoadModel(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var devNodes []mapview.MapNode
+	for _, n := range m.Nodes {
+		if n.Device == "UDM Pro" {
+			devNodes = append(devNodes, n)
+		}
+		for _, ip := range ips {
+			if n.ID == ip {
+				t.Fatalf("%s still rendered as its own node", ip)
+			}
+		}
+	}
+	if len(devNodes) != 1 {
+		t.Fatalf("UDM Pro visible nodes = %d, want 1: %#v", len(devNodes), devNodes)
+	}
+	agg := devNodes[0]
+	if agg.AggCount != len(ips) || agg.RoleOverride != "Router" {
+		t.Fatalf("aggregate = %#v, want %d Router members", agg, len(ips))
+	}
+
+	hosts, err := a.AggregateHosts(path, agg.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(hosts) != len(ips) {
+		t.Fatalf("AggregateHosts(%q) = %d hosts, want %d: %#v", agg.ID, len(hosts), len(ips), hosts)
+	}
+	got := map[string]bool{}
+	for _, h := range hosts {
+		if h.Device != "UDM Pro" || h.RoleOverride != "Router" {
+			t.Fatalf("host overlay missing: %#v", h)
+		}
+		got[h.ID] = true
+	}
+	for _, ip := range ips {
+		if !got[ip] {
+			t.Fatalf("missing aggregate member %s in %#v", ip, hosts)
+		}
+	}
+}
+
 func TestHostnameHints(t *testing.T) {
 	nodes := []graph.Node{
 		{IP: "192.168.20.1", Hostnames: []string{"udm"}},

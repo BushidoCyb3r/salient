@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"net/netip"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -253,6 +255,163 @@ func overlayNodes(nodes []mapview.MapNode, reg *devices.Registry) {
 	}
 }
 
+func overlayModel(model *mapview.Model, reg *devices.Registry) {
+	overlayNodes(model.Nodes, reg)
+	for id, members := range model.AggMembers {
+		overlayNodes(members, reg)
+		model.AggMembers[id] = members
+	}
+	collapseDeviceRoleNodes(model)
+}
+
+func collapseDeviceRoleNodes(model *mapview.Model) {
+	type key struct{ device, role string }
+	groups := map[key][]int{}
+	for i, n := range model.Nodes {
+		if n.Device == "" || n.AggCount > 0 || n.Gateway {
+			continue
+		}
+		if _, err := netip.ParseAddr(n.ID); err != nil {
+			continue
+		}
+		groups[key{n.Device, effectiveRole(n)}] = append(groups[key{n.Device, effectiveRole(n)}], i)
+	}
+
+	rewrite := map[string]string{}
+	remove := map[int]bool{}
+	for k, idxs := range groups {
+		if len(idxs) < 2 {
+			continue
+		}
+		sort.Slice(idxs, func(i, j int) bool { return mapNodeLess(model.Nodes[idxs[i]], model.Nodes[idxs[j]]) })
+		aggID := fmt.Sprintf("dev:%x:%x", k.device, k.role)
+		members := make([]mapview.MapNode, 0, len(idxs))
+		agg := model.Nodes[idxs[0]]
+		agg.ID = aggID
+		agg.Label = k.device
+		agg.AggCount = len(idxs)
+		agg.Composite = 0
+		agg.Rank = 0
+		agg.MAC, agg.Vendor = "", ""
+		agg.Pinned = false
+		agg.Services = nil
+		agg.Labels = nil
+		for _, idx := range idxs {
+			n := model.Nodes[idx]
+			members = append(members, n)
+			rewrite[n.ID] = aggID
+			remove[idx] = true
+			if n.Composite > agg.Composite {
+				agg.Composite = n.Composite
+			}
+			if n.Rank > 0 && (agg.Rank == 0 || n.Rank < agg.Rank) {
+				agg.Rank = n.Rank
+			}
+			agg.Services = appendUnique(agg.Services, n.Services...)
+			agg.Labels = appendUnique(agg.Labels, n.Labels...)
+		}
+		if model.AggMembers == nil {
+			model.AggMembers = map[string][]mapview.MapNode{}
+		}
+		model.AggMembers[aggID] = members
+		model.Nodes = append(model.Nodes, agg)
+	}
+	if len(rewrite) == 0 {
+		return
+	}
+
+	kept := model.Nodes[:0]
+	for i, n := range model.Nodes {
+		if !remove[i] {
+			kept = append(kept, n)
+		}
+	}
+	model.Nodes = kept
+	model.Edges = rewriteDeviceEdges(model.Edges, rewrite)
+	sort.Slice(model.Nodes, func(i, j int) bool { return model.Nodes[i].ID < model.Nodes[j].ID })
+}
+
+func effectiveRole(n mapview.MapNode) string {
+	if n.RoleOverride != "" {
+		return n.RoleOverride
+	}
+	return n.Role
+}
+
+func mapNodeLess(a, b mapview.MapNode) bool {
+	if (a.Rank > 0) != (b.Rank > 0) {
+		return a.Rank > 0
+	}
+	if a.Rank != b.Rank && a.Rank > 0 {
+		return a.Rank < b.Rank
+	}
+	return a.ID < b.ID
+}
+
+func appendUnique(out []string, vals ...string) []string {
+	seen := map[string]bool{}
+	for _, v := range out {
+		seen[v] = true
+	}
+	for _, v := range vals {
+		if v != "" && !seen[v] {
+			seen[v] = true
+			out = append(out, v)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func rewriteDeviceEdges(edges []mapview.MapEdge, rewrite map[string]string) []mapview.MapEdge {
+	type key struct{ src, dst, class string }
+	merged := map[key]mapview.MapEdge{}
+	for _, e := range edges {
+		if dst := rewrite[e.Src]; dst != "" {
+			e.Src = dst
+		}
+		if dst := rewrite[e.Dst]; dst != "" {
+			e.Dst = dst
+		}
+		if e.Src == e.Dst {
+			continue
+		}
+		k := key{e.Src, e.Dst, e.Class}
+		if prev, ok := merged[k]; ok {
+			prev.Hosts += e.Hosts
+			prev.Conns += e.Conns
+			if e.Width > prev.Width {
+				prev.Width = e.Width
+			}
+			if e.Drift != "" && prev.Drift != "" && e.Drift != prev.Drift {
+				prev.Drift = "changed"
+			} else if prev.Drift == "" {
+				prev.Drift = e.Drift
+			}
+			if prev.Hosts > 1 {
+				prev.Label = fmt.Sprintf("%d hosts → %s", prev.Hosts, prev.Class)
+			}
+			merged[k] = prev
+			continue
+		}
+		merged[k] = e
+	}
+	out := make([]mapview.MapEdge, 0, len(merged))
+	for _, e := range merged {
+		out = append(out, e)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Src != out[j].Src {
+			return out[i].Src < out[j].Src
+		}
+		if out[i].Dst != out[j].Dst {
+			return out[i].Dst < out[j].Dst
+		}
+		return out[i].Class < out[j].Class
+	})
+	return out
+}
+
 // operatorFacts flattens the registry into per-IP ground truth for the AI
 // tagging prompt: device name/type, role overrides, durable labels. Notes
 // never leave the host. A corrupt registry yields nil — tagging proceeds
@@ -287,11 +446,11 @@ func (a *App) operatorFacts() map[string]assist.OperatorFacts {
 // applyDeviceOverlay loads the registry and overlays it; a corrupt
 // registry never blocks map loading — the overlay is skipped and the
 // operator warned in the task log.
-func (a *App) applyDeviceOverlay(nodes []mapview.MapNode) {
+func (a *App) applyDeviceOverlay(model *mapview.Model) {
 	reg, err := devices.Load(a.registryPath())
 	if err != nil {
 		a.emit("device:warning", "device registry unreadable — overlay skipped: "+err.Error())
 		return
 	}
-	overlayNodes(nodes, &reg)
+	overlayModel(model, &reg)
 }

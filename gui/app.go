@@ -119,7 +119,7 @@ func (a *App) finishModel(resolved string, model *mapview.Model) (*mapview.Model
 			}
 		}
 	}
-	a.applyDeviceOverlay(model.Nodes)
+	a.applyDeviceOverlay(model)
 	return model, nil
 }
 
@@ -135,6 +135,14 @@ func (a *App) mapOptions() mapview.Options {
 	if len(reg.Pinned) > 0 {
 		opts.Pinned = make(map[string]bool, len(reg.Pinned))
 		for _, ip := range reg.Pinned {
+			opts.Pinned[ip] = true
+		}
+	}
+	for _, d := range reg.Devices {
+		for _, ip := range d.IPs {
+			if opts.Pinned == nil {
+				opts.Pinned = map[string]bool{}
+			}
 			opts.Pinned[ip] = true
 		}
 	}
@@ -198,11 +206,16 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 // ("g:<cidr>:clients"). Ranked hosts come first (best rank leading),
 // unranked hosts follow ordered by IP string, matching the map's own sort.
 func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, error) {
-	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	resolved := a.resolveSnapshotPath(path)
+	snap, err := snapshot.Load(resolved)
 	if err != nil {
 		return nil, err
 	}
-	hosts := mapview.Build(snap, a.mapOptions()).AggMembers[nodeID]
+	model, err := a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
+	if err != nil {
+		return nil, err
+	}
+	hosts := model.AggMembers[nodeID]
 	sort.Slice(hosts, func(i, j int) bool {
 		x, y := hosts[i], hosts[j]
 		if (x.Rank > 0) != (y.Rank > 0) {
@@ -213,7 +226,6 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 		}
 		return x.ID < y.ID
 	})
-	a.applyDeviceOverlay(hosts)
 	return hosts, nil
 }
 
@@ -408,11 +420,15 @@ func loadTagArtifact(snapshotPath string) (*TagArtifact, error) {
 // what the operator is looking at — exactly the complaint that led to
 // ExportImage below, which rasterizes the live Cytoscape canvas instead.
 func (a *App) ExportMap(path string, format string) (string, error) {
-	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	resolved := a.resolveSnapshotPath(path)
+	snap, err := snapshot.Load(resolved)
 	if err != nil {
 		return "", err
 	}
-	mm := mapview.Build(snap, a.mapOptions())
+	mm, err := a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
+	if err != nil {
+		return "", err
+	}
 
 	var ext, filterName string
 	var render func(io.Writer, *mapview.Model) error

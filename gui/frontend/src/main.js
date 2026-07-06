@@ -308,6 +308,7 @@ function logLine(text, cls) {
 let cy = null;
 let curLayout = 'fcose';
 let overviewMode = false; // segment overview vs focused single-VLAN view
+let currentModel = null;
 const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
 const topoBandColor = { boundary: '#3a2417', router: '#12243f', switch: '#12331f' };
 const topoBorder = { boundary: '#e3a008', router: '#5a86ff', switch: '#3fb950' };
@@ -679,6 +680,7 @@ $('ai-tagbtn').onclick = async () => {
 };
 
 function renderModel(model) {
+  currentModel = model;
   // Each view gets its best-fit default layout unless the operator picked one
   // explicitly (layoutPref) — that choice persists across re-renders, so a
   // tiered/realistic layout holds when drilling into a VLAN. Default: grid for
@@ -745,7 +747,7 @@ function renderModel(model) {
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
       { selector: 'node.grp.drillable', style: { label: (ele) => '▸ ' + ele.data('label'), 'border-color': '#3d4450' } },
       { selector: 'node.topo-box', style: { 'background-color': (ele) => topoBandColor[ele.data('topoLayer')] || '#161b22', 'background-opacity': 0.7, 'border-color': (ele) => topoBorder[ele.data('topoLayer')] || '#5a86ff', 'border-width': 2, 'min-width': 150, 'min-height': 60, padding: 12, color: '#eaf1ff' } },
-      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 'mapData(comp, 0, 1, 92, 156)', height: 'mapData(comp, 0, 1, 30, 46)', label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
+      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 'mapData(comp, 0, 1, 92, 156)', height: 'mapData(comp, 0, 1, 30, 46)', label: (ele) => (ele.data('device') && !ele.data('agg')) ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
       { selector: 'node[agg>0]', style: { shape: 'round-rectangle', 'border-style': 'double', 'border-width': 3 } },
@@ -772,7 +774,7 @@ function renderModel(model) {
   });
   runLayout(curLayout);
   bindContextMenu();
-  renderTerrain(model);
+  renderTerrainButton(model);
 
   // Flow reveal: a full mesh of inter-segment edges is an unreadable hairball,
   // so in the segment-flow overview edges start hidden and light up only for
@@ -829,44 +831,30 @@ function renderModel(model) {
   cy.on('tap', (e) => { if (e.target === cy) applyEdgeVisibility(); });
 }
 
-function renderTerrain(model) {
-  const list = $('terrainlist');
-  list.textContent = '';
-  const nodes = (model.nodes || [])
-    .filter((n) => n.rank > 0 && !n.agg_count)
+function topTerrainNodes(model) {
+  return (model.nodes || [])
+    .filter((n) => n.rank > 0 && (!n.agg_count || n.device))
     .sort((a, b) => a.rank - b.rank)
     .slice(0, TERRAIN_TOP_N);
-  for (const item of nodes) {
-    const li = document.createElement('li');
-    const button = document.createElement('button');
-    button.type = 'button';
-    const rank = document.createElement('span');
-    rank.className = 'trank';
-    rank.textContent = '#' + item.rank;
-    const name = document.createElement('span');
-    name.className = 'tname';
-    name.textContent = (item.device ? item.device + ' · ' : '') + item.label.split('\n')[0];
-    const role = document.createElement('span');
-    role.className = 'trole';
-    role.textContent = item.role || 'Unknown';
-    const bar = document.createElement('span');
-    bar.className = 'tbar';
-    const fill = document.createElement('i');
-    fill.style.width = Math.max(0, Math.min(100, (item.composite || 0) * 100)) + '%';
-    bar.appendChild(fill);
-    button.append(rank, name, role, bar);
-    button.onclick = () => {
-      const node = cy.getElementById(item.id);
-      if (node.nonempty()) {
-        cy.animate({ center: { eles: node }, zoom: 1.4, duration: 300 });
-        lightEdgesFor(node);
-        showNodeEvidence(node);
-      }
-    };
-    li.appendChild(button);
-    list.appendChild(li);
-  }
 }
+
+function renderTerrainButton(model) {
+  const count = topTerrainNodes(model).length;
+  $('terrainbtn').disabled = count === 0;
+  $('terrainbtn').textContent = count ? 'Open key terrain (' + count + ')' : 'No key terrain';
+}
+
+function zoomToTerrain(item) {
+  const node = cy && cy.getElementById(item.id);
+  if (!node || node.empty()) return;
+  cy.animate({ center: { eles: node }, zoom: 1.4, duration: 300 });
+  lightEdgesFor(node);
+  showNodeEvidence(node);
+}
+
+$('terrainbtn').onclick = () => {
+  if (currentModel) openTerrainList(currentModel);
+};
 
 let lastSegTap = { id: '', t: 0 };
 
@@ -995,6 +983,7 @@ const HL_TAG_CAP = 100; // assist.AssistMaxNodes — per-group tagging cap
 let hlHosts = [];
 let hlShown = []; // rows currently visible (post-filter, capped)
 let aggListNode = ''; // aggregate node id the host list is showing
+let hlMode = 'hosts';
 
 async function openHostList(nodeID, title) {
   let hosts;
@@ -1005,9 +994,23 @@ async function openHostList(nodeID, title) {
     return;
   }
   hlHosts = hosts || [];
+  hlMode = 'hosts';
   aggListNode = nodeID;
   $('hl-title').textContent = title;
   $('hl-filter').value = '';
+  $('hl-tag').style.display = 'block';
+  $('hostlist').style.display = 'flex';
+  renderHostList('');
+  $('hl-filter').focus();
+}
+
+function openTerrainList(model) {
+  hlHosts = topTerrainNodes(model);
+  hlMode = 'terrain';
+  aggListNode = '';
+  $('hl-title').textContent = 'Key Terrain';
+  $('hl-filter').value = '';
+  $('hl-tag').style.display = 'none';
   $('hostlist').style.display = 'flex';
   renderHostList('');
   $('hl-filter').focus();
@@ -1016,6 +1019,7 @@ async function openHostList(nodeID, title) {
 function closeHostList() {
   $('hostlist').style.display = 'none';
   hlHosts = [];
+  hlMode = 'hosts';
 }
 
 function renderHostList(q) {
@@ -1065,6 +1069,10 @@ function renderHostList(q) {
     }
     li.title = h.id;
     li.onclick = () => {
+      if (hlMode === 'terrain') {
+        zoomToTerrain(h);
+        return;
+      }
       $('ev').textContent =
         h.label +
         (h.role_override ? '\nrole: ✎ ' + h.role_override + ' (operator)\ninferred: ' + h.role : '\nrole: ' + h.role) +
@@ -1076,7 +1084,11 @@ function renderHostList(q) {
         (h.mac ? '\nMAC: ' + h.mac + (h.vendor ? ' (' + h.vendor + ')' : '') : '') +
         ((h.evidence || []).length ? '\n\n' + h.evidence.join('\n') : '\n\n(no role evidence)');
     };
-    li.oncontextmenu = (ev) => { ev.preventDefault(); openHostMenu(h.id, h.role_override || '', ev.clientX, ev.clientY); };
+    li.oncontextmenu = (ev) => {
+      if (!/^[0-9a-f:.]+$/i.test(h.id)) return;
+      ev.preventDefault();
+      openHostMenu(h.id, h.role_override || '', ev.clientX, ev.clientY);
+    };
     list.appendChild(li);
   }
   $('hl-note').textContent = match.length > HL_MAX_ROWS
@@ -1088,6 +1100,7 @@ $('hl-close').onclick = closeHostList;
 $('hl-filter').addEventListener('input', (e) => renderHostList(e.target.value.trim().toLowerCase()));
 
 $('hl-tag').onclick = async () => {
+  if (hlMode !== 'hosts') return;
   const req = tagRequest();
   if (!req) { logLine('AI tagging: set endpoint and model in the AI panel first', 'warn'); return; }
   let ips = hlShown.map((h) => h.id);
