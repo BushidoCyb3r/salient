@@ -146,6 +146,14 @@ func (a *App) mapOptions() mapview.Options {
 			opts.Pinned[ip] = true
 		}
 	}
+	for ip, role := range reg.RoleOverrides {
+		if customDeviceLabel(role) {
+			if opts.Pinned == nil {
+				opts.Pinned = map[string]bool{}
+			}
+			opts.Pinned[ip] = true
+		}
+	}
 	for _, s := range reg.Segments {
 		opts.Segments = append(opts.Segments, mapview.Segment{CIDR: s.CIDR, Name: s.Name})
 	}

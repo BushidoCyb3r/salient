@@ -808,7 +808,7 @@ function renderModel(model) {
   cy.on('tap', 'node:childless', (e) => {
     const n = e.target;
     lightEdgesFor(n);
-    if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('label')); return; }
+    if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('device') || n.data('label')); return; }
     showNodeEvidence(n);
   });
   // Segment interaction: single-tap a VLAN box lights up that whole segment's
@@ -1031,12 +1031,18 @@ function renderHostList(q) {
   hlShown = match.slice(0, HL_MAX_ROWS);
   for (const h of match.slice(0, HL_MAX_ROWS)) {
     const li = document.createElement('li');
-    li.textContent = h.label.split('\n')[0];
+    li.textContent = (hlMode === 'terrain' && h.device) ? h.device : h.label.split('\n')[0];
     if (h.rank) {
       const rank = document.createElement('span');
       rank.className = 'rank';
       rank.textContent = ' #' + h.rank;
       li.appendChild(rank);
+    }
+    if (hlMode === 'terrain' && h.agg_count) {
+      const cnt = document.createElement('span');
+      cnt.className = 'role';
+      cnt.textContent = ' — ' + h.agg_count + ' IPs';
+      li.appendChild(cnt);
     }
     if (h.role_override) {
       const role = document.createElement('span');

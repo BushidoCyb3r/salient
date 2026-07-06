@@ -265,33 +265,39 @@ func overlayModel(model *mapview.Model, reg *devices.Registry) {
 }
 
 func collapseDeviceRoleNodes(model *mapview.Model) {
-	type key struct{ device, role string }
-	groups := map[key][]int{}
+	groups := map[string][]int{}
 	for i, n := range model.Nodes {
-		if n.Device == "" || n.AggCount > 0 || n.Gateway {
+		name, ok := collapseName(n)
+		if !ok || n.AggCount > 0 || n.Gateway {
 			continue
 		}
 		if _, err := netip.ParseAddr(n.ID); err != nil {
 			continue
 		}
-		groups[key{n.Device, effectiveRole(n)}] = append(groups[key{n.Device, effectiveRole(n)}], i)
+		groups[name] = append(groups[name], i)
 	}
 
 	rewrite := map[string]string{}
 	remove := map[int]bool{}
-	for k, idxs := range groups {
+	devGroups := map[string]string{}
+	for name, idxs := range groups {
 		if len(idxs) < 2 {
 			continue
 		}
 		sort.Slice(idxs, func(i, j int) bool { return mapNodeLess(model.Nodes[idxs[i]], model.Nodes[idxs[j]]) })
-		aggID := fmt.Sprintf("dev:%x:%x", k.device, k.role)
+		aggID := "dev:" + fmt.Sprintf("%x", name)
+		groupID := "devg:" + fmt.Sprintf("%x", name)
+		devGroups[groupID] = name
 		members := make([]mapview.MapNode, 0, len(idxs))
 		agg := model.Nodes[idxs[0]]
 		agg.ID = aggID
-		agg.Label = k.device
+		agg.Group = groupID
+		agg.Label = fmt.Sprintf("%d IPs", len(idxs))
+		agg.Device = name
 		agg.AggCount = len(idxs)
 		agg.Composite = 0
 		agg.Rank = 0
+		agg.RoleOverride = sharedOverride(model.Nodes, idxs)
 		agg.MAC, agg.Vendor = "", ""
 		agg.Pinned = false
 		agg.Services = nil
@@ -320,6 +326,9 @@ func collapseDeviceRoleNodes(model *mapview.Model) {
 		return
 	}
 
+	for id, label := range devGroups {
+		model.Groups = append(model.Groups, mapview.Group{ID: id, Label: label})
+	}
 	kept := model.Nodes[:0]
 	for i, n := range model.Nodes {
 		if !remove[i] {
@@ -328,14 +337,40 @@ func collapseDeviceRoleNodes(model *mapview.Model) {
 	}
 	model.Nodes = kept
 	model.Edges = rewriteDeviceEdges(model.Edges, rewrite)
+	sort.Slice(model.Groups, func(i, j int) bool { return model.Groups[i].ID < model.Groups[j].ID })
 	sort.Slice(model.Nodes, func(i, j int) bool { return model.Nodes[i].ID < model.Nodes[j].ID })
 }
 
-func effectiveRole(n mapview.MapNode) string {
-	if n.RoleOverride != "" {
-		return n.RoleOverride
+func collapseName(n mapview.MapNode) (string, bool) {
+	if n.Device != "" {
+		return n.Device, true
 	}
-	return n.Role
+	if customDeviceLabel(n.RoleOverride) {
+		return n.RoleOverride, true
+	}
+	return "", false
+}
+
+func customDeviceLabel(role string) bool {
+	if role == "" {
+		return false
+	}
+	switch strings.ToLower(role) {
+	case "gateway", "networkgear", "unknown":
+		return false
+	}
+	_, generic := overrideTiers[strings.ToLower(role)]
+	return !generic
+}
+
+func sharedOverride(nodes []mapview.MapNode, idxs []int) string {
+	role := nodes[idxs[0]].RoleOverride
+	for _, idx := range idxs[1:] {
+		if nodes[idx].RoleOverride != role {
+			return ""
+		}
+	}
+	return role
 }
 
 func mapNodeLess(a, b mapview.MapNode) bool {

@@ -151,9 +151,6 @@ func TestLoadModelCollapsesSameDeviceRole(t *testing.T) {
 		if _, err := a.AssignIP("UDM Pro", ip); err != nil {
 			t.Fatal(err)
 		}
-		if err := a.SetRole(ip, "Router"); err != nil {
-			t.Fatal(err)
-		}
 	}
 
 	var nodes []graph.Node
@@ -186,8 +183,20 @@ func TestLoadModelCollapsesSameDeviceRole(t *testing.T) {
 		t.Fatalf("UDM Pro visible nodes = %d, want 1: %#v", len(devNodes), devNodes)
 	}
 	agg := devNodes[0]
-	if agg.AggCount != len(ips) || agg.RoleOverride != "Router" {
-		t.Fatalf("aggregate = %#v, want %d Router members", agg, len(ips))
+	if agg.AggCount != len(ips) {
+		t.Fatalf("aggregate = %#v, want %d members", agg, len(ips))
+	}
+	if agg.Group == "" || agg.Group == "g:"+graph.Subnet(ips[0]) {
+		t.Fatalf("aggregate group = %q, want standalone device group", agg.Group)
+	}
+	var groupLabel string
+	for _, g := range m.Groups {
+		if g.ID == agg.Group {
+			groupLabel = g.Label
+		}
+	}
+	if groupLabel != "UDM Pro" {
+		t.Fatalf("device group label = %q, want UDM Pro", groupLabel)
 	}
 
 	hosts, err := a.AggregateHosts(path, agg.ID)
@@ -199,7 +208,7 @@ func TestLoadModelCollapsesSameDeviceRole(t *testing.T) {
 	}
 	got := map[string]bool{}
 	for _, h := range hosts {
-		if h.Device != "UDM Pro" || h.RoleOverride != "Router" {
+		if h.Device != "UDM Pro" {
 			t.Fatalf("host overlay missing: %#v", h)
 		}
 		got[h.ID] = true
@@ -207,6 +216,49 @@ func TestLoadModelCollapsesSameDeviceRole(t *testing.T) {
 	for _, ip := range ips {
 		if !got[ip] {
 			t.Fatalf("missing aggregate member %s in %#v", ip, hosts)
+		}
+	}
+}
+
+func TestLoadModelCollapsesCustomRoleLabel(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	for _, ip := range []string{"10.0.1.10", "10.0.2.10"} {
+		if err := a.SetRole(ip, "UDM Pro"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, ip := range []string{"10.0.3.10", "10.0.4.10"} {
+		if err := a.SetRole(ip, "Printer"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	nodes := []graph.Node{
+		{IP: "10.0.1.10", Subnet: "10.0.1.0/24", Scores: graph.ScoreSet{Composite: 1, Rank: 1}},
+		{IP: "10.0.2.10", Subnet: "10.0.2.0/24", Scores: graph.ScoreSet{Composite: 0.9, Rank: 2}},
+		{IP: "10.0.3.10", Subnet: "10.0.3.0/24", Scores: graph.ScoreSet{Composite: 0.8, Rank: 3}},
+		{IP: "10.0.4.10", Subnet: "10.0.4.0/24", Scores: graph.ScoreSet{Composite: 0.7, Rank: 4}},
+	}
+	path := filepath.Join(dataDir, "snapshot.json.gz")
+	writeSnapshot(t, path, graph.Snapshot{Nodes: nodes})
+
+	m, err := a.LoadModel(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var udm *mapview.MapNode
+	for i := range m.Nodes {
+		n := &m.Nodes[i]
+		if n.Device == "UDM Pro" {
+			udm = n
+		}
+	}
+	if udm == nil || udm.AggCount != 2 {
+		t.Fatalf("UDM Pro custom-role aggregate = %#v, want 2-member aggregate", udm)
+	}
+	for _, ip := range []string{"10.0.3.10", "10.0.4.10"} {
+		if !nodeInModel(m, ip) {
+			t.Fatalf("generic Printer role %s should not collapse", ip)
 		}
 	}
 }
