@@ -111,7 +111,29 @@ Platform-specific runtime packages and unsigned-build warnings are documented in
 
 ## First connection
 
-1. Create a read-only Elasticsearch API key using
+1. Create a read-only Elasticsearch API key. In Kibana, go to **Stack
+   Management → Security → API keys → Create API key**, name it, toggle
+   **Control security privileges** on, and replace the editor contents with:
+
+   ```json
+   {
+     "defilade_ro": {
+       "cluster": ["monitor"],
+       "indices": [
+         {
+           "names": ["logs-*"],
+           "privileges": ["read", "view_index_metadata"]
+         }
+       ]
+     }
+   }
+   ```
+
+   The `cluster: ["monitor"]` privilege is required — Defilade calls the
+   Elasticsearch root `info` API at connect, and without it the grid returns
+   `action [cluster:monitor/main] is unauthorized ... HTTP 403`. Create the key,
+   then copy its **Base64 ("encoded")** value for the connect form. Full steps
+   (firewall, TLS, Dev Tools alternative) are in
    [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 2. Launch the console and enter the manager URL, API key, and CA certificate.
 3. Set the analysis window, timezone, and optional scope CIDRs.

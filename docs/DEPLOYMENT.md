@@ -15,26 +15,51 @@ sudo so-firewall apply
 > Verify the correct role name for your SO version with `sudo so-firewall listhosts`
 > — the goal is TCP 9200 from your workstation to the manager, nothing more.
 
-## 2. Create a read-only role and API key
+## 2. Create a read-only API key
 
-In Kibana Dev Tools (or `curl` as an admin user):
+The key needs two things: the cluster `monitor` privilege (Defilade calls the
+Elasticsearch root `info` API at connect — without it you get
+`action [cluster:monitor/main] is unauthorized ... HTTP 403`) and `read` +
+`view_index_metadata` on the Zeek log indices. Nothing writable.
+
+### Option A — Kibana UI (Stack Management)
+
+1. **Stack Management → Security → API keys → Create API key**.
+2. **Name:** `defilade_readonly`.
+3. Toggle **Control security privileges** on. A code editor appears — select all
+   of its contents, delete them, and paste *only* this (no `POST` line, no outer
+   `name` key):
+
+   ```json
+   {
+     "defilade_ro": {
+       "cluster": ["monitor"],
+       "indices": [
+         {
+           "names": ["logs-*"],
+           "privileges": ["read", "view_index_metadata"]
+         }
+       ]
+     }
+   }
+   ```
+
+   `indices` stays an **array** — if Kibana reports "expected object, found
+   Array," there is leftover text above or below your paste; the editor must
+   contain exactly the object above and nothing else.
+4. **Create API key**, then switch the result's format dropdown to **Base64** and
+   copy that value — it is the `encoded` (`base64(id:api_key)`) form the console
+   wants.
+
+### Option B — Kibana Dev Tools (or `curl` as an admin user)
 
 ```json
-POST /_security/role/defilade_readonly
-{
-  "indices": [
-    {
-      "names": ["logs-*"],
-      "privileges": ["read", "view_index_metadata"]
-    }
-  ]
-}
-
 POST /_security/api_key
 {
-  "name": "defilade",
+  "name": "defilade_readonly",
   "role_descriptors": {
-    "defilade_readonly": {
+    "defilade_ro": {
+      "cluster": ["monitor"],
       "indices": [
         { "names": ["logs-*"], "privileges": ["read", "view_index_metadata"] }
       ]
@@ -42,6 +67,9 @@ POST /_security/api_key
   }
 }
 ```
+
+If your Zeek logs are not under `logs-*`, change `names` to match the index
+pattern you configure in the field map.
 
 Use the `encoded` value from the response:
 
