@@ -44,7 +44,7 @@ func TestLoadReconcileModelFlagsUndocumentedAndWarns(t *testing.T) {
 	}
 	var warned, counted bool
 	for _, f := range m.Findings {
-		if strings.Contains(f, "asset CSV:") {
+		if strings.Contains(f, "asset list:") {
 			warned = true
 		}
 		if strings.Contains(f, "not in the asset list") {
@@ -53,6 +53,36 @@ func TestLoadReconcileModelFlagsUndocumentedAndWarns(t *testing.T) {
 	}
 	if !warned || !counted {
 		t.Errorf("findings missing warning/count: %v", m.Findings)
+	}
+}
+
+// The manual-grid path (LoadReconcileModelCSV) must reach the same result as a
+// CSV file — it feeds the identical parse+reconcile core from typed-in text.
+func TestLoadReconcileModelCSVMatchesFile(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	snapPath := filepath.Join(dataDir, "snap.json.gz")
+	writeSnapshot(t, snapPath, graph.Snapshot{
+		Meta: graph.SnapshotMeta{CreatedAt: t0},
+		Nodes: []graph.Node{
+			{IP: "10.0.0.1", Subnet: "10.0.0.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.9, Rank: 1}},
+			{IP: "10.0.0.2", Subnet: "10.0.0.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.8, Rank: 2}},
+		},
+	})
+	// Same rows the in-app grid serializes: header + one documented host.
+	m, err := a.LoadReconcileModelCSV(snapPath, "ip,hostname,role,segment\n10.0.0.1,dc01,DomainController,srv\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var flagged bool
+	for _, n := range m.Nodes {
+		if n.ID == "10.0.0.2" && n.Drift == "undocumented" {
+			flagged = true
+		}
+	}
+	if !flagged {
+		t.Errorf("undocumented host not flagged from manual CSV: %+v", m.Nodes)
 	}
 }
 

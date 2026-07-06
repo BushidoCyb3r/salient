@@ -42,6 +42,8 @@ export function LoadModel(arg1:string):Promise<mapview.Model>;
 
 export function LoadReconcileModel(arg1:string,arg2:string):Promise<mapview.Model>;
 
+export function LoadReconcileModelCSV(arg1:string,arg2:string):Promise<mapview.Model>;
+
 export function PickAssetCSV():Promise<string>;
 
 export function PinToMap(arg1:string):Promise<void>;

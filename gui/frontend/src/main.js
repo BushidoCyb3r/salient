@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -98,17 +98,23 @@ function clearReconcile(reload) {
   if (reload && currentSnapshotPath) openSnapshot(currentSnapshotPath);
 }
 
+// showReconcile renders a reconciled model and updates the chip. Shared by the
+// CSV-file and manual-grid paths — only the source of the asset rows differs.
+function showReconcile(model, label) {
+  renderModel(model);
+  refreshDevices();
+  logFindings(model);
+  const findings = (model.findings || []).filter((f) => /silent|asset list|contradict/.test(f));
+  $('rec-label').textContent = label + ' — ' +
+    (findings.length ? findings.length + ' finding group' + (findings.length === 1 ? '' : 's') : 'no findings');
+  $('rec-chip').style.display = 'flex';
+}
+
 async function applyReconcile() {
   if (!sessionAssetPath || !currentSnapshotPath) return;
   try {
     const model = await LoadReconcileModel(currentSnapshotPath, sessionAssetPath);
-    renderModel(model);
-    refreshDevices();
-    logFindings(model);
-    const findings = (model.findings || []).filter((f) => /silent|asset list|contradict/.test(f));
-    $('rec-label').textContent = sessionAssetPath.split(/[\\/]/).pop() + ' — ' +
-      (findings.length ? findings.length + ' finding group' + (findings.length === 1 ? '' : 's') : 'no findings');
-    $('rec-chip').style.display = 'flex';
+    showReconcile(model, sessionAssetPath.split(/[\\/]/).pop());
   } catch (err) {
     logLine('reconcile failed: ' + err, 'err');
     clearReconcile(true);
@@ -124,6 +130,61 @@ $('rec-load').onclick = async () => {
   } catch (err) { logLine('asset CSV pick failed: ' + err, 'err'); }
 };
 $('rec-clear').onclick = () => clearReconcile(true);
+
+/* ---- manual asset entry grid (native CSV columns, no file needed) ---- */
+
+function rgAddRow(vals) {
+  const tr = document.createElement('tr');
+  for (let c = 0; c < 4; c++) { // ip, hostname, role, segment
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.value = (vals && vals[c]) || '';
+    if (c === 0) inp.placeholder = '10.10.40.5';
+    td.appendChild(inp);
+    tr.appendChild(td);
+  }
+  const del = document.createElement('td');
+  del.className = 'rg-del';
+  const x = document.createElement('button');
+  x.className = 'rg-x';
+  x.textContent = '×';
+  x.title = 'remove row';
+  x.onclick = () => tr.remove();
+  del.appendChild(x);
+  tr.appendChild(del);
+  $('rg-rows').appendChild(tr);
+  return tr;
+}
+
+// csvCell quotes a value only when it holds a comma, quote, or newline (RFC 4180).
+function csvCell(s) {
+  s = (s || '').trim();
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+$('rec-manual').onclick = () => {
+  if (!currentSnapshotPath) { logLine('open a snapshot before reconciling', 'warn'); return; }
+  $('rg-rows').innerHTML = '';
+  for (let i = 0; i < 6; i++) rgAddRow();
+  $('rg-msg').textContent = '';
+  $('recgrid').style.display = 'flex';
+};
+$('rg-add').onclick = () => rgAddRow();
+$('rg-cancel').onclick = () => { $('recgrid').style.display = 'none'; };
+$('rg-apply').onclick = async () => {
+  const rows = [...$('rg-rows').querySelectorAll('tr')].map((tr) => [...tr.querySelectorAll('input')].map((i) => i.value));
+  const filled = rows.filter((r) => r.some((v) => v.trim() !== ''));
+  if (!filled.length) { $('rg-msg').textContent = 'enter at least one row'; return; }
+  const csv = ['ip,hostname,role,segment', ...filled.map((r) => r.map(csvCell).join(','))].join('\n');
+  try {
+    const model = await LoadReconcileModelCSV(currentSnapshotPath, csv);
+    sessionAssetPath = ''; // manual entry is not a file
+    $('recgrid').style.display = 'none';
+    showReconcile(model, 'manual entry (' + filled.length + ' host' + (filled.length === 1 ? '' : 's') + ')');
+  } catch (err) {
+    $('rg-msg').textContent = 'reconcile failed: ' + err;
+  }
+};
 
 function refreshDriftBaseline() {
   const sel = $('drift-base');

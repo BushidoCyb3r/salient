@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Manual asset entry for reconcile**: alongside "Load asset CSV…", an **Enter
+  manually…** button opens an in-app grid with the columns pre-loaded (IP,
+  hostname, role, VLAN/segment). Type the asset list directly — blank rows are
+  ignored, only IP is required — and it reconciles through the exact same
+  parse/compare path as a CSV file. No spreadsheet needed for a handful of hosts.
 - **Operator-declared segments**: a **Segments** panel to override the naive
   auto-`/24` grouping with the real subnet layout. Declare CIDRs (with optional
   names) — e.g. split a `/24` into two `/25`s, or merge several `/24`s into one

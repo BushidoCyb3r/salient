@@ -173,6 +173,13 @@ documented-but-silent assets are ghosted into their subnet group — including
 inside hatched blind-spot boxes, where "silent" may just mean "unobserved".
 Asset-list VLAN/segment names enrich the subnet-group labels.
 
+In the desktop console, reconcile takes the asset list two ways: **Load asset
+CSV…** (a spreadsheet export, columns autodetected as above) or **Enter
+manually…**, which opens an in-app grid with the columns pre-loaded (IP,
+hostname, role, VLAN/segment). Both feed the identical parse-and-compare path —
+manual entry is just a typed-in CSV for when a handful of hosts doesn't warrant
+a file.
+
 The asset CSV is parsed forgivingly: header names are autodetected
 (ip/address, host/name, role/function, vlan/segment/site), quoting is lazy,
 and rows without a parseable IP are skipped with a warning instead of

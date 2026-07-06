@@ -70,6 +70,10 @@ export function LoadReconcileModel(arg1, arg2) {
   return window['go']['main']['App']['LoadReconcileModel'](arg1, arg2);
 }
 
+export function LoadReconcileModelCSV(arg1, arg2) {
+  return window['go']['main']['App']['LoadReconcileModelCSV'](arg1, arg2);
+}
+
 export function PickAssetCSV() {
   return window['go']['main']['App']['PickAssetCSV']();
 }

@@ -232,28 +232,40 @@ func (a *App) PickAssetCSV() (string, error) {
 	})
 }
 
-// LoadReconcileModel reconciles a snapshot against an asset CSV and returns
-// the flagged map model. ParseCSV warnings and reconcile counts ride
+// LoadReconcileModel reconciles a snapshot against an asset CSV file and
+// returns the flagged map model. ParseCSV warnings and reconcile counts ride
 // Model.Findings.
 func (a *App) LoadReconcileModel(snapshotPath, assetsPath string) (*mapview.Model, error) {
-	resolved := a.resolveSnapshotPath(snapshotPath)
-	snap, err := snapshot.Load(resolved)
-	if err != nil {
-		return nil, err
-	}
 	f, err := os.Open(assetsPath)
 	if err != nil {
 		return nil, fmt.Errorf("asset CSV: %w", err)
 	}
 	defer f.Close()
-	assets, warnings, err := reconcile.ParseCSV(f)
+	return a.reconcileFrom(snapshotPath, f)
+}
+
+// LoadReconcileModelCSV reconciles a snapshot against asset rows the operator
+// typed into the in-app grid, serialized as CSV text (header ip,hostname,
+// role,segment). Same parse + reconcile path as the file loader — the only
+// difference is where the CSV comes from.
+func (a *App) LoadReconcileModelCSV(snapshotPath, csvText string) (*mapview.Model, error) {
+	return a.reconcileFrom(snapshotPath, strings.NewReader(csvText))
+}
+
+func (a *App) reconcileFrom(snapshotPath string, assets io.Reader) (*mapview.Model, error) {
+	resolved := a.resolveSnapshotPath(snapshotPath)
+	snap, err := snapshot.Load(resolved)
 	if err != nil {
-		return nil, fmt.Errorf("asset CSV: %w", err)
+		return nil, err
 	}
-	res := reconcile.Compare(snap, assets)
-	model := mapview.BuildReconcile(snap, res, assets, a.mapOptions())
+	parsed, warnings, err := reconcile.ParseCSV(assets)
+	if err != nil {
+		return nil, fmt.Errorf("asset list: %w", err)
+	}
+	res := reconcile.Compare(snap, parsed)
+	model := mapview.BuildReconcile(snap, res, parsed, a.mapOptions())
 	for _, w := range warnings {
-		model.Findings = append(model.Findings, "asset CSV: "+w)
+		model.Findings = append(model.Findings, "asset list: "+w)
 	}
 	return a.finishModel(resolved, model)
 }
