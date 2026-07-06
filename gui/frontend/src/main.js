@@ -246,6 +246,7 @@ function logLine(text, cls) {
 
 let cy = null;
 let curLayout = 'fcose';
+let overviewMode = false; // segment overview vs focused single-VLAN view
 const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
 const tierBorder = { core: '#d9773f', service: '#4d8fe0', client: '#586274' };
 const layouts = {
@@ -285,6 +286,60 @@ function tieredLayout() {
   const BANDGAP = 190;  // vertical gap between VLAN rows
   const EXTGAP = 260;   // external band sits far above the internal VLAN rows
   const pos = {};
+
+  // Per-host activity = total traffic volume on the edges touching a host.
+  const hact = {};
+  cy.edges('.host-edge').forEach((e) => {
+    const w = e.data('width') || 1;
+    hact[e.source().id()] = (hact[e.source().id()] || 0) + w;
+    hact[e.target().id()] = (hact[e.target().id()] || 0) + w;
+  });
+  const H = (k) => hact[k.id()] || 0;
+
+  // Focused single-VLAN view: same treatment as the overview, one level down.
+  // Router on top, then hosts banded by activity — busy in the upper rows,
+  // barely-any traffic in a lower band, zero-connection hosts off in a side
+  // column so they don't clutter the box.
+  if (!overviewMode && vlans.length) {
+    const box = vlans[0];
+    const kids = box.children();
+    const gw = kids.filter((k) => k.data('gw')).sort(childOrder);
+    const rest = kids.filter((k) => !k.data('gw')).sort(childOrder);
+    const maxH = rest.reduce((m, k) => Math.max(m, H(k)), 0);
+    const cut = maxH * 0.1; // <10% of peak = "barely any"
+    const busy = rest.filter((k) => H(k) > cut);
+    const quiet = rest.filter((k) => H(k) > 0 && H(k) <= cut);
+    const dead = rest.filter((k) => H(k) <= 0);
+
+    const COLW = NODEW + 20, ROWH = NODEH + VGAP;
+    const cols = Math.min(8, Math.max(4, Math.ceil(Math.sqrt(busy.length || 1))));
+    const rowW = cols * COLW;
+    const placeGrid = (arr, y0) => {
+      arr.forEach((k, i) => { pos[k.id()] = { x: PADX + (i % cols) * COLW, y: y0 + Math.floor(i / cols) * ROWH }; });
+      return y0 + Math.ceil(arr.length / cols) * ROWH;
+    };
+
+    // External band centered over the box row, far above it.
+    ext.forEach((p) => {
+      const eks = p.children();
+      const w = eks.length * (NODEW + 16);
+      const sx = rowW / 2 - w / 2;
+      eks.forEach((k, j) => { pos[k.id()] = { x: sx + j * (NODEW + 16), y: PADY }; });
+    });
+    const topH = ext.length ? PADY + NODEH + EXTGAP : PADY;
+
+    // Router(s) centered over the busy grid, on top.
+    gw.forEach((k, i) => { pos[k.id()] = { x: rowW / 2 - (gw.length * COLW) / 2 + i * COLW + PADX, y: topH }; });
+    let y = topH + ROWH + 28;
+    y = placeGrid(busy, y);
+    if (quiet.length) y = placeGrid(quiet, y + BANDGAP);
+    // Zero-connection hosts: a column off to the right of the box.
+    const deadX = rowW + COLW * 1.2;
+    dead.forEach((k, i) => { pos[k.id()] = { x: PADX + deadX, y: topH + i * ROWH }; });
+
+    cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
+    return;
+  }
 
   // Per-VLAN activity = total traffic volume on its hosts' edges. Three bands:
   // real traffic (upper row), barely-any traffic (bottom row), and zero
@@ -479,8 +534,10 @@ function renderModel(model) {
   // Each view gets its best-fit default layout unless the operator picked one
   // explicitly (layoutPref) — that choice persists across re-renders, so a
   // tiered/realistic layout holds when drilling into a VLAN. Default: grid for
-  // the segment overview, organic for focused/detail.
-  curLayout = layoutPref || (model.overview ? 'grid' : 'fcose');
+  // the segment overview, tiered/banded for the focused VLAN view (hosts banded
+  // by activity, the same treatment the overview gives VLANs).
+  overviewMode = !!model.overview;
+  curLayout = layoutPref || (overviewMode ? 'grid' : 'dagre');
   const els = [];
   for (const g of model.groups || []) {
     els.push({ data: { id: g.id, label: g.label, cidr: g.cidr || '' }, classes: 'grp' + (g.blind_spot ? ' blind' : '') + (g.cidr ? ' drillable' : '') });
