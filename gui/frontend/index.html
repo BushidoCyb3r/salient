@@ -47,6 +47,13 @@
  aside{width:300px;border-left:1px solid var(--line);padding:12px;overflow:auto;background:var(--panel)}
  aside h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:14px 0 6px}
  aside h2:first-child{margin-top:0}
+ ol#terrainlist{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+ #terrainlist button{width:100%;padding:6px 8px;text-align:left;display:grid;grid-template-columns:28px 1fr;gap:2px 6px}
+ #terrainlist .trank{grid-row:1 / 3;color:var(--warn);font-weight:700}
+ #terrainlist .tname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #terrainlist .trole{color:var(--mut);font-size:10px}
+ #terrainlist .tbar{grid-column:2;height:3px;background:#252c36;border-radius:2px;overflow:hidden}
+ #terrainlist .tbar i{display:block;height:100%;background:var(--accent)}
  ul#snaplist{list-style:none;margin:0;padding:0}
  ul#snaplist li{padding:6px 8px;border-radius:6px;cursor:pointer;border:1px solid transparent}
  ul#snaplist li:hover{background:var(--panel2)}
@@ -179,6 +186,8 @@
       </div>
     </div>
     <aside>
+      <h2>Key Terrain</h2>
+      <ol id="terrainlist"></ol>
       <h2>Snapshots</h2>
       <ul id="snaplist"></ul>
       <div id="snaplist-empty" style="display:none">No snapshots yet. Run a scan.</div>

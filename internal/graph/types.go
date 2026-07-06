@@ -99,15 +99,16 @@ type ScoreSet struct {
 
 // Node is a host and everything inferred about it.
 type Node struct {
-	IP        string          `json:"ip"`
-	Hostnames []string        `json:"hostnames,omitempty"`
-	Roles     []RoleAssertion `json:"roles,omitempty"`
-	Subnet    string          `json:"subnet"`
-	FirstSeen time.Time       `json:"first_seen"`
-	LastSeen  time.Time       `json:"last_seen"`
-	Sensors   []string        `json:"sensors,omitempty"`
-	MAC       string          `json:"mac,omitempty"` // responder MAC (own NIC; gateway MACs excluded)
-	Scores    ScoreSet        `json:"scores"`
+	IP              string          `json:"ip"`
+	Hostnames       []string        `json:"hostnames,omitempty"`
+	Roles           []RoleAssertion `json:"roles,omitempty"`
+	TerrainEvidence []string        `json:"terrain_evidence,omitempty"`
+	Subnet          string          `json:"subnet"`
+	FirstSeen       time.Time       `json:"first_seen"`
+	LastSeen        time.Time       `json:"last_seen"`
+	Sensors         []string        `json:"sensors,omitempty"`
+	MAC             string          `json:"mac,omitempty"` // responder MAC (own NIC; gateway MACs excluded)
+	Scores          ScoreSet        `json:"scores"`
 }
 
 // TopRole returns the highest-confidence role label for display, or

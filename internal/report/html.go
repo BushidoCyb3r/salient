@@ -3,6 +3,7 @@ package report
 import (
 	"html/template"
 	"io"
+	"sort"
 	"strconv"
 
 	"github.com/BushidoCyb3r/defilade/internal/graph"
@@ -20,6 +21,30 @@ var htmlTmpl = template.Must(template.New("report").Funcs(template.FuncMap{
 		return strconv.Itoa(int(f*100 + 0.5))
 	},
 	"topRole": graph.Node.TopRole,
+	"topTerrain": func(nodes []graph.Node) []graph.Node {
+		out := make([]graph.Node, 0, len(nodes))
+		for _, n := range nodes {
+			if n.Scores.Rank > 0 && graph.TerrainAddr(n.IP) {
+				out = append(out, n)
+			}
+		}
+		sort.SliceStable(out, func(i, j int) bool { return out[i].Scores.Rank < out[j].Scores.Rank })
+		if len(out) > 10 {
+			out = out[:10]
+		}
+		return out
+	},
+	"why": func(n graph.Node) string {
+		if len(n.TerrainEvidence) > 0 {
+			return n.TerrainEvidence[0]
+		}
+		for _, role := range n.Roles {
+			if len(role.Evidence) > 0 {
+				return role.Evidence[0]
+			}
+		}
+		return "No score-driver evidence recorded"
+	},
 }).Parse(reportHTML))
 
 const reportHTML = `<!DOCTYPE html>
@@ -68,6 +93,19 @@ const reportHTML = `<!DOCTYPE html>
 </div>
 
 <div class="panel">
+ <h2>Top 10 key terrain</h2>
+ <table>
+  <thead><tr><th>#</th><th>Host</th><th>Role</th><th>Why</th></tr></thead>
+  <tbody>{{range topTerrain .Nodes}}<tr>
+   <td class="rank">{{.Scores.Rank}}</td>
+   <td><code>{{.IP}}</code>{{range .Hostnames}}<br><span class="meta">{{.}}</span>{{end}}</td>
+   <td><span class="role">{{topRole .}}</span></td>
+   <td>{{why .}}</td>
+  </tr>{{end}}</tbody>
+ </table>
+</div>
+
+<div class="panel">
  <h2>Ranked terrain</h2>
  <table>
   <thead><tr><th>#</th><th>Host</th><th>Roles</th><th>Clients</th><th>Composite</th></tr></thead>
@@ -84,6 +122,8 @@ const reportHTML = `<!DOCTYPE html>
      <strong>Subnet:</strong> <code>{{.Subnet}}</code> ·
      <strong>PageRank:</strong> {{printf "%.4f" .Scores.PageRank}} ·
      <strong>Betweenness:</strong> {{printf "%.2f" .Scores.Betweenness}}
+     {{if .TerrainEvidence}}<div style="margin-top:6px"><strong>Why this is key terrain</strong>
+      <ul>{{range .TerrainEvidence}}<li>{{.}}</li>{{end}}</ul></div>{{end}}
      {{range .Roles}}{{if .Evidence}}
      <div style="margin-top:6px"><strong>{{.Role}}</strong> (confidence {{pct .Confidence}}%)
       <ul>{{range .Evidence}}<li>{{.}}</li>{{end}}</ul></div>

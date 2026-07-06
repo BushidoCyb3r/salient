@@ -3,6 +3,7 @@
 package score
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -69,6 +70,7 @@ func Score(m *graph.Model) Result {
 	normBW := minMax(bwVals)
 	normCrit := minMax(critVals)
 	normSpread := minMax(spreadVals)
+	drivers := make(map[string][]terrainDriver, len(terrain))
 
 	for i, n := range terrain {
 		id, _ := m.ID(n.IP)
@@ -79,6 +81,30 @@ func Score(m *graph.Model) Result {
 			config.WeightPageRank*normPR(prVals[i]) +
 			config.WeightBetween*normBW(bwVals[i]) +
 			config.WeightSubnet*normSpread(spreadVals[i])
+		if critIn[n.IP] > 0 {
+			drivers[n.IP] = append(drivers[n.IP], terrainDriver{
+				config.WeightDependency * normCrit(critVals[i]),
+				fmt.Sprintf("%d distinct hosts depend on it for critical services", critIn[n.IP]),
+			})
+		}
+		if bw[id] > 0 {
+			drivers[n.IP] = append(drivers[n.IP], terrainDriver{
+				config.WeightBetween * normBW(bwVals[i]),
+				fmt.Sprintf("chokepoint: betweenness %.2f — observed dependency paths pass through it", bw[id]),
+			})
+		}
+		if spread[n.IP] > 0 {
+			drivers[n.IP] = append(drivers[n.IP], terrainDriver{
+				config.WeightSubnet * normSpread(spreadVals[i]),
+				fmt.Sprintf("blast radius: dependencies reach it from %d subnets", spread[n.IP]),
+			})
+		}
+		if pr[id] > 0 {
+			drivers[n.IP] = append(drivers[n.IP], terrainDriver{
+				config.WeightPageRank * normPR(prVals[i]),
+				fmt.Sprintf("dependency centrality: PageRank %.4f from weighted incoming traffic", pr[id]),
+			})
+		}
 	}
 
 	// Rank by composite, descending; stable by IP for determinism.
@@ -91,8 +117,22 @@ func Score(m *graph.Model) Result {
 	})
 	for i, n := range ranked {
 		n.Scores.Rank = i + 1
+		n.TerrainEvidence = nil
+		if n.Scores.Rank > config.TerrainEvidenceTopN || !graph.TerrainAddr(n.IP) {
+			continue
+		}
+		d := drivers[n.IP]
+		sort.SliceStable(d, func(i, j int) bool { return d[i].contribution > d[j].contribution })
+		for _, driver := range d {
+			n.TerrainEvidence = append(n.TerrainEvidence, driver.text)
+		}
 	}
 	return res
+}
+
+type terrainDriver struct {
+	contribution float64
+	text         string
 }
 
 // criticalInDegree: distinct client IPs per responder on auth/dns/smb/db (§10).

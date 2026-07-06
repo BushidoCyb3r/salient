@@ -442,7 +442,7 @@ func nodeLabel(n *graph.Node) string {
 }
 
 func evidence(n *graph.Node) []string {
-	var out []string
+	out := append([]string(nil), n.TerrainEvidence...)
 	for _, r := range n.Roles {
 		out = append(out, r.Evidence...)
 	}

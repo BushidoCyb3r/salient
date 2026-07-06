@@ -23,7 +23,7 @@ func fixture() graph.Snapshot {
 			Sensors: []string{"sensor1"}, ZeroCovCIDRs: []string{"10.9.0.0/24"},
 		},
 		Nodes: []graph.Node{
-			{IP: "10.0.1.10", Subnet: "10.0.1.0/24", Roles: []graph.RoleAssertion{
+			{IP: "10.0.1.10", Subnet: "10.0.1.0/24", TerrainEvidence: []string{"20 distinct hosts depend on it for critical services"}, Roles: []graph.RoleAssertion{
 				{Role: graph.RoleDC, Confidence: 0.8, Evidence: []string{"20 distinct hosts made Kerberos requests to this host; LDAP also observed"}},
 			}, Scores: graph.ScoreSet{Rank: 1, Composite: 0.91, DependencyInDegree: 20, PageRank: 0.3, Betweenness: 12}},
 			{IP: "10.0.2.30", Subnet: "10.0.2.0/24", Roles: []graph.RoleAssertion{{Role: graph.RoleUnknown}},
@@ -81,7 +81,8 @@ func TestHTMLRendersEvidenceAndBlindSpots(t *testing.T) {
 	}
 	out := b.String()
 	for _, want := range []string{
-		"10.0.1.10", "DomainController", "Kerberos requests",
+		"Top 10 key terrain", "10.0.1.10", "DomainController", "Kerberos requests",
+		"20 distinct hosts depend on it for critical services",
 		"10.9.0.0/24",                  // blind-spot CIDR surfaced
 		"Handle at the classification", // handling banner
 	} {

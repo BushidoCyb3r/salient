@@ -312,6 +312,7 @@ const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
 const topoBandColor = { boundary: '#3a2417', router: '#12243f', switch: '#12331f' };
 const topoBorder = { boundary: '#e3a008', router: '#5a86ff', switch: '#3fb950' };
 const tierBorder = { core: '#d9773f', service: '#4d8fe0', client: '#586274' };
+const TERRAIN_TOP_N = 15;
 const layouts = {
   // Tight, tiled fcose: pack each segment's hosts into a compact grid inside its
   // box (so boxes come out small and uniform, not ballooned by wide separation),
@@ -744,7 +745,7 @@ function renderModel(model) {
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
       { selector: 'node.grp.drillable', style: { label: (ele) => '▸ ' + ele.data('label'), 'border-color': '#3d4450' } },
       { selector: 'node.topo-box', style: { 'background-color': (ele) => topoBandColor[ele.data('topoLayer')] || '#161b22', 'background-opacity': 0.7, 'border-color': (ele) => topoBorder[ele.data('topoLayer')] || '#5a86ff', 'border-width': 2, 'min-width': 150, 'min-height': 60, padding: 12, color: '#eaf1ff' } },
-      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
+      { selector: 'node:childless', style: { shape: 'round-rectangle', width: 'mapData(comp, 0, 1, 92, 156)', height: 'mapData(comp, 0, 1, 30, 46)', label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
       { selector: 'node[agg>0]', style: { shape: 'round-rectangle', 'border-style': 'double', 'border-width': 3 } },
@@ -771,6 +772,7 @@ function renderModel(model) {
   });
   runLayout(curLayout);
   bindContextMenu();
+  renderTerrain(model);
 
   // Flow reveal: a full mesh of inter-segment edges is an unreadable hairball,
   // so in the segment-flow overview edges start hidden and light up only for
@@ -789,6 +791,8 @@ function renderModel(model) {
       cy.nodes(':childless').forEach((n) => n.removeStyle('background-color'));
     }
   };
+  $('l-heat').checked = overviewMode;
+  $('l-heat').onchange();
   $('l-lbl').onchange = function () { cy.edges().style('text-opacity', this.checked ? 1 : 0); };
   $('l-flows').onchange = function () {
     edgesHidden = !!model.overview && !this.checked;
@@ -823,6 +827,45 @@ function renderModel(model) {
   cy.on('tap', 'node.topo-box', (e) => { showDeviceCard(e.target.data('device')); });
   // Tap empty canvas → back to the clean structure-only view.
   cy.on('tap', (e) => { if (e.target === cy) applyEdgeVisibility(); });
+}
+
+function renderTerrain(model) {
+  const list = $('terrainlist');
+  list.textContent = '';
+  const nodes = (model.nodes || [])
+    .filter((n) => n.rank > 0 && !n.agg_count)
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, TERRAIN_TOP_N);
+  for (const item of nodes) {
+    const li = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    const rank = document.createElement('span');
+    rank.className = 'trank';
+    rank.textContent = '#' + item.rank;
+    const name = document.createElement('span');
+    name.className = 'tname';
+    name.textContent = (item.device ? item.device + ' · ' : '') + item.label.split('\n')[0];
+    const role = document.createElement('span');
+    role.className = 'trole';
+    role.textContent = item.role || 'Unknown';
+    const bar = document.createElement('span');
+    bar.className = 'tbar';
+    const fill = document.createElement('i');
+    fill.style.width = Math.max(0, Math.min(100, (item.composite || 0) * 100)) + '%';
+    bar.appendChild(fill);
+    button.append(rank, name, role, bar);
+    button.onclick = () => {
+      const node = cy.getElementById(item.id);
+      if (node.nonempty()) {
+        cy.animate({ center: { eles: node }, zoom: 1.4, duration: 300 });
+        lightEdgesFor(node);
+        showNodeEvidence(node);
+      }
+    };
+    li.appendChild(button);
+    list.appendChild(li);
+  }
 }
 
 let lastSegTap = { id: '', t: 0 };

@@ -25,6 +25,9 @@
           ]
         }
       ],
+      "terrain_evidence": [
+        "20 distinct hosts depend on it for critical services"
+      ],
       "subnet": "10.0.1.0/24",
       "first_seen": "0001-01-01T00:00:00Z",
       "last_seen": "0001-01-01T00:00:00Z",

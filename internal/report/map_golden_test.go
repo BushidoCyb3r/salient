@@ -89,7 +89,7 @@ func TestHTMLMapSelfContainedAndHasEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := b.String()
-	for _, want := range []string{"cytoscape(", "gateway (inferred)", "10.0.1.10", "possible blind spot"} {
+	for _, want := range []string{"cytoscape(", "gateway (inferred)", "10.0.1.10", "possible blind spot", "mapData(comp", `id="l-heat" checked`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("HTML map missing %q", want)
 		}

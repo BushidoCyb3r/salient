@@ -1,4 +1,4 @@
-# Briefing maps
+# Key-terrain criticality maps
 
 `defilade map --snapshot FILE [--format html|svg|graphml]` renders a
 subnet-grouped, tiered dependency map from a stored snapshot. Maps are a pure
@@ -7,9 +7,10 @@ re-renderable anytime.
 
 ## What these maps are — and are not
 
-**L3 logical dependency maps derived from observed traffic.** They show real
-observed dependencies, how heavy they are, and which nodes are key terrain —
-annotated with criticality, something a hand-drawn Visio never has.
+**Criticality views of L3 logical dependencies derived from observed traffic.**
+They communicate the ranked key terrain: larger, hotter nodes are more critical,
+and their evidence explains why. They are not intended to reconstruct a network
+diagram.
 
 **Not physical topology.** Flow data cannot see switches, physical links,
 port assignments, or any device that never talks across a monitored segment.
@@ -25,9 +26,9 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
   `10.10.40.128/25`, or merge several `/24`s into one supernet) and each host
   falls into the most-specific declared segment; undeclared hosts still group by
   `/24`. Hatched red boxes are **blind spots**: in scope, zero observed traffic.
-- **Layouts** (desktop): *grid* (default — uniform boxes on a grid), *organic*
-  (force-directed), *topology* (the realistic tiered/layered map).
-- **Topology layout**: the realistic tiered map — external box up top, VLAN
+- **Layouts** (desktop): *grid* (default criticality view), *organic*
+  (force-directed), and *topology* (optional declared-device cross-check).
+- **Topology layout (secondary)**: an optional declared-design cross-check — external box up top, VLAN
   boxes banded by traffic below, router pinned atop each box — extended with the
   physical hierarchy *you declare*. Tag a device's network layer (its type:
   boundary/router/switch) and give it the IP **ranges it owns** (device card →
@@ -36,8 +37,12 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
   the VLAN rows, and every VLAN whose range it owns threads up through it.
   Routing hops render **dashed** — declared, not observed, since flow data
   cannot see L2 fabric. Layer order (switch → router → boundary) sets the tiers;
-  no uplinks to declare. This is the terrain-validation view: observed traffic
-  that doesn't fit your declared design stands out.
+  no uplinks to declare. It is useful when an operator already has a declared
+  design to compare, but it is not the resting view or a substitute for the
+  key-terrain ranking.
+- **Node size and criticality heat** encode the composite terrain score. Heat is
+  on by default in the overview so high-impact systems dominate before the
+  operator selects anything.
 - **Rows within a box** are tiers, top to bottom: **Core** (gateways, DCs,
   DNS, network gear) → **Service** (file/db/web/jump/mail) → **Client**
   (printers, cameras, workstations, everything else).
@@ -102,8 +107,8 @@ navigable down to host detail — instead of a flat wall of nodes:
   draws every host edge at once (dense);
 - **drill into a segment:** double-click a VLAN box (marked ▸) to re-render
   focused on that CIDR — every host, intra-segment flow, gateways — then
-  **← overview** to return. The overview defaults to the tiered (directional)
-  layout; the organic toggle still applies;
+  **← overview** to return. The overview defaults to the grid criticality view;
+  organic and topology remain explicit operator choices;
 - at most one gateway per segment survives (observed L2 candidates win by
   distinct-IP count);
 - **console overrides:** right-click **Pin to map** forces any collapsed host to

@@ -1,11 +1,34 @@
 package score
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/BushidoCyb3r/defilade/internal/graph"
 )
+
+func TestScoreAttachesTerrainEvidence(t *testing.T) {
+	edges := []graph.Edge{
+		{Src: "10.0.1.10", Dst: "10.0.3.10", Port: 88, ConnCount: 10},
+		{Src: "10.0.2.10", Dst: "10.0.3.10", Port: 88, ConnCount: 10},
+		{Src: "10.0.3.10", Dst: "10.0.4.10", Port: 443, ConnCount: 10},
+	}
+	m := graph.Build(edges)
+	Score(m)
+
+	hub := m.Nodes["10.0.3.10"]
+	why := strings.Join(hub.TerrainEvidence, "\n")
+	if len(hub.TerrainEvidence) == 0 || hub.TerrainEvidence[0] != "2 distinct hosts depend on it for critical services" {
+		t.Errorf("strongest terrain evidence = %q, want critical dependents first", hub.TerrainEvidence)
+	}
+	if !strings.Contains(why, "chokepoint:") {
+		t.Errorf("terrain evidence = %q, want chokepoint rationale", why)
+	}
+	if !strings.Contains(why, "2 distinct hosts depend") {
+		t.Errorf("terrain evidence = %q, want dependent-host rationale", why)
+	}
+}
 
 // TestScoreExcludesBroadcastMulticast: broadcast/multicast destinations soak
 // up traffic from every host (DHCP, mDNS, IGMP) but are not terrain — they

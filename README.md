@@ -3,10 +3,15 @@
 **A desktop operator console for passive terrain analysis on Security Onion grids.**
 
 Defilade connects read-only to Elasticsearch, aggregates existing Zeek telemetry,
-and turns observed traffic into a scored dependency graph and briefing map. It is
-built for hunting teams that are new to an environment and need to understand its
-key systems and dependencies without active scanning or changes to the Security
-Onion deployment.
+and turns observed traffic into a scored dependency graph and ranked key-terrain
+report with the evidence behind each ranking. It is built for hunting teams that
+are new to an environment and need to understand its key systems and dependencies
+without active scanning or changes to the Security Onion deployment.
+
+The map is a criticality view of that observed dependency terrain, not a network
+diagram. Node size and heat emphasize the systems whose compromise or loss would
+matter most. The declared-device topology layout remains available as an optional
+cross-check; it is not the product's primary view.
 
 The desktop console is the primary interface. It connects to the grid, runs scans
 with live progress, browses saved snapshots, investigates role evidence, and
@@ -24,8 +29,10 @@ The console provides:
   warnings (conn is required), and sensors, in the task log.
 - Configurable scan window, scope CIDRs, and timezone.
 - Live scan progress and cancellation.
-- Ranked key-terrain maps grouped by subnet, with observed or inferred gateways.
-- Organic and tiered layouts, criticality heat, and optional edge labels.
+- A Key Terrain panel leading with the ranked systems and their score-driver evidence.
+- Criticality maps grouped by subnet, sized and heated by terrain score, with
+  observed or inferred gateways.
+- Grid and organic layouts, plus an optional declared-device topology cross-check.
 - Snapshot browsing and offline map reconstruction.
 - Aggregate drill-in: clicking an "N other hosts" node opens a filterable list
   of every collapsed host with its rank, role, services, device, MAC, and

@@ -52,6 +52,7 @@ const (
 	ResponderTermsSize      = 2000                // role-evidence responder terms cap
 	RoleSampleHostsSize     = 3                   // example client IPs kept per responder for evidence strings
 	TopNTemporal            = 50                  // §6.1 second-pass temporal for top-N nodes
+	TerrainEvidenceTopN     = 20                  // ranked nodes carrying explicit score-driver rationale
 	ExactBetweennessMax     = 2000                // §10 gonum exact ≤2k nodes
 	BetweennessSamplePivots = 256                 // Brandes–Pich pivots above the exact limit
 )

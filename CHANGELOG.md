@@ -81,6 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   evidence is visible.
 
 ### Changed
+- Refocused on key-terrain identification: ranked terrain is the primary console
+  surface, map nodes are sized and colored by criticality, the terrain report
+  leads with a Top 10 and score-driver rationale, and the topology device-diagram
+  layout is demoted to an optional secondary view.
 - Aggregate "N other hosts" drill-in list now shows each host's MAC and vendor
   and is filterable by them.
 - Overview grouping no longer coarsens subnets past the operator's true prefix;

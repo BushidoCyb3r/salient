@@ -296,6 +296,7 @@ export namespace graph {
 	    ip: string;
 	    hostnames?: string[];
 	    roles?: RoleAssertion[];
+	    terrain_evidence?: string[];
 	    subnet: string;
 	    // Go type: time
 	    first_seen: any;
@@ -314,6 +315,7 @@ export namespace graph {
 	        this.ip = source["ip"];
 	        this.hostnames = source["hostnames"];
 	        this.roles = this.convertValues(source["roles"], RoleAssertion);
+	        this.terrain_evidence = source["terrain_evidence"];
 	        this.subnet = source["subnet"];
 	        this.first_seen = this.convertValues(source["first_seen"], null);
 	        this.last_seen = this.convertValues(source["last_seen"], null);

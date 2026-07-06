@@ -72,7 +72,7 @@ const mapHTML = `<!DOCTYPE html>
  <button id="b-fcose" class="on">organic (fcose)</button><button id="b-dagre">tiered (dagre)</button>
  <h2>Layers</h2>
  <div class="ctl">
-  <label><input type="checkbox" id="l-heat"> criticality heat</label>
+  <label><input type="checkbox" id="l-heat" checked> criticality heat</label>
   <label><input type="checkbox" id="l-cov"> sensor coverage</label>
   <label><input type="checkbox" id="l-lbl" checked> edge labels</label>
   <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
@@ -108,7 +108,7 @@ const cy = cytoscape({container: document.getElementById('cy'), elements: els, w
   {selector:'node.grp', style:{'background-color':'#f2f4f8','background-opacity':0.55,'border-color':'#b9c0cc','border-width':1,
     shape:'round-rectangle',label:'data(label)','text-valign':'top','font-size':12,'font-weight':600,color:'#39414f',padding:18}},
   {selector:'node.grp.blind', style:{'border-color':'#c96a6a','border-style':'dashed','background-color':'#f6e8e8'}},
-  {selector:'node:childless', style:{shape:'round-rectangle',width:120,height:34,label:'data(label)','text-valign':'center',
+  {selector:'node:childless', style:{shape:'round-rectangle',width:'mapData(comp, 0, 1, 92, 156)',height:'mapData(comp, 0, 1, 30, 46)',label:'data(label)','text-valign':'center',
     'font-size':10,'background-color':ele=>tierColor[ele.data('tier')]||'#fff','border-width':1.6,
     'border-color':ele=>tierBorder[ele.data('tier')]||'#8f97a5'}},
   {selector:'node[gw=1]', style:{shape:'diamond',height:40}},
@@ -146,6 +146,7 @@ document.getElementById('l-heat').onchange=function(){
  if(this.checked) cy.nodes(':childless').forEach(n=>{const c=n.data('comp');
    n.style('background-color','rgb('+Math.round(255-90*c)+','+Math.round(240-170*c)+','+Math.round(235-180*c)+')');});
  else cy.nodes(':childless').forEach(n=>n.removeStyle('background-color'));};
+document.getElementById('l-heat').onchange();
 document.getElementById('l-cov').onchange=function(){
  cy.nodes('.grp').forEach(g=>g.style('border-width', this.checked && !g.data('covered') ? 3 : 1));
  cy.nodes('.grp').forEach(g=>g.style('border-color', this.checked && !g.data('covered') ? '#c96a6a' : (g.hasClass('blind')?'#c96a6a':'#b9c0cc')));};
