@@ -47,12 +47,7 @@
  aside{width:300px;border-left:1px solid var(--line);padding:12px;overflow:auto;background:var(--panel)}
  aside h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:14px 0 6px}
  aside h2:first-child{margin-top:0}
- #terrainbtn{width:100%;text-align:left}
- ul#snaplist{list-style:none;margin:0;padding:0}
- ul#snaplist li{padding:6px 8px;border-radius:6px;cursor:pointer;border:1px solid transparent}
- ul#snaplist li:hover{background:var(--panel2)}
- ul#snaplist li.sel{background:#0d1f45;border-color:var(--accent)}
- #snaplist-empty{color:var(--mut);font-style:italic}
+ #terrainbtn,#snapshotbtn{width:100%;text-align:left}
  ul#devlist{list-style:none;margin:0;padding:0}
  ul#devlist li{padding:5px 8px;border-radius:6px;cursor:pointer;border:1px solid transparent}
  ul#devlist li:hover{background:var(--panel2)}
@@ -100,6 +95,7 @@
  ul#hl-list{list-style:none;margin:0;padding:0;flex:1;overflow:auto}
  ul#hl-list li{padding:4px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  ul#hl-list li:hover{background:var(--panel2)}
+ ul#hl-list li.sel{background:#0d1f45;border:1px solid var(--accent)}
  ul#hl-list li .role{color:var(--mut)}
  ul#hl-list li .rank{color:var(--warn)}
 
@@ -183,8 +179,7 @@
       <h2>Key Terrain</h2>
       <button id="terrainbtn" disabled>Open key terrain</button>
       <h2>Snapshots</h2>
-      <ul id="snaplist"></ul>
-      <div id="snaplist-empty" style="display:none">No snapshots yet. Run a scan.</div>
+      <button id="snapshotbtn" disabled>No snapshots</button>
       <h2>Drift</h2>
       <select id="drift-base" disabled></select>
       <div style="display:flex;gap:6px;margin-top:6px">

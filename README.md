@@ -29,7 +29,7 @@ The console provides:
   warnings (conn is required), and sensors, in the task log.
 - Configurable scan window, scope CIDRs, and timezone.
 - Live scan progress and cancellation.
-- A Key Terrain panel leading with the ranked systems and their score-driver evidence.
+- A Key Terrain drawer leading with the ranked systems and their score-driver evidence.
 - Criticality maps grouped by subnet, sized and heated by terrain score, with
   observed or inferred gateways.
 - Grid and organic layouts, plus an optional declared-device topology cross-check.
@@ -71,6 +71,25 @@ The console provides:
 Elasticsearch and model API keys remain in memory and are never written to
 disk. Operator annotations (devices, labels, role overrides) persist in
 `defilade-data/devices.json` and survive rescans.
+
+## Key-terrain scoring
+
+Defilade ranks key terrain from observed dependency traffic, not labels or icon
+size. Each rank is a composite score:
+
+- **40% critical-service dependents:** distinct hosts depending on this node for
+  auth, DNS/name resolution, file, or database services.
+- **25% PageRank:** dependency centrality in the weighted traffic graph; auth
+  and DNS/name-resolution edges count 3×.
+- **20% betweenness:** chokepoint value — how often dependency paths pass
+  through the node.
+- **15% subnet spread:** how many client subnets depend on the node.
+
+Scores are min-max normalized within the snapshot and ranked descending; invalid
+terrain artifacts such as multicast, broadcast, loopback, and link-local
+addresses are excluded from the composite. The console's **Key Terrain** button
+shows the top ranked visible hosts/devices and opens a drawer that can zoom to
+the selected node. Collapsed device nodes inherit their strongest member rank.
 
 ## Build and run
 

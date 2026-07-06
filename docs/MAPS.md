@@ -43,6 +43,15 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
 - **Node size and criticality heat** encode the composite terrain score. Heat is
   on by default in the overview so high-impact systems dominate before the
   operator selects anything.
+- **Key-terrain score** is computed from the snapshot dependency graph, then
+  ranked descending: 40% distinct critical-service dependents (auth, DNS/name,
+  file, DB), 25% PageRank dependency centrality (auth and DNS/name edges count
+  3×), 20% betweenness/chokepoint value, and 15% client-subnet spread. Each
+  component is min-max normalized inside the snapshot. Multicast, broadcast,
+  loopback, and link-local artifacts are excluded from the terrain composite.
+  The desktop **Key Terrain** button opens the ranked drawer for the current
+  map; collapsed named devices use their strongest member rank and zoom as one
+  device node.
 - **Rows within a box** are tiers, top to bottom: **Core** (gateways, DCs,
   DNS, network gear) → **Service** (file/db/web/jump/mail) → **Client**
   (printers, cameras, workstations, everything else).

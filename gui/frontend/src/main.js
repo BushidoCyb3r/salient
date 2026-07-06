@@ -62,29 +62,32 @@ async function refreshList(loadNewest) {
   }
   entries = entries || [];
   snapshotEntries = entries;
-  const list = $('snaplist');
-  list.innerHTML = '';
-  $('snaplist-empty').style.display = entries.length === 0 ? 'block' : 'none';
-  for (const en of entries) {
-    const li = document.createElement('li');
-    li.textContent = en.Timestamp;
-    if (en.Snapshot) {
-      li.onclick = () => {
-        openSnapshot(en.Snapshot);
-        list.querySelectorAll('li').forEach((x) => x.classList.toggle('sel', x === li));
-      };
-    } else {
-      li.style.opacity = '0.4';
-      li.title = 'snapshot file missing — map cannot be rebuilt';
-    }
-    list.appendChild(li);
-  }
+  renderSnapshotButton();
   if (loadNewest && entries.length && entries[0].Snapshot) {
     openSnapshot(entries[0].Snapshot);
-    list.firstChild.classList.add('sel');
   }
   refreshDriftBaseline();
 }
+
+function renderSnapshotButton() {
+  const btn = $('snapshotbtn');
+  btn.disabled = snapshotEntries.length === 0;
+  const active = snapshotEntries.find((en) => en.Snapshot === currentSnapshotPath);
+  btn.textContent = active ? 'Snapshot: ' + active.Timestamp : (snapshotEntries.length ? 'Open snapshots (' + snapshotEntries.length + ')' : 'No snapshots');
+}
+
+function openSnapshotList() {
+  hlMode = 'snapshots';
+  aggListNode = '';
+  $('hl-title').textContent = 'Snapshots';
+  $('hl-filter').value = '';
+  $('hl-tag').style.display = 'none';
+  $('hostlist').style.display = 'flex';
+  renderHostList('');
+  $('hl-filter').focus();
+}
+
+$('snapshotbtn').onclick = openSnapshotList;
 
 /* ---------------- drift ---------------- */
 
@@ -591,6 +594,7 @@ function openSnapshot(path) {
     drilledCIDR = '';
     $('backbtn').style.display = 'none';
     closeHostList();
+    renderSnapshotButton();
     $('exportbtn').disabled = false;
     $('ai-tagbtn').disabled = false;
     $('ai-status').textContent = 'ready';
@@ -1023,6 +1027,7 @@ function closeHostList() {
 }
 
 function renderHostList(q) {
+  if (hlMode === 'snapshots') { renderSnapshotRows(q); return; }
   const list = $('hl-list');
   list.innerHTML = '';
   const match = q
@@ -1100,6 +1105,31 @@ function renderHostList(q) {
   $('hl-note').textContent = match.length > HL_MAX_ROWS
     ? 'showing ' + HL_MAX_ROWS + ' of ' + match.length + ' hosts — type to narrow'
     : match.length + ' host' + (match.length === 1 ? '' : 's');
+}
+
+function renderSnapshotRows(q) {
+  const list = $('hl-list');
+  list.innerHTML = '';
+  const match = q
+    ? snapshotEntries.filter((en) => (en.Timestamp + ' ' + (en.Snapshot || '')).toLowerCase().includes(q))
+    : snapshotEntries;
+  hlShown = [];
+  for (const en of match.slice(0, HL_MAX_ROWS)) {
+    const li = document.createElement('li');
+    li.textContent = en.Timestamp;
+    if (en.Snapshot === currentSnapshotPath) li.className = 'sel';
+    if (en.Snapshot) {
+      li.onclick = () => { openSnapshot(en.Snapshot); closeHostList(); };
+      li.title = en.Snapshot;
+    } else {
+      li.style.opacity = '0.4';
+      li.title = 'snapshot file missing — map cannot be rebuilt';
+    }
+    list.appendChild(li);
+  }
+  $('hl-note').textContent = match.length > HL_MAX_ROWS
+    ? 'showing ' + HL_MAX_ROWS + ' of ' + match.length + ' snapshots — type to narrow'
+    : match.length + ' snapshot' + (match.length === 1 ? '' : 's');
 }
 
 $('hl-close').onclick = closeHostList;
