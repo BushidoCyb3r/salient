@@ -441,17 +441,72 @@ function tieredLayout() {
     const startX = realW / 2 - w / 2;
     kids.forEach((k, j) => { pos[k.id()] = { x: startX + j * (NODEW + 16), y: PADY }; });
   });
-  const topH = ext.length ? PADY + NODEH + EXTGAP : 0;
+  const extH = ext.length ? PADY + NODEH + EXTGAP : 0;
 
-  let y = placeBand(real, topH);   // real traffic (upper)
-  placeBand(barely, y);            // barely any (bottom)
+  // Declared device bands: boundary → router → switch, between external and the
+  // VLAN rows. Each operator-declared device (its network layer from Type + the
+  // ranges it owns) collapses to ONE focus node regardless of how many IPs/VLANs
+  // it spans, and every VLAN whose range it owns is routed up through it with a
+  // dashed (declared, never observed) edge. Layer order supplies the tiers.
+  const devs = (registry.devices || [])
+    .map((d) => ({ name: d.name, layer: deviceLayer(d.type), owns: (d.owns_cidrs || []).map(parseCidr).filter(Boolean) }))
+    .filter((d) => d.layer && d.owns.length);
+  const devNodes = {};
+  devs.forEach((d) => {
+    const n = cy.add({ group: 'nodes', data: { id: 'topo:' + d.name, label: d.name, topoLayer: d.layer }, classes: 'topo-added topo-dev' });
+    devNodes[d.name] = { node: n, layer: d.layer, owns: d.owns };
+  });
+  const ownerAt = (cidr, layer) => {
+    let best = null, bestBits = -1;
+    for (const name in devNodes) {
+      const d = devNodes[name];
+      if (d.layer !== layer) continue;
+      for (const p of d.owns) if (cidrContains(p, cidr) && p.bits > bestBits) { best = d; bestBits = p.bits; }
+    }
+    return best;
+  };
+  const seen = new Set();
+  const addDecl = (a, b) => {
+    const k = a + '>' + b;
+    if (a === b || seen.has(k)) return;
+    seen.add(k);
+    cy.add({ group: 'edges', data: { id: 't:' + k, source: a, target: b }, classes: 'topo-added topo-decl' });
+  };
+  const extId = ext.length ? ext.id() : null;
+  vlans.forEach((p) => {
+    const cidr = p.data('cidr');
+    if (!cidr) return;
+    let below = p;
+    for (const layer of ['switch', 'router', 'boundary']) {
+      const up = ownerAt(cidr, layer);
+      if (!up) continue;
+      addDecl(below.id(), up.node.id());
+      below = up.node;
+    }
+    if (below !== p && extId) addDecl(below.id(), extId); // top of a real chain reaches the internet
+  });
+  // Position the device bands, one row per present layer, centered over the row.
+  let devY = extH ? extH - EXTGAP / 2 : PADY;
+  const DEVGAP = NODEH + 74;
+  let vlanTop = extH;
+  ['boundary', 'router', 'switch'].forEach((layer) => {
+    const ds = Object.values(devNodes).filter((d) => d.layer === layer);
+    if (!ds.length) return;
+    const w = ds.length * (NODEW + 60);
+    ds.forEach((d, i) => { pos[d.node.id()] = { x: realW / 2 - w / 2 + i * (NODEW + 60) + NODEW / 2, y: devY }; });
+    devY += DEVGAP;
+    vlanTop = devY + BANDGAP * 0.5;
+  });
+
+  let y = placeBand(real, vlanTop);   // real traffic (upper)
+  placeBand(barely, y);               // barely any (bottom)
 
   // Zero-connection VLANs: a spaced column far off to the right, isolated so
   // they add no visual noise to the live map.
   const zeroX = Math.max(realW, barely.length * CELLW) + CELLW * 1.5;
   zero.forEach((p, i) => {
     p.children().sort(childOrder).forEach((k, j) => {
-      pos[k.id()] = { x: zeroX + PADX, y: topH + i * 360 + PADY + j * (NODEH + VGAP) };
+      pos[k.id()] = { x: zeroX + PADX, y: vlanTop + i * 360 + PADY + j * (NODEH + VGAP) };
     });
   });
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
@@ -513,99 +568,22 @@ function cidrContains(p, cidrStr) {
   return ((c.base & p.mask) >>> 0) === p.base;
 }
 
-// topologyLayout draws the layered network map: external → boundary → router →
-// switch → VLAN bands, each declared device its own focus box, with dashed
-// (declared) edges routing every VLAN up through the devices that own its
-// range. Observed flow (solid seg/host edges) stays hidden until clicked, same
-// as the overview — so declared structure and observed traffic never blur.
-function topologyLayout() {
-  cy.remove('.topo-added');
-  const devs = (registry.devices || [])
-    .map((d) => ({ name: d.name, layer: deviceLayer(d.type), owns: (d.owns_cidrs || []).map(parseCidr).filter(Boolean) }))
-    .filter((d) => d.layer && d.owns.length);
-  const grps = cy.nodes('.grp');
-  const ext = grps.filter((g) => g.id() === 'g:external');
-  const vlans = grps.filter((g) => g.id() !== 'g:external' && g.data('cidr'));
-
-  const devNodes = {};
-  devs.forEach((d) => {
-    const n = cy.add({ group: 'nodes', data: { id: 'topo:' + d.name, label: d.name, topoLayer: d.layer }, classes: 'topo-added topo-dev' });
-    devNodes[d.name] = { node: n, layer: d.layer, owns: d.owns };
-  });
-
-  // Most-specific device of a given layer that owns the VLAN's range.
-  const ownerAt = (cidr, layer) => {
-    let best = null, bestBits = -1;
-    for (const name in devNodes) {
-      const d = devNodes[name];
-      if (d.layer !== layer) continue;
-      for (const p of d.owns) if (cidrContains(p, cidr) && p.bits > bestBits) { best = d; bestBits = p.bits; }
-    }
-    return best;
-  };
-  const seen = new Set();
-  const addDecl = (a, b) => {
-    const k = a + '>' + b;
-    if (a === b || seen.has(k)) return;
-    seen.add(k);
-    cy.add({ group: 'edges', data: { id: 't:' + k, source: a, target: b }, classes: 'topo-added topo-decl' });
-  };
-  vlans.forEach((g) => {
-    const cidr = g.data('cidr');
-    let below = g;
-    for (const layer of ['switch', 'router', 'boundary']) {
-      const up = ownerAt(cidr, layer);
-      if (!up) continue;
-      addDecl(below.id(), up.node.id());
-      below = up.node;
-    }
-    if (below !== g && ext.length) addDecl(below.id(), ext.id()); // top of a real chain reaches the internet
-  });
-
-  // Band positions, top → bottom.
-  const NODEW = 150, NODEH = 40, VGAP = 8, PADX = 40, PADY = 40, CELLW = 320;
-  const gw = (n) => (n.data('gw') ? 0 : 1);
-  const childSort = (a, b) => (gw(a) - gw(b)) || ((a.data('rank') || 1e9) - (b.data('rank') || 1e9));
-  const pos = {};
-  const vlanW = Math.max(vlans.length, 1) * CELLW;
-  const midX = vlanW / 2;
-  if (ext.length) {
-    const kids = ext.children();
-    const w = kids.length * (NODEW + 16);
-    kids.forEach((k, j) => { pos[k.id()] = { x: midX - w / 2 + j * (NODEW + 16), y: 0 }; });
-  }
-  const bandY = { boundary: 190, router: 380, switch: 570 };
-  ['boundary', 'router', 'switch'].forEach((layer) => {
-    const ds = Object.values(devNodes).filter((d) => d.layer === layer);
-    const w = ds.length * (NODEW + 60);
-    ds.forEach((d, i) => { pos[d.node.id()] = { x: midX - w / 2 + i * (NODEW + 60) + NODEW / 2, y: bandY[layer] }; });
-  });
-  const vy = 770;
-  vlans.forEach((g, i) => {
-    g.children().sort(childSort).forEach((k, j) => { pos[k.id()] = { x: i * CELLW + PADX, y: vy + PADY + j * (NODEH + VGAP) }; });
-  });
-  cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
-}
-
 function runLayout(name) {
   curLayout = name;
   if (cy) cy.remove('.topo-added');
   if (name === 'grid') gridLayout();
   else if (name === 'dagre') tieredLayout();
-  else if (name === 'topology') topologyLayout();
   else cy.layout(layouts[name]).run();
   $('b-grid').classList.toggle('on', name === 'grid');
   $('b-fcose').classList.toggle('on', name === 'fcose');
   $('b-dagre').classList.toggle('on', name === 'dagre');
-  $('b-topo').classList.toggle('on', name === 'topology');
 }
 // layoutPref remembers an explicit operator choice so it survives re-renders
-// (e.g. drilling into a VLAN keeps the tiered/realistic layout).
+// (e.g. drilling into a VLAN keeps the tiered/topology layout).
 let layoutPref = null;
 $('b-grid').onclick = () => { if (cy) { layoutPref = 'grid'; runLayout('grid'); } };
 $('b-fcose').onclick = () => { if (cy) { layoutPref = 'fcose'; runLayout('fcose'); } };
 $('b-dagre').onclick = () => { if (cy) { layoutPref = 'dagre'; runLayout('dagre'); } };
-$('b-topo').onclick = () => { if (cy) { layoutPref = 'topology'; runLayout('topology'); } };
 
 let currentSnapshotPath = '';
 
@@ -1309,7 +1287,7 @@ function showDeviceCard(name) {
       await SetDeviceOwns(d.name, cidrs);
       logLine('set ' + cidrs.length + ' range(s) on ' + d.name, 'ok');
       await refreshDevices(); showDeviceCard(d.name);
-      if (curLayout === 'topology') runLayout('topology');
+      if (curLayout === 'dagre') runLayout('dagre'); // refresh topology view live
     } catch (err) { logLine('range set failed: ' + err, 'err'); }
   };
   topo.appendChild(ownsSave);

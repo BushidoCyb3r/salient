@@ -26,17 +26,18 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
   falls into the most-specific declared segment; undeclared hosts still group by
   `/24`. Hatched red boxes are **blind spots**: in scope, zero observed traffic.
 - **Layouts** (desktop): *grid* (default — uniform boxes on a grid), *organic*
-  (force-directed), *tiered* (directional), *topology* (layered network map).
-  Boxes are sized uniformly in grid.
-- **Topology layout**: a layered map — external → boundary → router → switch →
-  VLAN bands — that routes observed flow along a physical path *you declare*.
-  Tag a device's network layer (its type: boundary/router/switch) and give it
-  the IP **ranges it owns** (device card → "owns ranges"); every VLAN whose
-  range it owns then threads up through it, each declared device drawn as its
-  own focus box. Routing hops render **dashed** — declared, not observed, since
-  flow data cannot see L2 fabric. Layer order (switch → router → boundary) sets
-  the tiers; no uplinks to declare. This is the terrain-validation view: observed
-  traffic that doesn't fit your declared design stands out.
+  (force-directed), *topology* (the realistic tiered/layered map).
+- **Topology layout**: the realistic tiered map — external box up top, VLAN
+  boxes banded by traffic below, router pinned atop each box — extended with the
+  physical hierarchy *you declare*. Tag a device's network layer (its type:
+  boundary/router/switch) and give it the IP **ranges it owns** (device card →
+  "owns ranges"); it collapses to one focus node — however many IPs/VLANs it
+  spans — placed in a boundary/router/switch band between the external box and
+  the VLAN rows, and every VLAN whose range it owns threads up through it.
+  Routing hops render **dashed** — declared, not observed, since flow data
+  cannot see L2 fabric. Layer order (switch → router → boundary) sets the tiers;
+  no uplinks to declare. This is the terrain-validation view: observed traffic
+  that doesn't fit your declared design stands out.
 - **Rows within a box** are tiers, top to bottom: **Core** (gateways, DCs,
   DNS, network gear) → **Service** (file/db/web/jump/mail) → **Client**
   (printers, cameras, workstations, everything else).
