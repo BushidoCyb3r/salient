@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Topology layout — declared routing** (new *topology* layout button): a
+  layered network map — external → boundary → router → switch → VLAN bands —
+  that routes observed flow along an operator-declared physical path. Tag a
+  device's network layer (its `Type`: boundary/router/switch) and assign it the
+  IP **ranges it owns**; every VLAN whose range it owns then threads up through
+  it, and each declared device renders as its own focus box in its band. The
+  routing hops are drawn **dashed** — declared, never observed — keeping the
+  honesty rule (flow data can't see L2 fabric, so you co-author it). Layer order
+  (switch → router → boundary) supplies the tiering; no manual uplinks. Foundation
+  for scan-to-validate: the declared model deviations stand out against observed
+  traffic. New `Device.OwnsCIDRs` field + `SetDeviceOwns` binding, persisted in
+  the registry.
 - **Manual asset entry for reconcile**: alongside "Load asset CSV…", an **Enter
   manually…** button opens an in-app grid with the columns pre-loaded (IP,
   hostname, role, VLAN/segment). Type the asset list directly — blank rows are

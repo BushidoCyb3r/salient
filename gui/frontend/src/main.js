@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -309,6 +309,7 @@ let cy = null;
 let curLayout = 'fcose';
 let overviewMode = false; // segment overview vs focused single-VLAN view
 const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
+const topoBandColor = { boundary: '#3a2417', router: '#12243f', switch: '#12331f' };
 const tierBorder = { core: '#d9773f', service: '#4d8fe0', client: '#586274' };
 const layouts = {
   // Tight, tiled fcose: pack each segment's hosts into a compact grid inside its
@@ -479,14 +480,124 @@ function gridLayout() {
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()], fit: true, padding: 40 }).run();
 }
 
+// deviceLayer mirrors devices.DeviceLayer: a device Type → topology band.
+function deviceLayer(typ) {
+  switch ((typ || '').trim().toLowerCase()) {
+    case 'firewall': case 'edge': case 'boundary': return 'boundary';
+    case 'router': case 'l3': case 'gateway': return 'router';
+    case 'switch': case 'l2': return 'switch';
+    default: return '';
+  }
+}
+
+// Minimal IPv4 CIDR helpers for topology routing (v6 ranges are ignored in v1).
+function parseCidr(s) {
+  const [ip, bitsStr] = (s || '').split('/');
+  const n = ipToInt(ip);
+  const bits = parseInt(bitsStr, 10);
+  if (n === null || !(bits >= 0 && bits <= 32)) return null;
+  const mask = bits === 0 ? 0 : (0xffffffff << (32 - bits)) >>> 0;
+  return { base: (n & mask) >>> 0, mask, bits };
+}
+function ipToInt(ip) {
+  const p = (ip || '').trim().split('.');
+  if (p.length !== 4) return null;
+  let n = 0;
+  for (const o of p) { const v = Number(o); if (!(v >= 0 && v <= 255)) return null; n = (n * 256) + v; }
+  return n >>> 0;
+}
+// cidrContains: does prefix p contain the network named by cidrStr (e.g. a VLAN box)?
+function cidrContains(p, cidrStr) {
+  const c = parseCidr(cidrStr);
+  if (!c || c.bits < p.bits) return false;
+  return ((c.base & p.mask) >>> 0) === p.base;
+}
+
+// topologyLayout draws the layered network map: external → boundary → router →
+// switch → VLAN bands, each declared device its own focus box, with dashed
+// (declared) edges routing every VLAN up through the devices that own its
+// range. Observed flow (solid seg/host edges) stays hidden until clicked, same
+// as the overview — so declared structure and observed traffic never blur.
+function topologyLayout() {
+  cy.remove('.topo-added');
+  const devs = (registry.devices || [])
+    .map((d) => ({ name: d.name, layer: deviceLayer(d.type), owns: (d.owns_cidrs || []).map(parseCidr).filter(Boolean) }))
+    .filter((d) => d.layer && d.owns.length);
+  const grps = cy.nodes('.grp');
+  const ext = grps.filter((g) => g.id() === 'g:external');
+  const vlans = grps.filter((g) => g.id() !== 'g:external' && g.data('cidr'));
+
+  const devNodes = {};
+  devs.forEach((d) => {
+    const n = cy.add({ group: 'nodes', data: { id: 'topo:' + d.name, label: d.name, topoLayer: d.layer }, classes: 'topo-added topo-dev' });
+    devNodes[d.name] = { node: n, layer: d.layer, owns: d.owns };
+  });
+
+  // Most-specific device of a given layer that owns the VLAN's range.
+  const ownerAt = (cidr, layer) => {
+    let best = null, bestBits = -1;
+    for (const name in devNodes) {
+      const d = devNodes[name];
+      if (d.layer !== layer) continue;
+      for (const p of d.owns) if (cidrContains(p, cidr) && p.bits > bestBits) { best = d; bestBits = p.bits; }
+    }
+    return best;
+  };
+  const seen = new Set();
+  const addDecl = (a, b) => {
+    const k = a + '>' + b;
+    if (a === b || seen.has(k)) return;
+    seen.add(k);
+    cy.add({ group: 'edges', data: { id: 't:' + k, source: a, target: b }, classes: 'topo-added topo-decl' });
+  };
+  vlans.forEach((g) => {
+    const cidr = g.data('cidr');
+    let below = g;
+    for (const layer of ['switch', 'router', 'boundary']) {
+      const up = ownerAt(cidr, layer);
+      if (!up) continue;
+      addDecl(below.id(), up.node.id());
+      below = up.node;
+    }
+    if (below !== g && ext.length) addDecl(below.id(), ext.id()); // top of a real chain reaches the internet
+  });
+
+  // Band positions, top → bottom.
+  const NODEW = 150, NODEH = 40, VGAP = 8, PADX = 40, PADY = 40, CELLW = 320;
+  const gw = (n) => (n.data('gw') ? 0 : 1);
+  const childSort = (a, b) => (gw(a) - gw(b)) || ((a.data('rank') || 1e9) - (b.data('rank') || 1e9));
+  const pos = {};
+  const vlanW = Math.max(vlans.length, 1) * CELLW;
+  const midX = vlanW / 2;
+  if (ext.length) {
+    const kids = ext.children();
+    const w = kids.length * (NODEW + 16);
+    kids.forEach((k, j) => { pos[k.id()] = { x: midX - w / 2 + j * (NODEW + 16), y: 0 }; });
+  }
+  const bandY = { boundary: 190, router: 380, switch: 570 };
+  ['boundary', 'router', 'switch'].forEach((layer) => {
+    const ds = Object.values(devNodes).filter((d) => d.layer === layer);
+    const w = ds.length * (NODEW + 60);
+    ds.forEach((d, i) => { pos[d.node.id()] = { x: midX - w / 2 + i * (NODEW + 60) + NODEW / 2, y: bandY[layer] }; });
+  });
+  const vy = 770;
+  vlans.forEach((g, i) => {
+    g.children().sort(childSort).forEach((k, j) => { pos[k.id()] = { x: i * CELLW + PADX, y: vy + PADY + j * (NODEH + VGAP) }; });
+  });
+  cy.layout({ name: 'preset', positions: (n) => pos[n.id()] || n.position(), fit: true, padding: 40 }).run();
+}
+
 function runLayout(name) {
   curLayout = name;
+  if (cy) cy.remove('.topo-added');
   if (name === 'grid') gridLayout();
   else if (name === 'dagre') tieredLayout();
+  else if (name === 'topology') topologyLayout();
   else cy.layout(layouts[name]).run();
   $('b-grid').classList.toggle('on', name === 'grid');
   $('b-fcose').classList.toggle('on', name === 'fcose');
   $('b-dagre').classList.toggle('on', name === 'dagre');
+  $('b-topo').classList.toggle('on', name === 'topology');
 }
 // layoutPref remembers an explicit operator choice so it survives re-renders
 // (e.g. drilling into a VLAN keeps the tiered/realistic layout).
@@ -494,6 +605,7 @@ let layoutPref = null;
 $('b-grid').onclick = () => { if (cy) { layoutPref = 'grid'; runLayout('grid'); } };
 $('b-fcose').onclick = () => { if (cy) { layoutPref = 'fcose'; runLayout('fcose'); } };
 $('b-dagre').onclick = () => { if (cy) { layoutPref = 'dagre'; runLayout('dagre'); } };
+$('b-topo').onclick = () => { if (cy) { layoutPref = 'topology'; runLayout('topology'); } };
 
 let currentSnapshotPath = '';
 
@@ -657,6 +769,8 @@ function renderModel(model) {
       { selector: 'node.grp', style: { 'background-color': '#161b22', 'background-opacity': 0.6, 'border-color': '#30363d', 'border-width': 1, shape: 'round-rectangle', label: 'data(label)', 'text-valign': 'top', 'font-size': 12, 'font-weight': 600, color: '#8b949e', padding: 12, 'min-width': 300, 'min-height': 180 } },
       { selector: 'node.grp.blind', style: { 'border-color': '#a0424a', 'border-style': 'dashed', 'background-color': '#2a1416' } },
       { selector: 'node.grp.drillable', style: { label: (ele) => '▸ ' + ele.data('label'), 'border-color': '#3d4450' } },
+      { selector: 'node.topo-dev', style: { shape: 'round-rectangle', width: 148, height: 40, label: 'data(label)', 'text-valign': 'center', 'font-size': 11, 'font-weight': 600, color: '#eaf1ff', 'background-color': (ele) => topoBandColor[ele.data('topoLayer')] || '#1c232d', 'border-color': '#5a86ff', 'border-width': 2 } },
+      { selector: 'edge.topo-decl', style: { 'curve-style': 'bezier', 'line-style': 'dashed', 'line-color': '#5a86ff', 'target-arrow-shape': 'none', width: 2, opacity: 0.55, 'z-index': 2, label: '' } },
       { selector: 'node:childless', style: { shape: 'round-rectangle', width: 120, height: 34, label: (ele) => ele.data('device') ? ele.data('device') + ' · ' + ele.data('label') : ele.data('label'), 'text-valign': 'center', 'font-size': 10, color: '#c9d1d9', 'background-color': (ele) => tierColor[ele.data('tier')] || '#1c232d', 'border-width': 1.6, 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
       { selector: 'node[gw=1]', style: { shape: 'diamond', height: 40 } },
       { selector: 'node[inf=1]', style: { 'border-style': 'dashed' } },
@@ -1155,6 +1269,52 @@ function showDeviceCard(name) {
     } catch (err) { logLine('save failed: ' + err, 'err'); }
   };
   card.appendChild(save);
+
+  // Topology: network layer + owned ranges (drives the topology layout —
+  // bands and the flow routing through this device).
+  const topo = document.createElement('div');
+  topo.style.marginTop = '6px';
+  const layLbl = document.createElement('label');
+  layLbl.textContent = 'network layer';
+  topo.appendChild(layLbl);
+  const lay = document.createElement('select');
+  for (const [val, txt] of [['', 'none (host)'], ['boundary', 'boundary (firewall/edge)'], ['router', 'router (core)'], ['switch', 'switch']]) {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = txt;
+    if (deviceLayer(d.type) === val) o.selected = true;
+    lay.appendChild(o);
+  }
+  lay.onchange = async () => {
+    try {
+      await SaveDevice(d.name, { name: d.name, type: lay.value, notes: d.notes || '', ips: d.ips || [], owns_cidrs: d.owns_cidrs || [] });
+      logLine('set ' + d.name + ' layer → ' + (lay.value || 'host'), 'ok');
+      await refreshDevices(); showDeviceCard(d.name);
+    } catch (err) { logLine('layer set failed: ' + err, 'err'); }
+  };
+  topo.appendChild(lay);
+  const ownsLbl = document.createElement('label');
+  ownsLbl.textContent = 'owns ranges (CIDRs, comma-separated) — traffic routes through this device';
+  ownsLbl.style.marginTop = '4px';
+  topo.appendChild(ownsLbl);
+  const owns = document.createElement('input');
+  owns.value = (d.owns_cidrs || []).join(', ');
+  owns.placeholder = '10.10.40.0/24, 10.10.50.0/24';
+  topo.appendChild(owns);
+  const ownsSave = document.createElement('button');
+  ownsSave.textContent = 'save ranges';
+  ownsSave.style.marginTop = '4px';
+  ownsSave.onclick = async () => {
+    const cidrs = owns.value.split(',').map((s) => s.trim()).filter(Boolean);
+    try {
+      await SetDeviceOwns(d.name, cidrs);
+      logLine('set ' + cidrs.length + ' range(s) on ' + d.name, 'ok');
+      await refreshDevices(); showDeviceCard(d.name);
+      if (curLayout === 'topology') runLayout('topology');
+    } catch (err) { logLine('range set failed: ' + err, 'err'); }
+  };
+  topo.appendChild(ownsSave);
+  card.appendChild(topo);
+
   for (const ip of d.ips || []) {
     const row = document.createElement('div');
     const a = document.createElement('span');

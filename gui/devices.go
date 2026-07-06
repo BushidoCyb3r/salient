@@ -119,6 +119,12 @@ func (a *App) RemoveSegment(cidr string) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { r.RemoveSegment(cidr); return nil })
 }
 
+// SetDeviceOwns replaces the CIDR ranges routed through a device (topology
+// view). The caller reloads the map to apply.
+func (a *App) SetDeviceOwns(name string, cidrs []string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { return r.SetDeviceOwns(name, cidrs) })
+}
+
 // overrideTiers maps known override roles (lowercased) to their map tier.
 // Free-text overrides not listed here keep the node's inferred tier.
 var overrideTiers = map[string]mapview.Tier{
