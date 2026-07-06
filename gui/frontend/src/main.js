@@ -613,7 +613,7 @@ function renderModel(model) {
       { selector: 'edge.seg-edge', style: { 'curve-style': 'bezier', 'line-color': 'data(color)', 'target-arrow-color': 'data(color)', 'target-arrow-shape': 'triangle', width: 'data(segw)', opacity: 0.55, 'z-index': 1, label: '' } },
       { selector: 'edge.e-hide', style: { display: 'none' } },
       { selector: 'edge.e-lit', style: { opacity: 0.95, width: 'mapData(width, 0, 6, 1.5, 7)', 'z-index': 20 } },
-      { selector: 'node.nbr', style: { 'border-color': '#39d3ff', 'border-width': 3 } },
+      { selector: 'node.nbr', style: { 'border-color': '#5a86ff', 'border-width': 3 } },
       { selector: 'edge.drift-new', style: { 'line-color': '#3fb950', 'target-arrow-color': '#3fb950', 'line-style': 'solid', opacity: 1 } },
       { selector: 'edge.drift-vanished', style: { 'line-color': '#8b949e', 'target-arrow-color': '#8b949e', 'line-style': 'dashed', opacity: 0.35 } },
       { selector: 'node.drift-off', style: { opacity: 1, 'border-width': 1.6, 'border-style': 'solid', 'border-color': (ele) => tierBorder[ele.data('tier')] || '#586274' } },
