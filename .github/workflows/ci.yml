@@ -101,3 +101,24 @@ jobs:
         with:
           name: salient-gui-linux-packages
           path: dist/*
+
+  release:
+    needs: [gui-build, package-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            artifacts/salient-gui-linux-packages/* \
+            artifacts/salient-gui-macos-latest/* \
+            artifacts/salient-gui-windows-latest/*
