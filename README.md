@@ -1,5 +1,7 @@
 # Salient
 
+![Salient](docs/salient-logo.png)
+
 **A desktop operator console for passive terrain analysis on Security Onion grids.**
 
 Salient connects read-only to Elasticsearch, aggregates existing Zeek telemetry,
