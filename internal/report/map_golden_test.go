@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
 )
 
 // mapFixture is a small, fixed snapshot exercising a real group, a sparse

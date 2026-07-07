@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/escli"
-	"github.com/BushidoCyb3r/defilade/internal/scan"
+	"github.com/BushidoCyb3r/salient/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/scan"
 )
 
 // mockGrid answers just the _search surface scan.Run drives, dispatching on

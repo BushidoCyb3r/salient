@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="392" viewBox="0 0 900 392" font-family="system-ui,sans-serif">
 <defs><pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#f6e8e8"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c96a6a" stroke-width="2"/></pattern></defs>
 <rect width="100%" height="100%" fill="#fcfcfd"/>
-<text x="24" y="34" font-size="20" font-weight="700" fill="#1c2330">Defilade briefing map — golden</text>
+<text x="24" y="34" font-size="20" font-weight="700" fill="#1c2330">Salient briefing map — golden</text>
 <text x="24" y="56" font-size="12" fill="#6a7180">window 336h0m0s · generated 2026-07-01 12:00Z · L3 logical dependency map from observed traffic — not physical topology</text>
 <line x1="121" y1="240" x2="355" y2="166" stroke="#d95f30" stroke-width="2.1" opacity="0.75"/>
 <text x="238" y="199" font-size="10" fill="#555c68" text-anchor="middle">2 hosts → auth</text>

@@ -9,10 +9,10 @@ import (
 	"net/netip"
 	"sort"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/reconcile"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/reconcile"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 // Tier drives the top-to-bottom briefing layout (§8.3).

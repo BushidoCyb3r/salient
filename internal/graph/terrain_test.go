@@ -3,7 +3,7 @@ package graph_test
 import (
 	"testing"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // TestTerrainAddrExcludesNonHosts guards the reported class of bug: pseudo-hosts

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // JSON writes the snapshot as indented JSON.

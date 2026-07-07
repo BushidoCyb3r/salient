@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/config"
 )
 
 // Write renders an artifact to a temporary file, then atomically replaces path.
@@ -27,7 +27,7 @@ func Write(path string, render func(io.Writer) error) error {
 	}
 	abs = filepath.Join(dir, filepath.Base(abs))
 
-	f, err := os.CreateTemp(dir, ".defilade-*")
+	f, err := os.CreateTemp(dir, ".salient-*")
 	if err != nil {
 		return err
 	}

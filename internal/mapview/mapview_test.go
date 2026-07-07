@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
-	"github.com/BushidoCyb3r/defilade/internal/reconcile"
-	"github.com/BushidoCyb3r/defilade/internal/score"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/reconcile"
+	"github.com/BushidoCyb3r/salient/internal/score"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 // fixture builds a real scored snapshot: DC/DNS/file server in 10.0.1.0/24,

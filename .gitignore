@@ -1,5 +1,6 @@
 bin/
 .tools/
+salient-data/
 defilade-data/
 graphify-out/
 .claude/
@@ -8,7 +9,7 @@ docs/superpowers/plans/
 
 # Internal-only docs (handoffs, design plan, specs) — not for public repo
 docs/*_HANDOFF.md
-docs/DEFILADE_PLAN.md
+docs/SALIENT_PLAN.md
 docs/AI.md
 docs/superpowers/specs/
 

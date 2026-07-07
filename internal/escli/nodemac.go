@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/config"
 )
 
 // NodeMACsQuery aggregates, per responder IP, its most-seen destination MAC,

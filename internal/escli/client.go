@@ -26,7 +26,7 @@ type Config struct {
 	Timeout            time.Duration
 }
 
-// Client wraps the low-level go-elasticsearch client. Defilade only ever
+// Client wraps the low-level go-elasticsearch client. Salient only ever
 // issues reads: GET/POST search, field_caps, resolve, and privilege checks.
 type Client struct {
 	es *elasticsearch.Client
@@ -34,10 +34,10 @@ type Client struct {
 
 // ErrZeroBuckets is the wrong-fieldmap signature: the index holds documents
 // but an aggregation on a mapped field returned no buckets. This must be
-// loud, never silent (DEFILADE_PLAN.md §13).
+// loud, never silent (SALIENT_PLAN.md §13).
 var ErrZeroBuckets = errors.New(
 	"aggregation returned zero buckets from a non-empty index — this is the signature of a wrong field map; " +
-		"run `defilade discover` and pin correct names with --fieldmap")
+		"run `salient discover` and pin correct names with --fieldmap")
 
 // New builds a client. TLS: prefer a grid CA via CACertPath;
 // InsecureSkipVerify is honored but the caller is responsible for the
@@ -151,7 +151,7 @@ func (c *Client) ResolveIndices(ctx context.Context, pattern string) ([]IndexInf
 }
 
 // search runs a request body against the pattern and returns the raw
-// decoded response. All Defilade searches are size:0 aggregations.
+// decoded response. All Salient searches are size:0 aggregations.
 func (c *Client) search(ctx context.Context, pattern, body string) (map[string]json.RawMessage, error) {
 	res, err := c.es.Search(
 		c.es.Search.WithContext(ctx),
@@ -212,7 +212,7 @@ type WritePrivilegeCheck struct {
 }
 
 // CheckWritePrivileges verifies the API key is genuinely read-only against
-// the index pattern (DEFILADE_PLAN.md §14).
+// the index pattern (SALIENT_PLAN.md §14).
 func (c *Client) CheckWritePrivileges(ctx context.Context, pattern string) (WritePrivilegeCheck, error) {
 	body, err := HasWritePrivilegesQuery(pattern)
 	if err != nil {
@@ -262,7 +262,7 @@ func apiError(op string, status int, body io.Reader) error {
 	msg, _ := io.ReadAll(io.LimitReader(body, 2048))
 	trimmed := strings.TrimSpace(string(msg))
 	if status == http.StatusUnauthorized {
-		return fmt.Errorf("%s: authentication failed (HTTP 401) — check DEFILADE_API_KEY: %s", op, trimmed)
+		return fmt.Errorf("%s: authentication failed (HTTP 401) — check SALIENT_API_KEY: %s", op, trimmed)
 	}
 	if status == http.StatusForbidden {
 		return fmt.Errorf("%s: authorization failed (HTTP 403) — API key lacks read access: %s", op, trimmed)

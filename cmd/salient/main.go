@@ -1,4 +1,4 @@
-// Defilade — passive terrain-dependency analyzer for Security Onion grids.
+// Salient — passive terrain-dependency analyzer for Security Onion grids.
 //
 // Read-only Elasticsearch client; the only writes are to the local
 // filesystem. Subcommands: test-connection, discover, scan, report, map,

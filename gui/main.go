@@ -31,7 +31,7 @@ func main() {
 		path, err := runtime.OpenFileDialog(app.ctx, runtime.OpenDialogOptions{
 			DefaultDirectory: app.DataDir + "/snapshots",
 			Filters: []runtime.FileFilter{
-				{DisplayName: "Defilade snapshots (*.json.gz)", Pattern: "*.json.gz"},
+				{DisplayName: "Salient snapshots (*.json.gz)", Pattern: "*.json.gz"},
 			},
 		})
 		if err != nil || path == "" {
@@ -45,7 +45,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "Defilade Briefing Map",
+		Title:  "Salient Briefing Map",
 		Width:  1440,
 		Height: 900,
 		Menu:   appMenu,

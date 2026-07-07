@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // HTML writes a self-contained analyst terrain report: a ranked table with
@@ -49,7 +49,7 @@ var htmlTmpl = template.Must(template.New("report").Funcs(template.FuncMap{
 
 const reportHTML = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Defilade Terrain Report — {{.Meta.ClusterName}}</title>
+<title>Salient Terrain Report — {{.Meta.ClusterName}}</title>
 <style>
  :root{--bg:#0f1115;--fg:#e6e6e6;--mut:#8a90a0;--card:#181b22;--acc:#e2734a;--line:#262a33}
  *{box-sizing:border-box}
@@ -79,7 +79,7 @@ const reportHTML = `<!DOCTYPE html>
  footer{padding:16px 28px;color:var(--mut);font-size:12px;border-top:1px solid var(--line)}
 </style></head><body>
 <header>
- <h1>Defilade — Key Cyber Terrain</h1>
+ <h1>Salient — Key Cyber Terrain</h1>
  <div class="meta">Cluster <code>{{.Meta.ClusterName}}</code> · window {{.Meta.Window}} · generated {{.Meta.CreatedAt.Format "2006-01-02 15:04 MST"}} · {{len .Nodes}} hosts, {{len .Edges}} edges</div>
 </header>
 <div class="handle">⚠ This report describes network topology and dependencies. Handle at the classification of the network it describes. Do not distribute uncontrolled.</div>
@@ -135,5 +135,5 @@ const reportHTML = `<!DOCTYPE html>
 </div>
 
 </main>
-<footer>Defilade · passive, read-only · L3 logical dependency view, not physical topology. Absence of evidence is not evidence of absence — see LIMITATIONS.</footer>
+<footer>Salient · passive, read-only · L3 logical dependency view, not physical topology. Absence of evidence is not evidence of absence — see LIMITATIONS.</footer>
 </body></html>`

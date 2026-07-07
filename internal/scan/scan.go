@@ -14,14 +14,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/escli"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
-	"github.com/BushidoCyb3r/defilade/internal/report"
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
-	"github.com/BushidoCyb3r/defilade/internal/score"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/report"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/score"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 // Options are the tunables a caller chooses per scan.
@@ -75,7 +75,7 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	}
 	emit("aggregating-edges", fmt.Sprintf("%d edges aggregated", len(edges)), false)
 	if len(edges) == 0 {
-		return Result{}, fmt.Errorf("no edges observed — check window, scope, and fieldmap (run `defilade discover`)")
+		return Result{}, fmt.Errorf("no edges observed — check window, scope, and fieldmap (run `salient discover`)")
 	}
 
 	ev, err := cli.FetchEvidence(ctx, fm, opts.Window, opts.Scope)

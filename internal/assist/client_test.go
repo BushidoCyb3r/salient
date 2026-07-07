@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 func TestAnalyzeSendsCappedSnapshotAndValidatesCitations(t *testing.T) {

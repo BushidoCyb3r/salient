@@ -7,12 +7,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/BushidoCyb3r/defilade/internal/assist"
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/devices"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/assist"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/devices"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 func (a *App) registryPath() string { return filepath.Join(a.DataDir, "devices.json") }

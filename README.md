@@ -1,8 +1,8 @@
-# Defilade
+# Salient
 
 **A desktop operator console for passive terrain analysis on Security Onion grids.**
 
-Defilade connects read-only to Elasticsearch, aggregates existing Zeek telemetry,
+Salient connects read-only to Elasticsearch, aggregates existing Zeek telemetry,
 and turns observed traffic into a scored dependency graph and ranked key-terrain
 report with the evidence behind each ranking. It is built for hunting teams that
 are new to an environment and need to understand its key systems and dependencies
@@ -70,11 +70,11 @@ The console provides:
 
 Elasticsearch and model API keys remain in memory and are never written to
 disk. Operator annotations (devices, labels, role overrides) persist in
-`defilade-data/devices.json` and survive rescans.
+`salient-data/devices.json` and survive rescans.
 
 ## Key-terrain scoring
 
-Defilade ranks key terrain from observed dependency traffic, not labels or icon
+Salient ranks key terrain from observed dependency traffic, not labels or icon
 size. Each rank is a composite score:
 
 - **40% critical-service dependents:** distinct hosts depending on this node for
@@ -113,8 +113,8 @@ sudo dnf install webkit2gtk4.1-devel gtk3-devel
 Clone, download the pinned dependencies, and build:
 
 ~~~sh
-git clone https://github.com/BushidoCyb3r/defilade.git
-cd defilade
+git clone https://github.com/BushidoCyb3r/salient.git
+cd salient
 make gui-deps
 make gui
 ~~~
@@ -143,7 +143,7 @@ Platform-specific runtime packages and unsigned-build warnings are documented in
 
    ```json
    {
-     "defilade_ro": {
+     "salient_ro": {
        "cluster": ["monitor"],
        "indices": [
          {
@@ -155,7 +155,7 @@ Platform-specific runtime packages and unsigned-build warnings are documented in
    }
    ```
 
-   The `cluster: ["monitor"]` privilege is required — Defilade calls the
+   The `cluster: ["monitor"]` privilege is required — Salient calls the
    Elasticsearch root `info` API at connect, and without it the grid returns
    `action [cluster:monitor/main] is unauthorized ... HTTP 403`. Create the key,
    then copy its **Base64 ("encoded")** value for the connect form. Full steps
@@ -178,7 +178,7 @@ output. A wrong field map can produce incomplete terrain.
 
 ## What a scan produces
 
-Defilade performs server-side Elasticsearch aggregations rather than downloading
+Salient performs server-side Elasticsearch aggregations rather than downloading
 raw events. A completed scan writes:
 
 - A compressed snapshot containing scored nodes, dependencies, evidence, and
@@ -188,8 +188,8 @@ raw events. A completed scan writes:
 - An optional protected `.tags.json` sidecar containing validated model
   suggestions when device tagging is used.
 
-Artifacts are stored under defilade-data/snapshots, defilade-data/reports, and
-defilade-data/maps. The console can reopen snapshots without reconnecting to the
+Artifacts are stored under salient-data/snapshots, salient-data/reports, and
+salient-data/maps. The console can reopen snapshots without reconnecting to the
 grid.
 
 Large unfocused maps are condensed into a **segment-flow overview**: every real
@@ -300,15 +300,15 @@ analysis, asset reconciliation, and optional snapshot analysis.
 make deps
 make build
 
-export DEFILADE_ES_URL="https://so-manager:9200"
-export DEFILADE_API_KEY="<base64 id:key>"
+export SALIENT_ES_URL="https://so-manager:9200"
+export SALIENT_API_KEY="<base64 id:key>"
 
-./bin/defilade test-connection --ca-cert grid-ca.pem
-./bin/defilade discover --ca-cert grid-ca.pem --window 168h
-./bin/defilade scan --ca-cert grid-ca.pem --window 336h \
+./bin/salient test-connection --ca-cert grid-ca.pem
+./bin/salient discover --ca-cert grid-ca.pem --window 168h
+./bin/salient scan --ca-cert grid-ca.pem --window 336h \
     --scope 10.0.0.0/8 --tz America/New_York
-./bin/defilade list
-./bin/defilade view
+./bin/salient list
+./bin/salient view
 ~~~
 
 Stored snapshots can also be rendered as HTML, SVG, JSON, or GraphML; compared
@@ -317,7 +317,7 @@ with the diff command; or reconciled against an asset CSV. See
 
 ## Security model
 
-- Elasticsearch access is read-only. Defilade does not change grid
+- Elasticsearch access is read-only. Salient does not change grid
   configuration, indices, or documents.
 - The console writes only local snapshots, reports, maps, and operator-selected
   exports.
@@ -360,7 +360,7 @@ Supported request shapes are OpenAI-compatible chat completions, Anthropic
 Messages, and Gemini GenerateContent. These cover the major hosted APIs, local
 Llama servers that expose a compatible endpoint, and compatible Ask Sage
 routes. GenAI.mil and other tenant-controlled services use the API shape,
-endpoint, model, and credentials issued for that environment; Defilade does not
+endpoint, model, and credentials issued for that environment; Salient does not
 assume a universal public endpoint.
 
 Only capped node and edge summaries are sent, never raw Zeek events or
@@ -387,7 +387,7 @@ labels (they survive rescans and feed future tagging runs as ground truth);
 
 ~~~
 gui/                   native desktop operator console
-cmd/defilade/          command-line interface
+cmd/salient/          command-line interface
 internal/scan/         shared scan pipeline used by the console and CLI
 internal/escli/        read-only Elasticsearch client and field mapping
 internal/graph/        dependency graph, evidence, role inference, snapshots
@@ -411,11 +411,11 @@ Additional operator documentation:
 
 ## License
 
-Defilade is licensed under the [Apache License 2.0](LICENSE).
+Salient is licensed under the [Apache License 2.0](LICENSE).
 
-Defilade uses the
+Salient uses the
 [official Elasticsearch Go client](https://github.com/elastic/go-elasticsearch/blob/v8.19.6/LICENSE),
-which is also licensed under Apache-2.0. Defilade connects to external
+which is also licensed under Apache-2.0. Salient connects to external
 Elasticsearch and Security Onion installations; those platforms remain subject
 to their own licenses:
 

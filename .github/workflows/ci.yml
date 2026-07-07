@@ -47,7 +47,7 @@ jobs:
         run: go test ./...
       - uses: actions/upload-artifact@v4
         with:
-          name: defilade-gui-${{ matrix.os }}
+          name: salient-gui-${{ matrix.os }}
           path: gui/build/bin/*
 
   # Verifies the RHEL-family build path. On Fedora (RHEL upstream) webkit2gtk
@@ -78,5 +78,5 @@ jobs:
         run: go test ./...
       - uses: actions/upload-artifact@v4
         with:
-          name: defilade-gui-fedora
+          name: salient-gui-fedora
           path: gui/build/bin/*

@@ -8,11 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
-	"github.com/BushidoCyb3r/defilade/internal/reconcile"
-	"github.com/BushidoCyb3r/defilade/internal/report"
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/reconcile"
+	"github.com/BushidoCyb3r/salient/internal/report"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 func newReconcileCmd() *cobra.Command {

@@ -1,9 +1,9 @@
-module github.com/BushidoCyb3r/defilade/gui
+module github.com/BushidoCyb3r/salient/gui
 
 go 1.26.4
 
 require (
-	github.com/BushidoCyb3r/defilade v0.0.0-00010101000000-000000000000
+	github.com/BushidoCyb3r/salient v0.0.0-00010101000000-000000000000
 	github.com/wailsapp/wails/v2 v2.12.0
 )
 
@@ -47,4 +47,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/BushidoCyb3r/defilade => ../
+replace github.com/BushidoCyb3r/salient => ../

@@ -17,16 +17,16 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
-	"github.com/BushidoCyb3r/defilade/internal/assist"
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/devices"
-	"github.com/BushidoCyb3r/defilade/internal/escli"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
-	"github.com/BushidoCyb3r/defilade/internal/reconcile"
-	"github.com/BushidoCyb3r/defilade/internal/report"
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
-	"github.com/BushidoCyb3r/defilade/internal/scan"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/assist"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/devices"
+	"github.com/BushidoCyb3r/salient/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/reconcile"
+	"github.com/BushidoCyb3r/salient/internal/report"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/scan"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 // App struct
@@ -59,7 +59,7 @@ func NewApp() *App {
 // defaultDataDir anchors DataDir to the user's home directory. Unlike the
 // CLI — always run from a terminal in a directory the operator chose —
 // a double-clicked (or `open`ed) .app has no reliable working directory;
-// on macOS it's often "/", which isn't writable. A relative "defilade-data"
+// on macOS it's often "/", which isn't writable. A relative "salient-data"
 // would then fail every scan with a read-only-filesystem error.
 func defaultDataDir() string {
 	home, err := os.UserHomeDir()
@@ -550,13 +550,13 @@ func (a *App) Connect(req ConnectRequest) (escli.ClusterInfo, error) {
 
 	// Surface the same trust warnings the CLI prints — a GUI-only operator
 	// otherwise never sees that TLS verification is off or that the key can
-	// write (DEFILADE_PLAN.md §14). Best-effort: the connection itself
+	// write (SALIENT_PLAN.md §14). Best-effort: the connection itself
 	// already succeeded, so a failed privilege probe is not fatal.
 	if req.InsecureSkipVerify {
 		a.emit("connect:warning", "TLS certificate verification is DISABLED — the connection to the grid is open to interception. Use a CA cert instead.")
 	}
 	if priv, perr := cli.CheckWritePrivileges(ctx, fm.IndexPattern); perr == nil && priv.CanWrite {
-		a.emit("connect:warning", "this API key can WRITE to "+fm.IndexPattern+" ("+priv.Detail+"). Defilade never writes, but the key violates least privilege — create a read-only key.")
+		a.emit("connect:warning", "this API key can WRITE to "+fm.IndexPattern+" ("+priv.Detail+"). Salient never writes, but the key violates least privilege — create a read-only key.")
 	}
 	return info, nil
 }

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 func TestCompareDetectsRequiredDriftSignals(t *testing.T) {

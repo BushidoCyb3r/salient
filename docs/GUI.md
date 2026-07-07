@@ -2,13 +2,13 @@
 
 A native window (Linux/macOS/Windows) that connects to a Security Onion grid,
 runs scans with live progress, and browses the resulting snapshots and briefing
-maps — reuses the same Cytoscape map as `defilade map --format html`, with added
+maps — reuses the same Cytoscape map as `salient map --format html`, with added
 right-click actions, search, and PNG/HTML/GraphML export.
 
 It runs the same read-only scan pipeline as the CLI (`internal/scan`): the only
-Elasticsearch traffic is the aggregation queries a `defilade scan` issues, and
+Elasticsearch traffic is the aggregation queries a `salient scan` issues, and
 the only writes are the snapshot, report, and map under `<data-dir>`
-(default `defilade-data/`, same as the CLI). The API key lives in memory only —
+(default `salient-data/`, same as the CLI). The API key lives in memory only —
 never persisted to disk, never included in an emitted event. Model-assisted
 `diff` and `reconcile` stay CLI-only; the console reads whatever snapshots those
 and its own scans leave in `<data-dir>/{snapshots,reports,maps}`. Optional device

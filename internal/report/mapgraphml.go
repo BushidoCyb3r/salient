@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
 )
 
 // GraphMLMap writes the briefing map as GraphML with subnet groups as nested

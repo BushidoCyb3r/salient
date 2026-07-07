@@ -13,18 +13,18 @@ import (
 	"runtime"
 	"strings"
 
-	defilade "github.com/BushidoCyb3r/defilade"
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	salient "github.com/BushidoCyb3r/salient"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 	"github.com/spf13/cobra"
 )
 
 const browserIndexHTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Defilade reports</title><style>
+<title>Salient reports</title><style>
 :root{color-scheme:dark}body{margin:0;background:#111820;color:#e8edf2;font:16px system-ui,sans-serif}main{max-width:900px;margin:auto;padding:32px}header{display:flex;align-items:center;gap:20px;border-bottom:1px solid #34414d;padding-bottom:20px}.logo{width:96px;height:96px;object-fit:contain}h1{margin:0}.note{color:#aeb9c3}.scan{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#1b2630;border:1px solid #34414d;border-radius:8px;margin:16px 0;padding:18px}.links{display:flex;gap:10px}a{background:#b58a43;color:#111820;text-decoration:none;font-weight:700;padding:9px 14px;border-radius:5px}a:hover{background:#d1a65d}@media(max-width:600px){.scan{align-items:flex-start;flex-direction:column}}</style></head>
-<body><main><header><img class="logo" alt="Defilade logo" src="data:image/png;base64,{{.Logo}}"><div><h1>Defilade reports</h1><p class="note">Local terrain artifacts · newest first</p></div></header>
+<body><main><header><img class="logo" alt="Salient logo" src="data:image/png;base64,{{.Logo}}"><div><h1>Salient reports</h1><p class="note">Local terrain artifacts · newest first</p></div></header>
 {{range .Entries}}<section class="scan"><time>{{.Timestamp}}</time><div class="links">{{if .Report}}<a href="{{.Report}}">Report</a>{{end}}{{if .Map}}<a href="{{.Map}}">Map</a>{{end}}</div></section>{{end}}
 <p class="note">Protect these artifacts at the network's classification.</p></main></body></html>`
 
@@ -35,7 +35,7 @@ func newViewCmd() *cobra.Command {
 		Short: "Open a browser index of saved reports and maps",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path, err := writeBrowserIndex(dataDir, defilade.LogoPNG)
+			path, err := writeBrowserIndex(dataDir, salient.LogoPNG)
 			if err != nil {
 				return err
 			}
@@ -72,7 +72,7 @@ func writeBrowserIndex(dataDir string, logo []byte) (string, error) {
 		hasHTML = hasHTML || entry.Report != "" || entry.Map != ""
 	}
 	if !hasHTML {
-		return "", errors.New("no HTML reports or maps found — run `defilade scan` first")
+		return "", errors.New("no HTML reports or maps found — run `salient scan` first")
 	}
 
 	path := filepath.Join(dataDir, "index.html")

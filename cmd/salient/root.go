@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/escli"
 )
 
 const ansiRed = "\x1b[31;1m"
@@ -16,7 +16,7 @@ const ansiYellow = "\x1b[33;1m"
 const ansiReset = "\x1b[0m"
 
 // globalOpts holds flags shared by every subcommand. Precedence:
-// flags > environment (DEFILADE_ES_URL, DEFILADE_API_KEY) > nothing.
+// flags > environment (SALIENT_ES_URL, SALIENT_API_KEY) > nothing.
 type globalOpts struct {
 	esURL              string
 	apiKey             string
@@ -28,9 +28,9 @@ type globalOpts struct {
 func newRootCmd() *cobra.Command {
 	opts := &globalOpts{}
 	root := &cobra.Command{
-		Use:   "defilade",
+		Use:   "salient",
 		Short: "Passive terrain-dependency analyzer for Security Onion grids",
-		Long: `Defilade queries the Zeek logs already aggregated on a Security Onion
+		Long: `Salient queries the Zeek logs already aggregated on a Security Onion
 manager and produces dependency graphs, key-terrain rankings, and briefing
 maps. It is strictly read-only against Elasticsearch: the only writes are
 to the local filesystem. No agents, no scans, no changes to the SO stack.`,

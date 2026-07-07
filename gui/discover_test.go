@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BushidoCyb3r/defilade/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/escli"
 )
 
 func TestDiscoverLines(t *testing.T) {

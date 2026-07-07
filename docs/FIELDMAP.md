@@ -1,7 +1,7 @@
 # Field map verification worksheet (Phase 0 output)
 
 **Status: UNVERIFIED.** Every value in `internal/escli/fieldmap.go` is an assumption.
-Run `defilade discover` and `defilade test-connection` against the homelab grid,
+Run `salient discover` and `salient test-connection` against the homelab grid,
 record ground truth here, then update the default `FieldMap` and delete the
 `// UNVERIFIED` markers. The query code (Phases 1–4) is implemented against these
 assumed names; wrong names fail loudly (`ErrZeroBuckets`) rather than silently, so
@@ -60,5 +60,5 @@ datasets:
 ```
 
 ```sh
-defilade discover --fieldmap custom-fieldmap.yaml
+salient discover --fieldmap custom-fieldmap.yaml
 ```

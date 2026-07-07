@@ -1,4 +1,4 @@
-// Package escli is Defilade's read-only Elasticsearch access layer.
+// Package escli is Salient's read-only Elasticsearch access layer.
 //
 // Every field name and index pattern used in a query lives in FieldMap,
 // never as an inline string in query builders. A wrong field name against
@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// FieldMap maps Defilade's abstract field concepts onto the concrete
+// FieldMap maps Salient's abstract field concepts onto the concrete
 // ECS/Zeek field names of the target Security Onion deployment.
 type FieldMap struct {
 	// IndexPattern selects the indices/data streams holding Zeek logs.
@@ -37,7 +37,7 @@ type FieldMap struct {
 
 	// Datasets holds candidate DatasetField values per Zeek log type.
 	// Security Onion releases have shipped both bare ("conn") and
-	// prefixed ("zeek.conn") dataset names; `defilade discover` reports
+	// prefixed ("zeek.conn") dataset names; `salient discover` reports
 	// which candidates actually exist on the grid so the map can be
 	// pinned in a custom fieldmap.
 	Datasets DatasetCandidates `yaml:"datasets"`
@@ -58,9 +58,9 @@ type DatasetCandidates struct {
 
 // DefaultFieldMap returns the assumed SO 2.4-era mapping.
 //
-// UNVERIFIED: every value below is an assumption from DEFILADE_PLAN.md §6.
+// UNVERIFIED: every value below is an assumption from SALIENT_PLAN.md §6.
 // Phase 0's exit criterion is replacing these with ground truth observed by
-// `defilade discover` against a real grid, recorded in docs/FIELDMAP.md.
+// `salient discover` against a real grid, recorded in docs/FIELDMAP.md.
 func DefaultFieldMap() FieldMap {
 	return FieldMap{
 		IndexPattern:     "logs-*",            // UNVERIFIED

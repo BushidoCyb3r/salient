@@ -1,4 +1,4 @@
-// Package score computes key-terrain rankings (DEFILADE_PLAN.md §10). It uses
+// Package score computes key-terrain rankings (SALIENT_PLAN.md §10). It uses
 // gonum for PageRank and betweenness — centrality is never hand-rolled.
 package score
 
@@ -9,8 +9,8 @@ import (
 
 	"gonum.org/v1/gonum/graph/network"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // Result reports how scoring ran; BetweennessSampled is true when the graph

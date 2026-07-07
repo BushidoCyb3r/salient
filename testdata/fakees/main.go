@@ -1,4 +1,4 @@
-// fakees mimics the exact Elasticsearch surface Defilade touches, plus a
+// fakees mimics the exact Elasticsearch surface Salient touches, plus a
 // chat-completions endpoint for `analyze`. Stdlib only. -variant 2 mutates
 // the network (new DB server appears, web server vanishes) for drift tests.
 package main

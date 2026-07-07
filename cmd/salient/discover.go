@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/escli"
 )
 
 func newDiscoverCmd(opts *globalOpts) *cobra.Command {
@@ -74,7 +74,7 @@ func runDiscover(cmd *cobra.Command, opts *globalOpts, window time.Duration) err
 		fmt.Fprintf(out, "  %-30s %12d docs\n", d.Dataset, d.Docs)
 	}
 
-	// Which datasets do Defilade's role-evidence queries need, and which
+	// Which datasets do Salient's role-evidence queries need, and which
 	// candidates actually exist here?
 	fmt.Fprintln(out, "\nRole-evidence dataset resolution:")
 	present := map[string]bool{}
@@ -107,7 +107,7 @@ func runDiscover(cmd *cobra.Command, opts *globalOpts, window time.Duration) err
 		}
 	}
 	if !slices.ContainsFunc(fm.Datasets.Conn, func(c string) bool { return present[c] }) {
-		fmt.Fprintf(os.Stderr, "%sWARNING: no conn dataset found — Defilade cannot build a dependency graph on this grid without it.%s\n", ansiRed, ansiReset)
+		fmt.Fprintf(os.Stderr, "%sWARNING: no conn dataset found — Salient cannot build a dependency graph on this grid without it.%s\n", ansiRed, ansiReset)
 	}
 
 	// Sensors.

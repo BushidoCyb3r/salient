@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/score"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/score"
 )
 
 // Synthetic toy enterprise (§13): 1 DC, 1 DNS, 1 file server, 1 jump box,

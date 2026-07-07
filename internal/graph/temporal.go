@@ -1,6 +1,6 @@
 package graph
 
-import "github.com/BushidoCyb3r/defilade/internal/config"
+import "github.com/BushidoCyb3r/salient/internal/config"
 
 // ClassifyTemporal applies the §9 cheap heuristics to folded hour-of-day and
 // day-of-week histograms (already in the operator's local timezone).

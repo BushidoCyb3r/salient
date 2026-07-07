@@ -1,6 +1,6 @@
 # Deployment: read-only access to the SO grid
 
-Defilade runs on an analyst workstation and needs exactly one thing: HTTPS reach to
+Salient runs on an analyst workstation and needs exactly one thing: HTTPS reach to
 the manager's Elasticsearch API (:9200) with a read-only API key. No SO changes.
 
 ## 1. Allow your workstation through the SO firewall
@@ -17,7 +17,7 @@ sudo so-firewall apply
 
 ## 2. Create a read-only API key
 
-The key needs two things: the cluster `monitor` privilege (Defilade calls the
+The key needs two things: the cluster `monitor` privilege (Salient calls the
 Elasticsearch root `info` API at connect — without it you get
 `action [cluster:monitor/main] is unauthorized ... HTTP 403`) and `read` +
 `view_index_metadata` on the Zeek log indices. Nothing writable.
@@ -25,14 +25,14 @@ Elasticsearch root `info` API at connect — without it you get
 ### Option A — Kibana UI (Stack Management)
 
 1. **Stack Management → Security → API keys → Create API key**.
-2. **Name:** `defilade_readonly`.
+2. **Name:** `salient_readonly`.
 3. Toggle **Control security privileges** on. A code editor appears — select all
    of its contents, delete them, and paste *only* this (no `POST` line, no outer
    `name` key):
 
    ```json
    {
-     "defilade_ro": {
+     "salient_ro": {
        "cluster": ["monitor"],
        "indices": [
          {
@@ -56,9 +56,9 @@ Elasticsearch root `info` API at connect — without it you get
 ```json
 POST /_security/api_key
 {
-  "name": "defilade_readonly",
+  "name": "salient_readonly",
   "role_descriptors": {
-    "defilade_ro": {
+    "salient_ro": {
       "cluster": ["monitor"],
       "indices": [
         { "names": ["logs-*"], "privileges": ["read", "view_index_metadata"] }
@@ -74,11 +74,11 @@ pattern you configure in the field map.
 Use the `encoded` value from the response:
 
 ```sh
-export DEFILADE_ES_URL="https://<manager>:9200"
-export DEFILADE_API_KEY="<encoded>"
+export SALIENT_ES_URL="https://<manager>:9200"
+export SALIENT_API_KEY="<encoded>"
 ```
 
-`defilade test-connection` verifies the key cannot write; it warns in red if it can.
+`salient test-connection` verifies the key cannot write; it warns in red if it can.
 
 ## 3. TLS
 
@@ -86,7 +86,7 @@ Fetch the grid CA once and pass it with `--ca-cert`:
 
 ```sh
 scp so-manager:/etc/pki/ca.crt grid-ca.pem   # path varies by SO version
-defilade test-connection --ca-cert grid-ca.pem
+salient test-connection --ca-cert grid-ca.pem
 ```
 
 `--insecure-skip-verify` works but prints a red warning every run. Don't make it a habit.

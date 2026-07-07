@@ -4,16 +4,16 @@ import (
 	"html/template"
 	"io"
 
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 // DriftHTML writes a self-contained Phase 2 drift report.
 func DriftHTML(w io.Writer, d snapshot.Diff) error { return driftTmpl.Execute(w, d) }
 
 var driftTmpl = template.Must(template.New("drift").Parse(`<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Defilade drift report</title>
+<html lang="en"><head><meta charset="utf-8"><title>Salient drift report</title>
 <style>body{font:14px/1.45 system-ui,sans-serif;max-width:1100px;margin:24px auto;padding:0 18px;color:#1c2330}h1{margin-bottom:4px}h2{margin-top:28px}table{border-collapse:collapse;width:100%}th,td{padding:6px 8px;border-bottom:1px solid #d7dbe2;text-align:left}.meta{color:#6a7180}.handle{background:#fdf3ef;color:#a04a26;padding:8px 10px;border:1px solid #e8c4b2}.empty{color:#6a7180}</style></head><body>
-<h1>Defilade drift report</h1><p class="meta">{{.FromMeta.CreatedAt}} → {{.ToMeta.CreatedAt}}</p>
+<h1>Salient drift report</h1><p class="meta">{{.FromMeta.CreatedAt}} → {{.ToMeta.CreatedAt}}</p>
 <p class="handle">Handle at the classification of the network described. This artifact maps terrain changes — protect it accordingly.</p>
 <h2>Appeared nodes</h2>{{if .AppearedNodes}}<table><tr><th>IP</th><th>Rank</th></tr>{{range .AppearedNodes}}<tr><td>{{.IP}}</td><td>{{.Scores.Rank}}</td></tr>{{end}}</table>{{else}}<p class="empty">None</p>{{end}}
 <h2>Disappeared nodes</h2>{{if .DisappearedNodes}}<table><tr><th>IP</th><th>Previous rank</th></tr>{{range .DisappearedNodes}}<tr><td>{{.IP}}</td><td>{{.Scores.Rank}}</td></tr>{{end}}</table>{{else}}<p class="empty">None</p>{{end}}

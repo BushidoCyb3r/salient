@@ -7,7 +7,7 @@ import (
 
 	"gonum.org/v1/gonum/graph/network"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // star-of-chains fixture: hub bridges several chains, so betweenness has a

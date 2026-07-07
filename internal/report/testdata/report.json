@@ -11,7 +11,7 @@
       "10.9.0.0/24"
     ],
     "betweenness_sampled": false,
-    "tool": "defilade"
+    "tool": "salient"
   },
   "nodes": [
     {

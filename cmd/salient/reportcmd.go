@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/report"
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
-	"github.com/BushidoCyb3r/defilade/internal/snapshot"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/report"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 func newReportCmd() *cobra.Command {
@@ -67,7 +67,7 @@ func newListCmd() *cobra.Command {
 				return err
 			}
 			if len(entries) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "no snapshots — run `defilade scan`")
+				fmt.Fprintln(cmd.OutOrStdout(), "no snapshots — run `salient scan`")
 				return nil
 			}
 			for _, e := range entries {

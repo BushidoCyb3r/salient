@@ -1,5 +1,5 @@
 // Package snapshot persists and lists Snapshots as gzipped JSON. No database:
-// one file per run under defilade-data/snapshots plus an index.json. Files are
+// one file per run under salient-data/snapshots plus an index.json. Files are
 // written 0600 in 0700 dirs — topology artifacts are sensitive (§14).
 package snapshot
 
@@ -13,9 +13,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
 )
 
 // IndexEntry is one line of index.json summarizing a stored snapshot.

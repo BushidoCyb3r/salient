@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 func TestLoadDriftModelMarksAppearedAndCounts(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 
 	"gonum.org/v1/gonum/graph/simple"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/config"
 )
 
 // Model is the in-memory working graph: the domain edges plus a gonum
@@ -106,7 +106,7 @@ func (m *Model) Snapshot(meta SnapshotMeta) Snapshot {
 		return nodes[i].IP < nodes[j].IP
 	})
 	if meta.Tool == "" {
-		meta.Tool = "defilade"
+		meta.Tool = "salient"
 	}
 	return Snapshot{Meta: meta, Nodes: nodes, Edges: m.Edges}
 }

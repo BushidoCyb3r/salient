@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // SilentAsset is documented but produced no observed traffic. InBlindSpot
@@ -17,7 +17,7 @@ type SilentAsset struct {
 	InBlindSpot bool `json:"in_blind_spot"`
 }
 
-// Contradiction is a host whose documented role maps to a role Defilade
+// Contradiction is a host whose documented role maps to a role Salient
 // infers, but observation disagrees. Hosts whose observed role is Unknown
 // are never contradicted — an honest Unknown beats a wrong guess.
 type Contradiction struct {
@@ -85,7 +85,7 @@ func Compare(snap graph.Snapshot, assets []Asset) Result {
 	return res
 }
 
-// NormalizeRole maps documented free-text role descriptions onto Defilade's
+// NormalizeRole maps documented free-text role descriptions onto Salient's
 // inferred roles. Multiword phrases match by substring; short tokens like
 // "dc" or "db" match whole words only, so "datacenter" never becomes a DC.
 func NormalizeRole(s string) graph.Role {

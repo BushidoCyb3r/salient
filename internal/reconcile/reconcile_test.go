@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 func TestParseCSVForgivingHeaders(t *testing.T) {

@@ -3,7 +3,7 @@ package graph_test
 import (
 	"testing"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // Device-service roles: printer/camera fire at one client, mail needs two.

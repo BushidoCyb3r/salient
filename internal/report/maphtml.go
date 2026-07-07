@@ -5,9 +5,9 @@ import (
 	"html/template"
 	"io"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
-	"github.com/BushidoCyb3r/defilade/web"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/web"
 )
 
 // HTMLMap writes the self-contained interactive briefing map (§8.1):
@@ -44,7 +44,7 @@ var mapTmpl = template.Must(template.New("map").Parse(mapHTML))
 
 const mapHTML = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Defilade Briefing Map — {{.Meta.ClusterName}}</title>
+<title>Salient Briefing Map — {{.Meta.ClusterName}}</title>
 <style>
  :root{--bg:#fcfcfd;--fg:#1c2330;--mut:#6a7180;--line:#d7dbe2}
  *{box-sizing:border-box} body{margin:0;font:14px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;height:100vh}
@@ -63,7 +63,7 @@ const mapHTML = `<!DOCTYPE html>
  #ev{white-space:pre-wrap;color:var(--mut)}
  .finding{background:#fdf3ef;border:1px solid #e8c4b2;border-radius:5px;padding:6px;margin:4px 0;font-size:12px}
 </style></head><body>
-<header><h1>Defilade briefing map — {{.Meta.ClusterName}}</h1>
+<header><h1>Salient briefing map — {{.Meta.ClusterName}}</h1>
 <span class="meta">window {{.Meta.Window}} · {{.Meta.CreatedAt.Format "2006-01-02 15:04Z"}} · L3 logical dependency map — not physical topology</span></header>
 <div class="handle">Handle at the classification of the network described. This artifact maps key terrain — protect it accordingly.</div>
 <div id="wrap"><div id="cy"></div>

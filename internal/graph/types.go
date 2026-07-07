@@ -1,4 +1,4 @@
-// Package graph holds Defilade's core data model and the pipeline that turns
+// Package graph holds Salient's core data model and the pipeline that turns
 // observed edges into a scored, role-typed dependency graph. It is the single
 // source of truth: a Snapshot is what gets persisted; every report and map is
 // a pure function of a Snapshot.
@@ -24,7 +24,7 @@ func TerrainAddr(ip string) bool {
 		!a.IsLinkLocalUnicast() && !a.IsLinkLocalMulticast() && ip != "255.255.255.255"
 }
 
-// Role is an inferred host function (DEFILADE_PLAN.md §7). Gateway is
+// Role is an inferred host function (SALIENT_PLAN.md §7). Gateway is
 // synthesized later by the mapview package (Phase 1.5), not here.
 type Role string
 

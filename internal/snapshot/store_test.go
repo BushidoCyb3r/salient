@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 func TestSaveLoadRoundTripAndPermissions(t *testing.T) {
@@ -15,7 +15,7 @@ func TestSaveLoadRoundTripAndPermissions(t *testing.T) {
 	snap := graph.Snapshot{
 		Meta: graph.SnapshotMeta{
 			CreatedAt: time.Date(2026, 7, 1, 12, 0, 0, 0, time.UTC),
-			Window:    "336h", ClusterName: "test", Tool: "defilade",
+			Window:    "336h", ClusterName: "test", Tool: "salient",
 		},
 		Nodes: []graph.Node{{IP: "10.0.1.10", Subnet: "10.0.1.0/24", Scores: graph.ScoreSet{Rank: 1, Composite: 0.9}}},
 		Edges: []graph.Edge{{Src: "10.0.2.30", Dst: "10.0.1.10", Port: 88, Service: "kerberos", ConnCount: 100}},

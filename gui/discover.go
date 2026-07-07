@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/escli"
 )
 
 // discoverLines formats grid discovery results for the task log, mirroring
 // the CLI's discover wording so operators see one vocabulary.
-// ponytail: gui-local formatter; share with cmd/defilade/discover.go if a
+// ponytail: gui-local formatter; share with cmd/salient/discover.go if a
 // third consumer appears.
 func discoverLines(counts, sensors []escli.DatasetCount, fm escli.FieldMap, cov escli.MACCoverage) []string {
 	var lines []string
@@ -29,7 +29,7 @@ func discoverLines(counts, sensors []escli.DatasetCount, fm escli.FieldMap, cov 
 		return slices.ContainsFunc(candidates, func(c string) bool { return present[c] })
 	}
 	if !has(fm.Datasets.Conn) {
-		lines = append(lines, "WARNING: REQUIRED conn dataset missing — no edges, Defilade cannot scan this grid")
+		lines = append(lines, "WARNING: REQUIRED conn dataset missing — no edges, Salient cannot scan this grid")
 	}
 	optional := []struct {
 		name, blind string

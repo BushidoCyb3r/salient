@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // EdgeAggQuery builds one page of the composite conn aggregation (§6.1).

@@ -1,5 +1,5 @@
 // Package config centralizes every tunable threshold and default in
-// Defilade. No magic numbers inline anywhere else (DEFILADE_PLAN.md §15).
+// Salient. No magic numbers inline anywhere else (SALIENT_PLAN.md §15).
 package config
 
 import (
@@ -10,9 +10,9 @@ import (
 // Environment variable names. Auth material goes through the environment,
 // never shell history.
 const (
-	EnvESURL        = "DEFILADE_ES_URL"
-	EnvAPIKey       = "DEFILADE_API_KEY"
-	EnvAssistAPIKey = "DEFILADE_AI_API_KEY"
+	EnvESURL        = "SALIENT_ES_URL"
+	EnvAPIKey       = "SALIENT_API_KEY"
+	EnvAssistAPIKey = "SALIENT_AI_API_KEY"
 )
 
 // Elasticsearch client defaults.
@@ -28,11 +28,11 @@ const (
 	SensorTermsSize = 100
 )
 
-// Output handling (DEFILADE_PLAN.md §14): topology artifacts are sensitive.
+// Output handling (SALIENT_PLAN.md §14): topology artifacts are sensitive.
 const (
 	OutputDirMode  = 0o700
 	OutputFileMode = 0o600
-	DataDirName    = "defilade-data"
+	DataDirName    = "salient-data"
 )
 
 // Optional snapshot analysis. This path is never used unless the operator
@@ -57,7 +57,7 @@ const (
 	BetweennessSamplePivots = 256                 // Brandes–Pich pivots above the exact limit
 )
 
-// Map generation (DEFILADE_PLAN.md §8).
+// Map generation (SALIENT_PLAN.md §8).
 const (
 	GroupPrefixV4         = 24   // §8.2 default subnet grouping prefix
 	SparseGroupMinHosts   = 2    // groups below this collapse into "sparse"
@@ -74,7 +74,7 @@ const (
 	MapSegmentMaxGroups   = 64   // segment-flow map: max VLAN boxes before the least-active overflow to "other internal networks"
 )
 
-// Drift detection (DEFILADE_PLAN.md Phase 2).
+// Drift detection (SALIENT_PLAN.md Phase 2).
 const (
 	DriftRankDelta = 5
 	DriftTopN      = 20
@@ -111,7 +111,7 @@ func ClassLabel(c ServiceClass) string {
 	return "other"
 }
 
-// Temporal classification thresholds (DEFILADE_PLAN.md §9).
+// Temporal classification thresholds (SALIENT_PLAN.md §9).
 const (
 	TemporalSparseMax     = 10   // <10 conns in window = Sparse
 	TemporalDominantFrac  = 0.80 // "≥80% of volume" rule shared by classes
@@ -123,7 +123,7 @@ const (
 	NightEndHour          = 6
 )
 
-// Role inference thresholds (DEFILADE_PLAN.md §7). Every magic number here.
+// Role inference thresholds (SALIENT_PLAN.md §7). Every magic number here.
 const (
 	RoleDCMinKerberosClients  = 5
 	RoleDNSMinClients         = 5
@@ -138,7 +138,7 @@ const (
 	RoleNetworkGearMinClients = 1
 )
 
-// Scoring weights (DEFILADE_PLAN.md §10). Sum ≈ 1.0.
+// Scoring weights (SALIENT_PLAN.md §10). Sum ≈ 1.0.
 const (
 	WeightDependency = 0.40
 	WeightPageRank   = 0.25

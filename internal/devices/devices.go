@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/BushidoCyb3r/defilade/internal/safefile"
+	"github.com/BushidoCyb3r/salient/internal/safefile"
 )
 
 // Device is one physical device that may own several IPs (e.g. a router

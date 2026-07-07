@@ -1,4 +1,4 @@
-module github.com/BushidoCyb3r/defilade
+module github.com/BushidoCyb3r/salient
 
 go 1.26.4
 

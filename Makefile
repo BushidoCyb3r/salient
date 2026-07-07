@@ -1,5 +1,5 @@
-BINARY  := defilade
-PKG     := ./cmd/defilade
+BINARY  := salient
+PKG     := ./cmd/salient
 # Prefer the known-good local toolchain when present; fall back to PATH.
 GO      ?= $(if $(wildcard $(HOME)/.local/go/bin/go),$(HOME)/.local/go/bin/go,$(shell command -v go 2>/dev/null || printf go))
 GO_ENV  ?= env -u GOROOT
@@ -63,9 +63,9 @@ cross:
 # Live-grid check, never in CI. Usage:
 #   make integration ES_URL=https://manager:9200 API_KEY=... [CA_CERT=grid-ca.pem]
 integration: build
-	DEFILADE_ES_URL='$(ES_URL)' DEFILADE_API_KEY='$(API_KEY)' \
+	SALIENT_ES_URL='$(ES_URL)' SALIENT_API_KEY='$(API_KEY)' \
 		./bin/$(BINARY) test-connection $(if $(CA_CERT),--ca-cert $(CA_CERT))
-	DEFILADE_ES_URL='$(ES_URL)' DEFILADE_API_KEY='$(API_KEY)' \
+	SALIENT_ES_URL='$(ES_URL)' SALIENT_API_KEY='$(API_KEY)' \
 		./bin/$(BINARY) discover $(if $(CA_CERT),--ca-cert $(CA_CERT))
 
 clean:

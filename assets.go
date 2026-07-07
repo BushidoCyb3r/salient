@@ -1,6 +1,6 @@
-package defilade
+package salient
 
 import _ "embed"
 
-//go:embed defilade-logo.png
+//go:embed salient-logo.png
 var LogoPNG []byte

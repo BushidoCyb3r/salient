@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/BushidoCyb3r/defilade/internal/config"
-	"github.com/BushidoCyb3r/defilade/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/config"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
 )
 
 // SVG renders the briefing map server-side: subnet group boxes, tiered rows
@@ -141,7 +141,7 @@ func SVGMap(w io.Writer, m *mapview.Model) error {
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%.0f" height="%.0f" viewBox="0 0 %.0f %.0f" font-family="system-ui,sans-serif">`+"\n", width, height, width, height)
 	b.WriteString(`<defs><pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#f6e8e8"/><line x1="0" y1="0" x2="0" y2="8" stroke="#c96a6a" stroke-width="2"/></pattern></defs>` + "\n")
 	b.WriteString(`<rect width="100%" height="100%" fill="#fcfcfd"/>` + "\n")
-	fmt.Fprintf(&b, `<text x="%d" y="34" font-size="20" font-weight="700" fill="#1c2330">Defilade briefing map — %s</text>`+"\n", svgMargin, xmlEsc(m.Meta.ClusterName))
+	fmt.Fprintf(&b, `<text x="%d" y="34" font-size="20" font-weight="700" fill="#1c2330">Salient briefing map — %s</text>`+"\n", svgMargin, xmlEsc(m.Meta.ClusterName))
 	fmt.Fprintf(&b, `<text x="%d" y="56" font-size="12" fill="#6a7180">window %s · generated %s · L3 logical dependency map from observed traffic — not physical topology</text>`+"\n",
 		svgMargin, xmlEsc(m.Meta.Window), m.Meta.CreatedAt.Format("2006-01-02 15:04Z"))
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // TemporalQuery builds the second-pass histogram for one responder (§6.1):

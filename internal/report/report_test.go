@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 var update = flag.Bool("update", false, "rewrite golden files")
@@ -19,7 +19,7 @@ func fixture() graph.Snapshot {
 	return graph.Snapshot{
 		Meta: graph.SnapshotMeta{
 			CreatedAt: time.Date(2026, 7, 1, 12, 0, 0, 0, time.UTC),
-			Window:    "336h0m0s", ClusterName: "golden", Tool: "defilade",
+			Window:    "336h0m0s", ClusterName: "golden", Tool: "salient",
 			Sensors: []string{"sensor1"}, ZeroCovCIDRs: []string{"10.9.0.0/24"},
 		},
 		Nodes: []graph.Node{

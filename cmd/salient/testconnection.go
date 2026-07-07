@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BushidoCyb3r/defilade/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/escli"
 )
 
 func newTestConnectionCmd(opts *globalOpts) *cobra.Command {
@@ -56,7 +56,7 @@ func runTestConnection(cmd *cobra.Command, opts *globalOpts) error {
 	case err != nil:
 		fmt.Fprintf(os.Stderr, "%swarning:%s could not check key privileges: %v\n", ansiYellow, ansiReset, err)
 	case priv.CanWrite:
-		fmt.Fprintf(os.Stderr, "%sWARNING: this API key can WRITE to %s (%s). Defilade never writes, but the key violates least privilege — create a read-only key per docs/DEPLOYMENT.md.%s\n",
+		fmt.Fprintf(os.Stderr, "%sWARNING: this API key can WRITE to %s (%s). Salient never writes, but the key violates least privilege — create a read-only key per docs/DEPLOYMENT.md.%s\n",
 			ansiRed, fm.IndexPattern, priv.Detail, ansiReset)
 	case priv.Indeterminate:
 		fmt.Fprintf(out, "Key privileges: could not verify (%s) — confirm the key is read-only manually\n", priv.Detail)
@@ -78,7 +78,7 @@ func runTestConnection(cmd *cobra.Command, opts *globalOpts) error {
 	fmt.Fprintf(out, "Index pattern %q: %d indices/data streams (%d data streams)\n",
 		fm.IndexPattern, len(indices), streams)
 	if len(indices) == 0 {
-		fmt.Fprintf(os.Stderr, "%sWARNING: nothing matches %q. The index pattern in the field map is wrong for this grid — run `defilade discover` after adjusting --fieldmap.%s\n",
+		fmt.Fprintf(os.Stderr, "%sWARNING: nothing matches %q. The index pattern in the field map is wrong for this grid — run `salient discover` after adjusting --fieldmap.%s\n",
 			ansiRed, fm.IndexPattern, ansiReset)
 		return nil
 	}

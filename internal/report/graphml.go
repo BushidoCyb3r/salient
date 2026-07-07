@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/BushidoCyb3r/defilade/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // GraphML writes a minimal GraphML document: nodes carry ip/role/composite/

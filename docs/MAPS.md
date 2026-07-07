@@ -1,6 +1,6 @@
 # Key-terrain criticality maps
 
-`defilade map --snapshot FILE [--format html|svg|graphml]` renders a
+`salient map --snapshot FILE [--format html|svg|graphml]` renders a
 subnet-grouped, tiered dependency map from a stored snapshot. Maps are a pure
 function of the snapshot (`internal/mapview`) — no ES access, fully offline,
 re-renderable anytime.
@@ -131,8 +131,8 @@ level summarises. The snapshot itself is untouched — drill into a segment, or
 re-render any enclave in full detail from the CLI:
 
 ```sh
-./bin/defilade map \
-  --snapshot defilade-data/snapshots/<timestamp>.json.gz \
+./bin/salient map \
+  --snapshot salient-data/snapshots/<timestamp>.json.gz \
   --focus 10.10.40.0/24 \
   --format html
 ```
@@ -154,7 +154,7 @@ with a warning above 120 elements.
 
 ## Importing GraphML into draw.io or yEd (offline)
 
-1. Generate the file: `defilade map --snapshot FILE --format graphml > map.graphml`
+1. Generate the file: `salient map --snapshot FILE --format graphml > map.graphml`
 2. **draw.io** (desktop, offline): File → Import from → Device → select the
    `.graphml` file. draw.io reads the nested `<graph>` elements as swimlane
    groups; nodes land inside their subnet's container. Re-layout with
@@ -166,14 +166,14 @@ with a warning above 120 elements.
    Layout → Hierarchical for a tiered view, or Layout → Organic for the
    fcose-equivalent look. yEd's own GraphML dialect (`y:` extensions) is not
    emitted — yEd still imports plain GraphML fine, it just won't carry
-   yEd-specific styling from Defilade; style after import.
+   yEd-specific styling from Salient; style after import.
 
 Both apps are offline desktop tools, so this path stays air-gap safe.
 
 ## Drift-highlighted maps
 
 ```sh
-defilade diff --from older.json.gz --to newer.json.gz --format html --map
+salient diff --from older.json.gz --to newer.json.gz --format html --map
 ```
 
 This writes the HTML drift report and a sibling `.diff.map.html` briefing map.
@@ -188,7 +188,7 @@ context only; the newer snapshot stays the authoritative current state.
 ## Reconciliation-flagged maps
 
 ```sh
-defilade reconcile --snapshot snap.json.gz --assets assets.csv --format html --map
+salient reconcile --snapshot snap.json.gz --assets assets.csv --format html --map
 ```
 
 This writes the doc-vs-reality report and a sibling `.reconcile.map.html`
