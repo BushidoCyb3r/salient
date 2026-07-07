@@ -113,12 +113,17 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+      - name: Prepare release assets
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          cp artifacts/salient-gui-linux-packages/*.deb artifacts/salient-gui-linux-packages/*.rpm release-assets/
+          (cd artifacts/salient-gui-macos-latest && zip -r -y ../../release-assets/salient-gui-macos.zip gui.app)
+          cp artifacts/salient-gui-windows-latest/gui.exe release-assets/salient-gui-windows.exe
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
-            artifacts/salient-gui-linux-packages/* \
-            artifacts/salient-gui-macos-latest/* \
-            artifacts/salient-gui-windows-latest/*
+            release-assets/*
