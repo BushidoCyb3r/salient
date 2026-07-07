@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-07
+
 ### Added
+- **Linux packaging + release pipeline**: `.deb`/`.rpm` packages (via nfpm)
+  declare `libwebkit2gtk-4.1`/`gtk3` as a package dependency instead of
+  bundling it, with desktop-launcher integration (`.desktop` entry + icon).
+  Buildable locally with `make package-linux`; a tagged (`v*`) push now
+  builds and publishes a GitHub Release with Linux (`.deb`/`.rpm`), macOS
+  (`.zip`), and Windows (`.exe`) binaries attached.
 - **Topology layout — declared routing** (the *tiered* layout, renamed
   *topology* and extended): the realistic tiered map now also draws the
   operator-declared device hierarchy. Tag a device's network layer (its `Type`:
@@ -103,4 +111,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `refreshDevices` dropped the pin set from the in-memory registry, which could
   leave the pin/unpin menu label stale.
 
-[Unreleased]: https://github.com/BushidoCyb3r/salient/commits/feature/desktop-map-viewer
+[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/BushidoCyb3r/salient/releases/tag/v0.1.0
