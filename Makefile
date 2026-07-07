@@ -9,11 +9,13 @@ TOOLS_DIR ?= .tools
 WAILS_BIN_DIR ?= $(TOOLS_DIR)/bin
 WAILS_CACHE_DIR ?= $(TOOLS_DIR)/go-build
 WAILS   ?= $(abspath $(WAILS_BIN_DIR)/wails)
+NFPM_VERSION := v2.47.0
+NFPM    ?= $(abspath $(WAILS_BIN_DIR)/nfpm)
 LDFLAGS := -s -w
 GOOS    ?= $(shell $(GO) env GOOS)
 GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
 
-.PHONY: deps gui-deps build gui gui-test test check lint cross clean integration
+.PHONY: deps gui-deps build gui gui-test test check lint cross package-linux clean integration
 
 deps:
 	$(GO_ENV) $(GO) mod download
@@ -25,6 +27,12 @@ $(WAILS):
 	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
 	$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
 
+# Same self-bootstrap rationale as $(WAILS): package-linux must never fail
+# with "no such file" on a fresh clone or CI runner.
+$(NFPM):
+	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
+	$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/goreleaser/nfpm/v2/cmd/nfpm@$(NFPM_VERSION)
+
 gui-deps: deps $(WAILS)
 	cd gui && $(GO_ENV) $(GO) mod download
 	cd gui/frontend && npm ci
@@ -34,6 +42,15 @@ build:
 
 gui: $(WAILS)
 	cd gui && PATH="$(GO_PATH)$(PATH)" $(GO_ENV) $(WAILS) build $(GUI_TAGS)
+
+# VERSION drives the .deb/.rpm version string; pass explicitly for real
+# releases, e.g. `make package-linux VERSION=0.3.0`.
+VERSION ?= 0.0.0-dev
+
+package-linux: gui $(NFPM)
+	mkdir -p dist
+	cd gui && VERSION=$(VERSION) $(NFPM) package --config nfpm.yaml --packager deb --target $(abspath dist)/
+	cd gui && VERSION=$(VERSION) $(NFPM) package --config nfpm.yaml --packager rpm --target $(abspath dist)/
 
 gui-test:
 	cd gui && $(GO_ENV) $(GO) test ./...
@@ -69,4 +86,4 @@ integration: build
 		./bin/$(BINARY) discover $(if $(CA_CERT),--ca-cert $(CA_CERT))
 
 clean:
-	rm -rf bin gui/build/bin $(TOOLS_DIR)
+	rm -rf bin dist gui/build/bin $(TOOLS_DIR)

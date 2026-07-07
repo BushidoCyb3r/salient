@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Salient GUI
+Comment=Salient desktop map viewer
+Exec=salient-gui
+Icon=salient-gui
+Terminal=false
+Categories=Network;Utility;
