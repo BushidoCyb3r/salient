@@ -59,7 +59,11 @@ The console provides:
   any text; the correction is marked ✎, the original inference stays visible,
   and known roles also move the node to the correct map tier.
 - Drift comparison: pick any older snapshot as a baseline and see what
-  appeared, vanished, or changed rank since.
+  appeared, vanished, or changed rank since — including new DNS/DHCP/auth/
+  file/database providers at any terrain rank, not just newcomers to the top.
+  Edges carry a service-evidence level (protocol-confirmed, responder-
+  confirmed, or port-only); port-only connection attempts never influence
+  rankings or roles.
 - Asset reconciliation: load an inventory CSV and see undocumented hosts,
   documented-but-silent assets, and role contradictions flagged on the map.
 - Optional model-assisted device tags based on observed network communication,
