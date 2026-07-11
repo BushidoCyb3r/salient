@@ -12,16 +12,16 @@ import (
 // aggregated from confirmed edges in a single snapshot. It is a descriptive
 // evidence summary only — never a suspicion or risk score.
 type ServiceProvider struct {
-	IP        string             `json:"ip"`
-	Hostname  string             `json:"hostname,omitempty"`
-	Role      graph.Role         `json:"role"`
-	Service   string             `json:"service"`
-	Port      uint16             `json:"port"`
+	IP        string              `json:"ip"`
+	Hostname  string              `json:"hostname,omitempty"`
+	Role      graph.Role          `json:"role"`
+	Service   string              `json:"service"`
+	Port      uint16              `json:"port"`
 	Evidence  graph.EvidenceLevel `json:"evidence"`
-	Clients   int                `json:"clients"`
-	FirstSeen time.Time          `json:"first_seen"`
-	LastSeen  time.Time          `json:"last_seen"`
-	Rank      int                `json:"rank,omitempty"`
+	Clients   int                 `json:"clients"`
+	FirstSeen time.Time           `json:"first_seen"`
+	LastSeen  time.Time           `json:"last_seen"`
+	Rank      int                 `json:"rank,omitempty"`
 }
 
 // evidenceStrength ranks evidence tiers so aggregation can keep the

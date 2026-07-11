@@ -13,7 +13,7 @@ func TestBuildServiceAuthority(t *testing.T) {
 	snap := graph.Snapshot{
 		Nodes: []graph.Node{
 			{IP: "10.0.1.11", Hostnames: []string{"dns1.corp"},
-				Roles: []graph.RoleAssertion{{Role: graph.RoleDNS, Confidence: 0.9}},
+				Roles:  []graph.RoleAssertion{{Role: graph.RoleDNS, Confidence: 0.9}},
 				Scores: graph.ScoreSet{Rank: 3}},
 			{IP: "10.0.3.30"},
 			{IP: "10.0.3.31"},
