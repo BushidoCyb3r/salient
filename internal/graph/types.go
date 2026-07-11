@@ -79,6 +79,7 @@ type Edge struct {
 	Dst       string           `json:"dst"`
 	Port      uint16           `json:"port"`
 	Service   string           `json:"service"`
+	Evidence  EvidenceLevel    `json:"evidence,omitempty"`
 	ConnCount int64            `json:"conn_count"`
 	BytesOut  int64            `json:"bytes_out"`
 	BytesIn   int64            `json:"bytes_in"`
