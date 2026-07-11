@@ -41,17 +41,40 @@ type NewProvider struct {
 	Rank    int    `json:"rank"`
 }
 
+// ProviderDisplacement summarizes client movement into one provider from
+// other providers of the same service between two snapshots — e.g. "14
+// clients that used Y now use X." Purely descriptive: which clients moved
+// and from where, never an intent judgment. Only the gaining provider gets
+// an entry; a provider that only lost clients isn't tracked here.
+type ProviderDisplacement struct {
+	IP           string            `json:"ip"`
+	Port         uint16            `json:"port"`
+	Service      string            `json:"service"`
+	ClientsAdded int               `json:"clients_added"` // clients new to this service entirely, not from a tracked prior provider
+	MigratedFrom []MigrationSource `json:"migrated_from,omitempty"`
+	Rank         int               `json:"rank,omitempty"`
+}
+
+// MigrationSource is one prior provider some of a new provider's clients
+// came from, and how many.
+type MigrationSource struct {
+	IP      string `json:"ip"`
+	Port    uint16 `json:"port"`
+	Clients int    `json:"clients"`
+}
+
 // Diff is the analyst-relevant drift between two snapshots.
 type Diff struct {
-	FromMeta              graph.SnapshotMeta `json:"from"`
-	ToMeta                graph.SnapshotMeta `json:"to"`
-	AppearedNodes         []graph.Node       `json:"appeared_nodes"`
-	DisappearedNodes      []graph.Node       `json:"disappeared_nodes"`
-	RankChanges           []RankChange       `json:"rank_changes"`
-	NewEdgesToTop         []graph.Edge       `json:"new_edges_to_top"`
-	VanishedCriticalEdges []graph.Edge       `json:"vanished_critical_edges"`
-	RoleChanges           []RoleChange       `json:"role_changes"`
-	NewProviders          []NewProvider      `json:"new_providers"`
+	FromMeta              graph.SnapshotMeta     `json:"from"`
+	ToMeta                graph.SnapshotMeta     `json:"to"`
+	AppearedNodes         []graph.Node           `json:"appeared_nodes"`
+	DisappearedNodes      []graph.Node           `json:"disappeared_nodes"`
+	RankChanges           []RankChange           `json:"rank_changes"`
+	NewEdgesToTop         []graph.Edge           `json:"new_edges_to_top"`
+	VanishedCriticalEdges []graph.Edge           `json:"vanished_critical_edges"`
+	RoleChanges           []RoleChange           `json:"role_changes"`
+	NewProviders          []NewProvider          `json:"new_providers"`
+	ProviderDisplacements []ProviderDisplacement `json:"provider_displacements"`
 }
 
 // Compare returns deterministic drift signals required by Phase 2.
@@ -130,6 +153,95 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 		a, b := d.NewProviders[i], d.NewProviders[j]
 		if a.Clients != b.Clients {
 			return a.Clients > b.Clients
+		}
+		if a.IP != b.IP {
+			return a.IP < b.IP
+		}
+		return a.Port < b.Port
+	})
+
+	// Provider displacement: for each service, track clients that were
+	// already a client of some same-service provider in `from` but are now
+	// (also) a client of a *different* same-service provider in `to` — a
+	// migration. A client with no prior same-service provider counts as
+	// organic new demand (ClientsAdded), not a migration.
+	oldClientsByProv := map[provKey]map[string]bool{}
+	oldProvsByService := map[string][]provKey{}
+	for _, e := range from.Edges {
+		if !config.IsSensitiveServicePort(e.Port) || !e.Confirmed() || !graph.TerrainAddr(e.Dst) {
+			continue
+		}
+		k := provKey{e.Dst, e.Port}
+		if oldClientsByProv[k] == nil {
+			oldClientsByProv[k] = map[string]bool{}
+			oldProvsByService[config.ServiceName(e.Port)] = append(oldProvsByService[config.ServiceName(e.Port)], k)
+		}
+		oldClientsByProv[k][e.Src] = true
+	}
+	newClientsByProv := map[provKey]map[string]bool{}
+	for _, e := range to.Edges {
+		if !config.IsSensitiveServicePort(e.Port) || !e.Confirmed() || !graph.TerrainAddr(e.Dst) {
+			continue
+		}
+		k := provKey{e.Dst, e.Port}
+		if newClientsByProv[k] == nil {
+			newClientsByProv[k] = map[string]bool{}
+		}
+		newClientsByProv[k][e.Src] = true
+	}
+	for k, clients := range newClientsByProv {
+		service := config.ServiceName(k.port)
+		wasClientBefore := oldClientsByProv[k]
+		fromCount := map[provKey]int{}
+		added := 0
+		for c := range clients {
+			if wasClientBefore[c] {
+				continue // already p's client last time — not new, not a migration
+			}
+			migrated := false
+			for _, q := range oldProvsByService[service] {
+				if q == k {
+					continue
+				}
+				if oldClientsByProv[q][c] {
+					fromCount[q]++
+					migrated = true
+					break
+				}
+			}
+			if !migrated {
+				added++
+			}
+		}
+		if added == 0 && len(fromCount) == 0 {
+			continue
+		}
+		var sources []MigrationSource
+		for q, n := range fromCount {
+			sources = append(sources, MigrationSource{IP: q.dst, Port: q.port, Clients: n})
+		}
+		sort.Slice(sources, func(i, j int) bool {
+			if sources[i].Clients != sources[j].Clients {
+				return sources[i].Clients > sources[j].Clients
+			}
+			return sources[i].IP < sources[j].IP
+		})
+		d.ProviderDisplacements = append(d.ProviderDisplacements, ProviderDisplacement{
+			IP: k.dst, Port: k.port, Service: service,
+			ClientsAdded: added, MigratedFrom: sources, Rank: newNodes[k.dst].Scores.Rank,
+		})
+	}
+	sort.Slice(d.ProviderDisplacements, func(i, j int) bool {
+		total := func(p ProviderDisplacement) int {
+			n := p.ClientsAdded
+			for _, s := range p.MigratedFrom {
+				n += s.Clients
+			}
+			return n
+		}
+		a, b := d.ProviderDisplacements[i], d.ProviderDisplacements[j]
+		if ta, tb := total(a), total(b); ta != tb {
+			return ta > tb
 		}
 		if a.IP != b.IP {
 			return a.IP < b.IP

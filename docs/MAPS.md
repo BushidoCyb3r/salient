@@ -209,6 +209,12 @@ New hosts, inferred service roles, and service dependencies are investigation
 leads for unauthorized or malicious service providers, especially when the
 change has no approved operational explanation.
 
+**Provider displacement** tracks client movement between two snapshots for
+the same service — "N clients moved from Y to X" — separately from organic
+new demand. Only the gaining provider is reported; a provider that only lost
+clients isn't flagged on its own. This is descriptive evidence of where
+traffic moved, not a judgment about which provider is legitimate.
+
 Vanished nodes and edges come from the older snapshot and remain visual
 context only; the newer snapshot stays the authoritative current state.
 

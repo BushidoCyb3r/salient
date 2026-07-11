@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   undocumented providers first, then new providers/services, then
   sole-observed providers, ordered by explicit facts (never a probability
   score). Each lead includes a one-click Security Onion Hunt query copy.
+- **Provider displacement drift**: drift comparison now reports client
+  migration between same-service providers — "N clients moved from Y to X"
+  — alongside organic new demand, surfaced in the HTML drift report and the
+  desktop console's drift findings.
 
 ## [0.2.0] - 2026-07-11
 

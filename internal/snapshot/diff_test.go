@@ -124,3 +124,81 @@ func TestCompareNewProvidersExistingHostAndSort(t *testing.T) {
 		t.Errorf("want existing-host provider sorted second with NewHost=false, got %+v", second)
 	}
 }
+
+func TestCompareProviderDisplacementMigration(t *testing.T) {
+	base := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.0.10"}, {IP: "10.0.0.20"}, // two DNS providers
+			{IP: "10.0.1.1"}, {IP: "10.0.1.2"}, {IP: "10.0.1.3"},
+		},
+		Edges: []graph.Edge{
+			// 3 clients use provider Y (10.0.0.20) for dns
+			{Src: "10.0.1.1", Dst: "10.0.0.20", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.1.2", Dst: "10.0.0.20", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.1.3", Dst: "10.0.0.20", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+		},
+	}
+	next := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.0.10", Scores: graph.ScoreSet{Rank: 5}}, {IP: "10.0.0.20"},
+			{IP: "10.0.1.1"}, {IP: "10.0.1.2"}, {IP: "10.0.1.3"}, {IP: "10.0.1.4"},
+		},
+		Edges: []graph.Edge{
+			// 2 of those 3 clients moved to provider X (10.0.0.10); one stayed with Y
+			{Src: "10.0.1.1", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.1.2", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.1.3", Dst: "10.0.0.20", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			// a brand-new client (never used any dns provider before) also picks X
+			{Src: "10.0.1.4", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+		},
+	}
+	d := Compare(base, next, DiffOptions{TopN: 10, RankDelta: 5})
+	if len(d.ProviderDisplacements) != 1 {
+		t.Fatalf("want exactly 1 displacement entry (only the gaining provider X), got %+v", d.ProviderDisplacements)
+	}
+	pd := d.ProviderDisplacements[0]
+	if pd.IP != "10.0.0.10" || pd.Port != 53 || pd.Service != "dns" || pd.ClientsAdded != 1 || pd.Rank != 5 {
+		t.Fatalf("bad displacement entry: %+v", pd)
+	}
+	if len(pd.MigratedFrom) != 1 || pd.MigratedFrom[0].IP != "10.0.0.20" || pd.MigratedFrom[0].Port != 53 || pd.MigratedFrom[0].Clients != 2 {
+		t.Fatalf("bad migration source: %+v", pd.MigratedFrom)
+	}
+}
+
+func TestCompareProviderDisplacementNoChangeProducesNoEntry(t *testing.T) {
+	base := graph.Snapshot{
+		Nodes: []graph.Node{{IP: "10.0.0.10"}, {IP: "10.0.1.1"}},
+		Edges: []graph.Edge{{Src: "10.0.1.1", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidenceProtocolConfirmed}},
+	}
+	next := graph.Snapshot{
+		Nodes: []graph.Node{{IP: "10.0.0.10"}, {IP: "10.0.1.1"}},
+		Edges: []graph.Edge{{Src: "10.0.1.1", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidenceProtocolConfirmed}},
+	}
+	d := Compare(base, next, DiffOptions{TopN: 10, RankDelta: 5})
+	if len(d.ProviderDisplacements) != 0 {
+		t.Fatalf("unchanged client set must produce no displacement entry, got %+v", d.ProviderDisplacements)
+	}
+}
+
+func TestCompareProviderDisplacementExcludesPortOnlyEdges(t *testing.T) {
+	base := graph.Snapshot{
+		Nodes: []graph.Node{{IP: "10.0.0.10"}, {IP: "10.0.0.20"}, {IP: "10.0.1.1"}},
+		Edges: []graph.Edge{{Src: "10.0.1.1", Dst: "10.0.0.20", Port: 53, Evidence: graph.EvidenceProtocolConfirmed}},
+	}
+	next := graph.Snapshot{
+		Nodes: []graph.Node{{IP: "10.0.0.10"}, {IP: "10.0.0.20"}, {IP: "10.0.1.1"}, {IP: "10.0.9.9"}},
+		Edges: []graph.Edge{
+			{Src: "10.0.1.1", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			// scanner probe to X must not count as a client / inflate ClientsAdded
+			{Src: "10.0.9.9", Dst: "10.0.0.10", Port: 53, Evidence: graph.EvidencePortOnly},
+		},
+	}
+	d := Compare(base, next, DiffOptions{TopN: 10, RankDelta: 5})
+	if len(d.ProviderDisplacements) != 1 {
+		t.Fatalf("want exactly 1 displacement entry, got %+v", d.ProviderDisplacements)
+	}
+	pd := d.ProviderDisplacements[0]
+	if pd.ClientsAdded != 0 || len(pd.MigratedFrom) != 1 || pd.MigratedFrom[0].Clients != 1 {
+		t.Fatalf("scanner must not appear as a client: %+v", pd)
+	}
+}
