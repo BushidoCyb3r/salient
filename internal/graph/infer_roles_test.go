@@ -40,3 +40,29 @@ func TestInferDeviceServiceRoles(t *testing.T) {
 		}
 	}
 }
+
+// DHCPServer fires on real lease evidence (server.address on an ACK/OFFER
+// record) — a distinct signal from any conn-log edge (broadcast-heavy
+// protocol, dhcp.log is a separate Zeek dataset from conn.log). Nodes are
+// still keyed off conn edges (dhcp.log evidence alone doesn't create a
+// node), so both hosts also need a port-67 edge, same as every other
+// evidence-driven role's test in this package.
+func TestInferDHCPServerRole(t *testing.T) {
+	edges := []graph.Edge{
+		{Src: "10.0.0.100", Dst: "10.0.0.1", Port: 67, ConnCount: 5},
+		{Src: "10.0.0.101", Dst: "10.0.0.2", Port: 67, ConnCount: 5},
+	}
+	m := graph.Build(edges)
+	m.InferRoles(graph.Evidence{
+		DHCP: map[string]graph.RoleEvidence{
+			"10.0.0.1": {Clients: 5}, // real server, above RoleDHCPMinClients=2
+			"10.0.0.2": {Clients: 1}, // below threshold — no role
+		},
+	})
+	if got := m.Nodes["10.0.0.1"].TopRole(); got != graph.RoleDHCPServer {
+		t.Errorf("10.0.0.1: expected DHCPServer, got %s", got)
+	}
+	if got := m.Nodes["10.0.0.2"].TopRole(); got != graph.RoleUnknown {
+		t.Errorf("10.0.0.2: expected Unknown (below threshold), got %s", got)
+	}
+}

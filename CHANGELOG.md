@@ -21,6 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   migration between same-service providers — "N clients moved from Y to X"
   — alongside organic new demand, surfaced in the HTML drift report and the
   desktop console's drift findings.
+- **DHCPServer role inference**: real lease evidence (`server.address` on a
+  DHCP ACK/OFFER record) — not a port-67 traffic guess — identifies actual
+  DHCP servers, the classic rogue-service target. Verified end-to-end
+  against a real Security Onion grid (see `docs/FIELDMAP.md`).
+
+### Verified
+- Phase 0 field-map verification completed against a real Security Onion
+  grid (ES 9.3.3): every default field name matched, zero overrides needed.
+  See `docs/FIELDMAP.md` for the full write-up, including confirmed
+  real-world evidence that ~92% of raw connection attempts on a live
+  network are port-only noise, correctly excluded from scoring.
 
 ## [0.2.0] - 2026-07-11
 

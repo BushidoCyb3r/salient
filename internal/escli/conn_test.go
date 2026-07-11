@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -94,12 +95,34 @@ func TestResponderCardinality(t *testing.T) {
 			"buckets":[{"key":"10.0.1.10","clients":{"value":42},
 				"sample_hosts":{"buckets":[{"key":"10.0.2.30","doc_count":5}]}}]}}}`),
 	})
-	ev, err := cli.ResponderCardinality(context.Background(), DefaultFieldMap(), []string{"kerberos"}, 24*time.Hour, nil)
+	fm := DefaultFieldMap()
+	ev, err := cli.ResponderCardinality(context.Background(), fm, []string{"kerberos"}, 24*time.Hour, nil, fm.DestinationIP, fm.SourceIP)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ev["10.0.1.10"].Clients != 42 || ev["10.0.1.10"].SampleHosts[0] != "10.0.2.30" {
 		t.Errorf("bad evidence: %+v", ev)
+	}
+}
+
+// DHCP role evidence uses its own ECS fields (server.address/client.address),
+// not the conn-shaped destination/source IP fields every other dataset uses —
+// verify the query body actually aggregates on the fields passed in, not a
+// hardcoded default.
+func TestResponderCardinalityQueryUsesPassedFields(t *testing.T) {
+	fm := DefaultFieldMap()
+	body, err := ResponderCardinalityQuery(fm, fm.Datasets.DHCP, 24*time.Hour, nil, fm.DHCPServer, fm.DHCPClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(body, `"server.address"`) {
+		t.Errorf("query missing DHCP server field: %s", body)
+	}
+	if !strings.Contains(body, `"client.address"`) {
+		t.Errorf("query missing DHCP client field: %s", body)
+	}
+	if strings.Contains(body, `"destination.ip"`) || strings.Contains(body, `"source.ip"`) {
+		t.Errorf("query wrongly used conn-shaped fields for a DHCP query: %s", body)
 	}
 }
 

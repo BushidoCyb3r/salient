@@ -38,6 +38,13 @@ type FieldMap struct {
 	// participation (SF/S0/REJ/...). Optional: absent on the grid means
 	// evidence classification falls back to responder bytes.
 	ConnState string `yaml:"conn_state"`
+	// DHCPServer and DHCPClient are the ECS-mapped Zeek dhcp.log fields
+	// identifying which host answered a lease request. Only populated on
+	// ACK/OFFER records (a REQUEST alone has no server field) — that
+	// absence is itself the confirmation signal, no message-type filter
+	// needed.
+	DHCPServer string `yaml:"dhcp_server"`
+	DHCPClient string `yaml:"dhcp_client"`
 
 	// Datasets holds candidate DatasetField values per Zeek log type.
 	// Security Onion releases have shipped both bare ("conn") and
@@ -80,6 +87,8 @@ func DefaultFieldMap() FieldMap {
 		SourceMAC:        "source.mac",        // UNVERIFIED — may not survive ECS mapping
 		DestinationMAC:   "destination.mac",   // UNVERIFIED — may not survive ECS mapping
 		ConnState:        "connection.state",  // UNVERIFIED — verify with `salient discover`; Task 0 records ground truth
+		DHCPServer:       "server.address",    // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
+		DHCPClient:       "client.address",    // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
 		Datasets: DatasetCandidates{
 			Conn:     []string{"conn", "zeek.conn"},
 			DNS:      []string{"dns", "zeek.dns"},
@@ -121,6 +130,8 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	merge(&fm.SourceMAC, override.SourceMAC)
 	merge(&fm.DestinationMAC, override.DestinationMAC)
 	merge(&fm.ConnState, override.ConnState)
+	merge(&fm.DHCPServer, override.DHCPServer)
+	merge(&fm.DHCPClient, override.DHCPClient)
 	mergeList(&fm.Datasets.Conn, override.Datasets.Conn)
 	mergeList(&fm.Datasets.DNS, override.Datasets.DNS)
 	mergeList(&fm.Datasets.Kerberos, override.Datasets.Kerberos)
