@@ -846,7 +846,7 @@ function renderTerrainButton(model) {
   const count = topTerrainNodes(model).length;
   $('terrainbtn').disabled = count === 0;
   $('terrainbtn').textContent = count ? 'Open key terrain (' + count + ')' : 'No key terrain';
-  $('svcauthbtn').disabled = count === 0;
+  $('svcauthbtn').disabled = false;
 }
 
 function zoomToTerrain(item) {
