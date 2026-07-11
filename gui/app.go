@@ -203,10 +203,10 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 	d := snapshot.Compare(from, to, snapshot.DiffOptions{})
 	model := mapview.BuildDrift(to, d, a.mapOptions())
 	model.Findings = append(model.Findings, fmt.Sprintf(
-		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges, %d new sensitive-service providers",
+		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges, %d new sensitive-service providers, %d provider displacements",
 		from.Meta.CreatedAt.UTC().Format("20060102T150405Z"),
 		len(d.AppearedNodes), len(d.DisappearedNodes), len(d.RankChanges),
-		len(d.NewEdgesToTop), len(d.VanishedCriticalEdges), len(d.NewProviders)))
+		len(d.NewEdgesToTop), len(d.VanishedCriticalEdges), len(d.NewProviders), len(d.ProviderDisplacements)))
 	for _, p := range d.NewProviders {
 		hostNote := ""
 		if p.NewHost {
@@ -215,6 +215,13 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 		model.Findings = append(model.Findings, fmt.Sprintf(
 			"new provider: %s began serving %s (port %d) to %d client(s)%s — investigate if unexpected",
 			p.IP, p.Service, p.Port, p.Clients, hostNote))
+	}
+	for _, p := range d.ProviderDisplacements {
+		for _, src := range p.MigratedFrom {
+			model.Findings = append(model.Findings, fmt.Sprintf(
+				"%d client(s) moved from %s:%d to %s:%d for %s",
+				src.Clients, src.IP, src.Port, p.IP, p.Port, p.Service))
+		}
 	}
 	return a.finishModel(resolved, model)
 }
