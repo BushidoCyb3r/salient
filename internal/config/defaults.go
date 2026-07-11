@@ -253,6 +253,17 @@ func IsNetworkGearPort(port uint16) bool { return networkGearPorts[port] }
 // ClassForPort returns the service class of a responder port.
 func ClassForPort(port uint16) ServiceClass { return portClass[port] }
 
+// IsSensitiveServicePort reports responder ports whose provider set is
+// hunt-relevant: name resolution, auth, file, and database classes, plus
+// DHCP and NTP. Web/admin excluded — too noisy for new-provider drift.
+func IsSensitiveServicePort(port uint16) bool {
+	switch ClassForPort(port) {
+	case ClassAuth, ClassName, ClassFile, ClassDB:
+		return true
+	}
+	return port == 67 || port == 123
+}
+
 // KnownService returns the short label for a recognized responder port, or
 // "" when the port is not notable — callers building service lists use this
 // to skip ephemeral/unknown ports.

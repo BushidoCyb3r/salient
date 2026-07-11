@@ -72,6 +72,20 @@ func TestNamedPortClasses(t *testing.T) {
 	}
 }
 
+func TestIsSensitiveServicePort(t *testing.T) {
+	for _, p := range []uint16{53, 88, 389, 445, 5432, 67, 123} {
+		if !IsSensitiveServicePort(p) {
+			t.Errorf("port %d should be sensitive", p)
+		}
+	}
+	// Web and admin are excluded: too noisy for new-provider drift.
+	for _, p := range []uint16{443, 80, 22, 3389, 49152} {
+		if IsSensitiveServicePort(p) {
+			t.Errorf("port %d should not be sensitive", p)
+		}
+	}
+}
+
 func TestNetworkGearPorts(t *testing.T) {
 	for _, p := range []uint16{5246, 5247, 8211, 4786, 49, 6789, 8880} {
 		if !IsNetworkGearPort(p) {

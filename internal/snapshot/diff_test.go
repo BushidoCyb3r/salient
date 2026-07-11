@@ -52,3 +52,37 @@ func TestCompareDetectsRequiredDriftSignals(t *testing.T) {
 		t.Fatalf("role changes = %+v", got.RoleChanges)
 	}
 }
+
+func TestCompareNewProviders(t *testing.T) {
+	base := graph.Snapshot{
+		Nodes: []graph.Node{{IP: "10.0.0.1"}, {IP: "10.0.0.53", Scores: graph.ScoreSet{Rank: 1}}},
+		Edges: []graph.Edge{{Src: "10.0.0.1", Dst: "10.0.0.53", Port: 53, Evidence: graph.EvidenceProtocolConfirmed}},
+	}
+	next := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.0.1"}, {IP: "10.0.0.2"},
+			{IP: "10.0.0.53", Scores: graph.ScoreSet{Rank: 1}},
+			{IP: "10.0.0.99", Scores: graph.ScoreSet{Rank: 40}}, // new low-rank host
+		},
+		Edges: []graph.Edge{
+			{Src: "10.0.0.1", Dst: "10.0.0.53", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			// new low-rank DNS provider with two confirmed clients — the handoff gap #3 case
+			{Src: "10.0.0.1", Dst: "10.0.0.99", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.0.2", Dst: "10.0.0.99", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			// port-only "provider" (scan) must not become a lead
+			{Src: "10.0.0.1", Dst: "10.0.0.2", Port: 445, Evidence: graph.EvidencePortOnly},
+			// broadcast DHCP noise must not become a lead
+			{Src: "10.0.0.1", Dst: "255.255.255.255", Port: 67, Evidence: graph.EvidenceResponderConfirmed},
+			// non-sensitive port must not become a lead
+			{Src: "10.0.0.1", Dst: "10.0.0.2", Port: 8080, Evidence: graph.EvidenceProtocolConfirmed},
+		},
+	}
+	d := Compare(base, next, DiffOptions{TopN: 10, RankDelta: 5})
+	if len(d.NewProviders) != 1 {
+		t.Fatalf("want exactly 1 new provider, got %+v", d.NewProviders)
+	}
+	p := d.NewProviders[0]
+	if p.IP != "10.0.0.99" || p.Port != 53 || p.Service != "dns" || p.Clients != 2 || !p.NewHost || p.Rank != 40 {
+		t.Errorf("bad new provider: %+v", p)
+	}
+}
