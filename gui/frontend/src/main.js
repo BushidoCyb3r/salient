@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -847,6 +847,7 @@ function renderTerrainButton(model) {
   $('terrainbtn').disabled = count === 0;
   $('terrainbtn').textContent = count ? 'Open key terrain (' + count + ')' : 'No key terrain';
   $('svcauthbtn').disabled = false;
+  $('huntbtn').disabled = false;
 }
 
 function zoomToTerrain(item) {
@@ -862,6 +863,7 @@ $('terrainbtn').onclick = () => {
 };
 
 $('svcauthbtn').onclick = () => openServiceAuthority();
+$('huntbtn').onclick = () => openHuntLeads();
 
 let lastSegTap = { id: '', t: 0 };
 
@@ -1091,9 +1093,96 @@ function showProviderDossier(r) {
   ev.appendChild(document.createTextNode(text));
 }
 
+async function openHuntLeads() {
+  let leads;
+  try {
+    leads = await LoadHuntLeads(currentSnapshotPath, '', '');
+  } catch (err) {
+    logLine('could not load hunt leads: ' + err, 'err');
+    return;
+  }
+  hlHosts = leads || [];
+  hlMode = 'leads';
+  aggListNode = '';
+  $('hl-title').textContent = 'Hunt Leads';
+  $('hl-filter').value = '';
+  $('hl-tag').style.display = 'none';
+  $('hostlist').style.display = 'flex';
+  renderHostList('');
+  $('hl-filter').focus();
+}
+
+const LEAD_REASON_LABELS = {
+  'contradicted': 'role contradicted',
+  'undocumented': 'undocumented',
+  'new-provider': 'new provider',
+  'new-service': 'new service',
+  'sole-provider': 'sole provider',
+};
+
+function renderLeadRows(q) {
+  const list = $('hl-list');
+  list.innerHTML = '';
+  const match = q
+    ? hlHosts.filter((l) => (l.ip + ' ' + (l.hostname || '') + ' ' + l.service + ' ' + l.reason).toLowerCase().includes(q))
+    : hlHosts;
+  hlShown = match.slice(0, HL_MAX_ROWS);
+  for (const l of hlShown) {
+    const li = document.createElement('li');
+    li.textContent = l.ip + ' — ' + l.service;
+    const reason = document.createElement('span');
+    reason.className = 'role';
+    reason.textContent = ' · ' + (LEAD_REASON_LABELS[l.reason] || l.reason);
+    li.appendChild(reason);
+    if (l.rank) {
+      const rank = document.createElement('span');
+      rank.className = 'rank';
+      rank.textContent = ' #' + l.rank;
+      li.appendChild(rank);
+    }
+    li.onclick = () => showLeadDossier(l);
+    list.appendChild(li);
+  }
+  $('hl-note').textContent = match.length > HL_MAX_ROWS
+    ? ('showing first ' + HL_MAX_ROWS + ' of ' + match.length)
+    : (match.length + ' lead' + (match.length === 1 ? '' : 's'));
+}
+
+function showLeadDossier(l) {
+  const ev = $('ev');
+  ev.textContent = '';
+  const text =
+    l.ip + (l.hostname ? ' (' + l.hostname + ')' : '') +
+    '\nreason: ' + (LEAD_REASON_LABELS[l.reason] || l.reason) +
+    '\nservice: ' + l.service + ' (port ' + l.port + ')' +
+    (l.inventory_status ? '\ninventory: ' + l.inventory_status : '') +
+    (l.rank ? '\nrank: #' + l.rank : '') +
+    '\nevidence: ' + l.evidence +
+    '\nclients: ' + l.clients + (l.sample_clients ? ' (' + l.sample_clients.join(', ') + ')' : '') +
+    (l.subnets ? '\nsubnets: ' + l.subnets.join(', ') : '') +
+    (l.sensors ? '\nsensors: ' + l.sensors.join(', ') : '') +
+    '\nfirst seen: ' + l.first_seen +
+    '\nlast seen: ' + l.last_seen;
+  ev.appendChild(document.createTextNode(text));
+
+  const row = document.createElement('div');
+  row.className = 'devcard';
+  const copyBtn = document.createElement('button');
+  copyBtn.textContent = 'copy Hunt query';
+  copyBtn.onclick = () => {
+    const query = 'destination.ip:"' + l.ip + '" AND destination.port:' + l.port;
+    navigator.clipboard.writeText(query).then(
+      () => logLine('copied Hunt query for ' + l.ip, 'ok'),
+      () => logLine('clipboard copy failed — query: ' + query, 'warn'));
+  };
+  row.appendChild(copyBtn);
+  ev.appendChild(row);
+}
+
 function renderHostList(q) {
   if (hlMode === 'snapshots') { renderSnapshotRows(q); return; }
   if (hlMode === 'services') { renderServiceAuthorityRows(q); return; }
+  if (hlMode === 'leads') { renderLeadRows(q); return; }
   const list = $('hl-list');
   list.innerHTML = '';
   const match = q
