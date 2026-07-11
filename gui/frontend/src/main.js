@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -846,6 +846,7 @@ function renderTerrainButton(model) {
   const count = topTerrainNodes(model).length;
   $('terrainbtn').disabled = count === 0;
   $('terrainbtn').textContent = count ? 'Open key terrain (' + count + ')' : 'No key terrain';
+  $('svcauthbtn').disabled = false;
 }
 
 function zoomToTerrain(item) {
@@ -859,6 +860,8 @@ function zoomToTerrain(item) {
 $('terrainbtn').onclick = () => {
   if (currentModel) openTerrainList(currentModel);
 };
+
+$('svcauthbtn').onclick = () => openServiceAuthority();
 
 let lastSegTap = { id: '', t: 0 };
 
@@ -1026,8 +1029,71 @@ function closeHostList() {
   hlMode = 'hosts';
 }
 
+async function openServiceAuthority() {
+  let rows;
+  try {
+    rows = await LoadServiceAuthority(currentSnapshotPath);
+  } catch (err) {
+    logLine('could not load service authority: ' + err, 'err');
+    return;
+  }
+  hlHosts = rows || [];
+  hlMode = 'services';
+  aggListNode = '';
+  $('hl-title').textContent = 'Service Authority';
+  $('hl-filter').value = '';
+  $('hl-tag').style.display = 'none';
+  $('hostlist').style.display = 'flex';
+  renderHostList('');
+  $('hl-filter').focus();
+}
+
+function renderServiceAuthorityRows(q) {
+  const list = $('hl-list');
+  list.innerHTML = '';
+  const match = q
+    ? hlHosts.filter((r) => (r.ip + ' ' + (r.hostname || '') + ' ' + r.service + ' ' + r.role).toLowerCase().includes(q))
+    : hlHosts;
+  hlShown = match.slice(0, HL_MAX_ROWS);
+  for (const r of hlShown) {
+    const li = document.createElement('li');
+    li.textContent = r.ip + ' — ' + r.service;
+    const clients = document.createElement('span');
+    clients.className = 'role';
+    clients.textContent = ' · ' + r.clients + ' client' + (r.clients === 1 ? '' : 's');
+    li.appendChild(clients);
+    if (r.rank) {
+      const rank = document.createElement('span');
+      rank.className = 'rank';
+      rank.textContent = ' #' + r.rank;
+      li.appendChild(rank);
+    }
+    li.onclick = () => showProviderDossier(r);
+    list.appendChild(li);
+  }
+  $('hl-note').textContent = match.length > HL_MAX_ROWS
+    ? ('showing first ' + HL_MAX_ROWS + ' of ' + match.length)
+    : (match.length + ' provider' + (match.length === 1 ? '' : 's'));
+}
+
+function showProviderDossier(r) {
+  const ev = $('ev');
+  ev.textContent = '';
+  const text =
+    r.ip + (r.hostname ? ' (' + r.hostname + ')' : '') +
+    '\nservice: ' + r.service + ' (port ' + r.port + ')' +
+    (r.role && r.role !== 'Unknown' ? '\nrole: ' + r.role : '') +
+    (r.rank ? '\nrank: #' + r.rank : '') +
+    '\nevidence: ' + r.evidence +
+    '\nclients: ' + r.clients +
+    '\nfirst seen: ' + r.first_seen +
+    '\nlast seen: ' + r.last_seen;
+  ev.appendChild(document.createTextNode(text));
+}
+
 function renderHostList(q) {
   if (hlMode === 'snapshots') { renderSnapshotRows(q); return; }
+  if (hlMode === 'services') { renderServiceAuthorityRows(q); return; }
   const list = $('hl-list');
   list.innerHTML = '';
   const match = q

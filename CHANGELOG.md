@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Service Authority view**: a snapshot-derived panel listing every
+  sensitive-service provider (DNS, DHCP, auth, file, database), aggregated
+  from confirmed edges only, with client count, strongest evidence tier, and
+  terrain rank per provider. Click a row for a dependency dossier.
+
 ## [0.2.0] - 2026-07-11
 
 ### Added

@@ -193,6 +193,7 @@ export namespace graph {
 	    dst: string;
 	    port: number;
 	    service: string;
+	    evidence?: string;
 	    conn_count: number;
 	    bytes_out: number;
 	    bytes_in: number;
@@ -213,6 +214,7 @@ export namespace graph {
 	        this.dst = source["dst"];
 	        this.port = source["port"];
 	        this.service = source["service"];
+	        this.evidence = source["evidence"];
 	        this.conn_count = source["conn_count"];
 	        this.bytes_out = source["bytes_out"];
 	        this.bytes_in = source["bytes_in"];
@@ -654,6 +656,56 @@ export namespace mapview {
 	        this.findings = source["findings"];
 	        this.meta = this.convertValues(source["meta"], graph.SnapshotMeta);
 	        this.overview = source["overview"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class ServiceProvider {
+	    ip: string;
+	    hostname?: string;
+	    role: string;
+	    service: string;
+	    port: number;
+	    evidence: string;
+	    clients: number;
+	    // Go type: time
+	    first_seen: any;
+	    // Go type: time
+	    last_seen: any;
+	    rank?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ServiceProvider(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ip = source["ip"];
+	        this.hostname = source["hostname"];
+	        this.role = source["role"];
+	        this.service = source["service"];
+	        this.port = source["port"];
+	        this.evidence = source["evidence"];
+	        this.clients = source["clients"];
+	        this.first_seen = this.convertValues(source["first_seen"], null);
+	        this.last_seen = this.convertValues(source["last_seen"], null);
+	        this.rank = source["rank"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
