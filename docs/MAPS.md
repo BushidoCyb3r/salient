@@ -12,6 +12,12 @@ They communicate the ranked key terrain: larger, hotter nodes are more critical,
 and their evidence explains why. They are not intended to reconstruct a network
 diagram.
 
+The maps also support rogue-service hunting. Inferred responder roles show what
+services hosts actually provide; drift highlights newly appeared hosts, roles,
+and dependencies; and reconciliation flags observed behavior that is missing
+from or contradicts the asset inventory. Together these identify potential
+rogue or malicious service providers for analyst validation.
+
 **Not physical topology.** Flow data cannot see switches, physical links,
 port assignments, or any device that never talks across a monitored segment.
 The one concession: gateway placement via MAC-convergence inference where
@@ -182,6 +188,10 @@ edges are ghosted, and significant rank changes have amber borders. The
 **drift highlights** layer toggle removes these visual overrides without
 hiding the underlying terrain.
 
+New hosts, inferred service roles, and service dependencies are investigation
+leads for unauthorized or malicious service providers, especially when the
+change has no approved operational explanation.
+
 Vanished nodes and edges come from the older snapshot and remain visual
 context only; the newer snapshot stays the authoritative current state.
 
@@ -197,6 +207,11 @@ contradicting their documented role get amber double borders, and
 documented-but-silent assets are ghosted into their subnet group — including
 inside hatched blind-spot boxes, where "silent" may just mean "unobserved".
 Asset-list VLAN/segment names enrich the subnet-group labels.
+
+Observed-but-undocumented hosts that provide infrastructure or application
+services are potential rogue service providers. Role contradictions can also
+expose a documented endpoint behaving as an unexpected server. These findings
+describe evidence and inventory mismatch, not proven malicious intent.
 
 In the desktop console, reconcile takes the asset list two ways: **Load asset
 CSV…** (a spreadsheet export, columns autodetected as above) or **Enter

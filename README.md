@@ -10,6 +10,18 @@ report with the evidence behind each ranking. It is built for hunting teams that
 are new to an environment and need to understand its key systems and dependencies
 without active scanning or changes to the Security Onion deployment.
 
+The same evidence can identify potential rogue or malicious service providers:
+Salient infers the services hosts actually provide, flags systems and roles that
+contradict the asset inventory, and highlights newly appeared hosts, roles, and
+service dependencies across snapshots. These are investigation leads backed by
+observed behavior, not automatic declarations of malicious intent.
+
+Dropped into an unfamiliar network, a hunt team's biggest cost is time: figuring
+out what actually matters before an active scan tips off an adversary or trips
+something fragile. Salient mines telemetry the grid already has and ranks what
+to defend or investigate first, with the evidence behind each rank instead of
+a guess.
+
 The map is a criticality view of that observed dependency terrain, not a network
 diagram. Node size and heat emphasize the systems whose compromise or loss would
 matter most. The declared-device topology layout remains available as an optional
@@ -59,9 +71,11 @@ The console provides:
   any text; the correction is marked ✎, the original inference stays visible,
   and known roles also move the node to the correct map tier.
 - Drift comparison: pick any older snapshot as a baseline and see what
-  appeared, vanished, or changed rank since.
+  appeared, vanished, changed role or rank, or began providing new service
+  dependencies.
 - Asset reconciliation: load an inventory CSV and see undocumented hosts,
-  documented-but-silent assets, and role contradictions flagged on the map.
+  documented-but-silent assets, and role contradictions flagged on the map,
+  exposing potential rogue service providers for investigation.
 - Optional model-assisted device tags based on observed network communication,
   grounded in operator-confirmed device names, roles, and labels; suggestions
   can be accepted into durable labels or dismissed permanently.
@@ -264,6 +278,10 @@ dashed nodes vanished, amber rank changes; new and vanished edges recolor the
 same way. The change counts print in the task log. **Clear** (or loading
 another snapshot) returns to the normal view.
 
+A newly appeared host, inferred service role, or dependency can indicate an
+unauthorized service provider. Drift supplies the behavioral evidence and time
+boundary; the operator determines whether the change is expected or malicious.
+
 ### Reconciling an asset inventory
 
 Select **Load asset CSV…** in the **Reconcile** section and pick your
@@ -272,6 +290,11 @@ documented-but-silent assets (ghosted — check sensor blind spots before
 calling them decommissioned), and role contradictions (amber double border).
 Segment names from the CSV label the subnet boxes. The CSV stays applied
 across snapshot switches until cleared with **×**.
+
+An undocumented host providing DNS, authentication, web, database, file, or
+network-infrastructure services is a potential rogue or malicious service
+provider. Reconciliation identifies that mismatch; it does not assign intent
+without analyst validation.
 
 The CSV format is forgiving — real spreadsheet exports work as-is. Only an IP
 column is required; headers are autodetected by keyword:
