@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 // FetchEdges must loop on after_key and stitch pages together.
@@ -98,5 +100,49 @@ func TestResponderCardinality(t *testing.T) {
 	}
 	if ev["10.0.1.10"].Clients != 42 || ev["10.0.1.10"].SampleHosts[0] != "10.0.2.30" {
 		t.Errorf("bad evidence: %+v", ev)
+	}
+}
+
+// Evidence classification: protocol beats state beats bytes beats port-only.
+func TestFetchEdgesEvidence(t *testing.T) {
+	_, cli := newMockES(t, map[string]http.HandlerFunc{
+		"/logs-*/_search": jsonHandler(200, `{"hits":{"total":{"value":100}},"aggregations":{"edges":{
+			"buckets":[
+			{"key":{"src":"10.0.0.1","dst":"10.0.0.2","port":53},"doc_count":10,
+				"bytes_out":{"value":100},"bytes_in":{"value":200},
+				"first":{"value":1750000000000},"last":{"value":1750086400000},
+				"sensors":{"buckets":[]},
+				"states":{"buckets":[{"key":"SF","doc_count":10}]},
+				"protos":{"buckets":[{"key":"dns","doc_count":10}]}},
+			{"key":{"src":"10.0.0.1","dst":"10.0.0.3","port":445},"doc_count":8,
+				"bytes_out":{"value":900},"bytes_in":{"value":700},
+				"first":{"value":1750000000000},"last":{"value":1750086400000},
+				"sensors":{"buckets":[]},
+				"states":{"buckets":[{"key":"SF","doc_count":8}]},
+				"protos":{"buckets":[]}},
+			{"key":{"src":"10.0.0.9","dst":"10.0.0.4","port":3306},"doc_count":40,
+				"bytes_out":{"value":2400},"bytes_in":{"value":0},
+				"first":{"value":1750000000000},"last":{"value":1750086400000},
+				"sensors":{"buckets":[]},
+				"states":{"buckets":[{"key":"S0","doc_count":40}]},
+				"protos":{"buckets":[]}}
+			]}}}`),
+	})
+	edges, _, err := cli.FetchEdges(context.Background(), DefaultFieldMap(), 24*time.Hour, nil, 1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(edges) != 3 {
+		t.Fatalf("want 3 edges, got %d", len(edges))
+	}
+	want := []graph.EvidenceLevel{
+		graph.EvidenceProtocolConfirmed,
+		graph.EvidenceResponderConfirmed,
+		graph.EvidencePortOnly,
+	}
+	for i, w := range want {
+		if edges[i].Evidence != w {
+			t.Errorf("edge %d evidence = %q, want %q", i, edges[i].Evidence, w)
+		}
 	}
 }
