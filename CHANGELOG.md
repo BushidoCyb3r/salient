@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   DHCP ACK/OFFER record) — not a port-67 traffic guess — identifies actual
   DHCP servers, the classic rogue-service target. Verified end-to-end
   against a real Security Onion grid (see `docs/FIELDMAP.md`).
+- **`salient stability`**: longitudinal terrain-stability report across every
+  stored snapshot in a data directory — which hosts persistently rank as key
+  terrain, which are newly emerging, which have gone quiet, plus role
+  consistency. Deterministic classification only, no anomaly score.
 
 ### Verified
 - Phase 0 field-map verification completed against a real Security Onion
