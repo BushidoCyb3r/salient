@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-11
+
+### Added
+- **Service-evidence tiers**: every edge now carries an evidence level —
+  protocol-confirmed (Zeek identified the application protocol),
+  responder-confirmed (an established connection or observed responder
+  bytes), or port-only (a SYN scan or rejected/unanswered attempt). Port-only
+  edges stay visible as observed hosts but no longer influence terrain
+  scoring, role inference, or centrality — a scan can no longer mint a fake
+  service provider.
+- **New sensitive-service-provider drift**: drift comparison now reports any
+  host that began providing DNS, DHCP, authentication, file, or database
+  service since the baseline, regardless of terrain rank — closing a gap
+  where a new low-ranked rogue provider was invisible to the old
+  top-N-gated new-edge detection. Surfaced in the HTML drift report and the
+  desktop console's drift findings.
+- Scan output reports the service-evidence mix (protocol-/responder-
+  confirmed vs. port-only edge counts) and warns when a grid produces zero
+  protocol-confirmed evidence — a signal the fieldmap needs attention.
+- `docs/SECURITY.md` and GitHub private vulnerability reporting.
+
+### Changed
+- README and `docs/MAPS.md` now describe using the same evidence (inferred
+  service roles, drift, asset reconciliation) to identify potential rogue or
+  unauthorized service providers, alongside the existing key-terrain-ranking
+  use case.
+
 ## [0.1.0] - 2026-07-07
 
 ### Added
