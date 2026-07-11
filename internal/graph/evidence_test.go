@@ -1,7 +1,10 @@
 // internal/graph/evidence_test.go
 package graph
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestClassifyEvidence(t *testing.T) {
 	cases := []struct {
@@ -38,5 +41,34 @@ func TestEdgeConfirmed(t *testing.T) {
 	}
 	if !(Edge{Evidence: EvidenceResponderConfirmed}).Confirmed() {
 		t.Error("responder-confirmed edge must be confirmed")
+	}
+}
+
+func TestPortOnlyEdgesExcludedFromRolesAndShape(t *testing.T) {
+	// 5 SYN-scanned "clients" toward a DB port must not mint a Database role.
+	var edges []Edge
+	for i := 0; i < 5; i++ {
+		edges = append(edges, Edge{
+			Src: fmt.Sprintf("10.0.0.%d", i+1), Dst: "10.0.9.9", Port: 5432,
+			ConnCount: 3, Evidence: EvidencePortOnly,
+		})
+	}
+	m := Build(edges)
+	m.InferRoles(Evidence{})
+	if got := m.Nodes["10.0.9.9"].TopRole(); got != RoleUnknown {
+		t.Errorf("scanned host role = %q, want Unknown", got)
+	}
+	if _, ok := m.Nodes["10.0.9.9"]; !ok {
+		t.Error("scanned host must still exist as a node")
+	}
+
+	// Same edges confirmed → Database role appears (guards the guard).
+	for i := range edges {
+		edges[i].Evidence = EvidenceResponderConfirmed
+	}
+	m = Build(edges)
+	m.InferRoles(Evidence{})
+	if got := m.Nodes["10.0.9.9"].TopRole(); got != RoleDatabase {
+		t.Errorf("confirmed DB responder role = %q, want Database", got)
 	}
 }

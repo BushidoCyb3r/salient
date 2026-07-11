@@ -80,6 +80,22 @@ func TestScoreExcludesBroadcastMulticast(t *testing.T) {
 	}
 }
 
+func TestPortOnlyEdgesDoNotScore(t *testing.T) {
+	confirmed := graph.Edge{Src: "10.0.0.1", Dst: "10.0.0.2", Port: 88, ConnCount: 50, Evidence: graph.EvidenceResponderConfirmed}
+	scanned := graph.Edge{Src: "10.0.0.3", Dst: "10.0.0.4", Port: 88, ConnCount: 50, Evidence: graph.EvidencePortOnly}
+	m := graph.Build([]graph.Edge{confirmed, scanned})
+	Score(m)
+	if m.Nodes["10.0.0.4"].Scores.DependencyInDegree != 0 {
+		t.Errorf("scanned dst critical in-degree = %d, want 0", m.Nodes["10.0.0.4"].Scores.DependencyInDegree)
+	}
+	if m.Nodes["10.0.0.2"].Scores.DependencyInDegree != 1 {
+		t.Errorf("confirmed dst critical in-degree = %d, want 1", m.Nodes["10.0.0.2"].Scores.DependencyInDegree)
+	}
+	if m.Nodes["10.0.0.2"].Scores.Composite <= m.Nodes["10.0.0.4"].Scores.Composite {
+		t.Error("confirmed responder must outscore scanned responder")
+	}
+}
+
 func clientIP(i int) string {
 	return []string{
 		"10.0.2.30", "10.0.2.31", "10.0.2.32", "10.0.2.33", "10.0.2.34",

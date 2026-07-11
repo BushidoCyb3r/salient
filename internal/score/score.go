@@ -144,6 +144,9 @@ func criticalInDegree(m *graph.Model) map[string]int {
 func subnetSpread(m *graph.Model) map[string]int {
 	subnets := map[string]map[string]bool{}
 	for _, e := range m.Edges {
+		if !e.Confirmed() {
+			continue
+		}
 		if subnets[e.Dst] == nil {
 			subnets[e.Dst] = map[string]bool{}
 		}
@@ -159,6 +162,9 @@ func subnetSpread(m *graph.Model) map[string]int {
 func distinctSrcPerDst(m *graph.Model, keep func(uint16) bool) map[string]int {
 	clients := map[string]map[string]bool{}
 	for _, e := range m.Edges {
+		if !e.Confirmed() {
+			continue
+		}
 		if !keep(e.Port) {
 			continue
 		}

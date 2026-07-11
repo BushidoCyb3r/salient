@@ -129,6 +129,9 @@ func (m *Model) adminShape() map[string]degree {
 	in := map[string]map[string]bool{}
 	out := map[string]map[string]bool{}
 	for _, e := range m.Edges {
+		if !e.Confirmed() {
+			continue
+		}
 		if !config.IsAdminPort(e.Port) {
 			continue
 		}
@@ -153,6 +156,9 @@ func (m *Model) adminShape() map[string]degree {
 func (m *Model) clientCounts(match func(uint16) bool) map[string]int {
 	clients := map[string]map[string]bool{}
 	for _, e := range m.Edges {
+		if !e.Confirmed() {
+			continue
+		}
 		if !match(e.Port) {
 			continue
 		}
