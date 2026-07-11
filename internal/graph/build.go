@@ -36,6 +36,9 @@ func Build(edges []Edge) *Model {
 		e := &edges[i]
 		src := m.node(e.Src, e.FirstSeen, e.LastSeen, e.Sensors)
 		dst := m.node(e.Dst, e.FirstSeen, e.LastSeen, e.Sensors)
+		if !e.Confirmed() {
+			continue // observed attempt only — no centrality weight
+		}
 		w := math.Log1p(float64(e.ConnCount))
 		if config.IsAuthEdge(e.Port) {
 			w *= config.AuthEdgeWeightMul

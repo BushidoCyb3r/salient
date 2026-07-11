@@ -45,6 +45,8 @@ func EdgeAggQuery(fm FieldMap, window time.Duration, scope []string, pageSize in
 					"first":     map[string]any{"min": map[string]any{"field": fm.Timestamp}},
 					"last":      map[string]any{"max": map[string]any{"field": fm.Timestamp}},
 					"sensors":   map[string]any{"terms": map[string]any{"field": fm.ObserverName, "size": 20}},
+					"states":    map[string]any{"terms": map[string]any{"field": fm.ConnState, "size": 16}},
+					"protos":    map[string]any{"terms": map[string]any{"field": fm.Service, "size": 8}},
 				},
 			},
 		},
@@ -146,6 +148,12 @@ func parseEdgePage(res map[string]json.RawMessage) ([]graph.Edge, map[string]any
 			Sensors struct {
 				Buckets []termsBucket `json:"buckets"`
 			} `json:"sensors"`
+			States struct {
+				Buckets []termsBucket `json:"buckets"`
+			} `json:"states"`
+			Protos struct {
+				Buckets []termsBucket `json:"buckets"`
+			} `json:"protos"`
 		} `json:"buckets"`
 	}
 	if err := json.Unmarshal(raw, &agg); err != nil {
@@ -159,6 +167,14 @@ func parseEdgePage(res map[string]json.RawMessage) ([]graph.Edge, map[string]any
 		for _, s := range b.Sensors.Buckets {
 			sensors = append(sensors, s.Key)
 		}
+		states := make(map[string]int64, len(b.States.Buckets))
+		for _, s := range b.States.Buckets {
+			states[s.Key] = s.DocCount
+		}
+		var protos []string
+		for _, p := range b.Protos.Buckets {
+			protos = append(protos, p.Key)
+		}
 		edges = append(edges, graph.Edge{
 			Src:       b.Key.Src,
 			Dst:       b.Key.Dst,
@@ -170,6 +186,7 @@ func parseEdgePage(res map[string]json.RawMessage) ([]graph.Edge, map[string]any
 			FirstSeen: epochMillis(b.First.Value),
 			LastSeen:  epochMillis(b.Last.Value),
 			Sensors:   sensors,
+			Evidence:  graph.ClassifyEvidence(states, protos, int64(b.BytesIn.Value)),
 		})
 	}
 	// A full page implies more may remain; ES only omits after_key when done.

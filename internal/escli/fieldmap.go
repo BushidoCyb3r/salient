@@ -34,6 +34,10 @@ type FieldMap struct {
 	DestinationBytes string `yaml:"destination_bytes"`
 	SourceMAC        string `yaml:"source_mac"`
 	DestinationMAC   string `yaml:"destination_mac"`
+	// ConnState is the Zeek conn_state field grading responder
+	// participation (SF/S0/REJ/...). Optional: absent on the grid means
+	// evidence classification falls back to responder bytes.
+	ConnState string `yaml:"conn_state"`
 
 	// Datasets holds candidate DatasetField values per Zeek log type.
 	// Security Onion releases have shipped both bare ("conn") and
@@ -75,6 +79,7 @@ func DefaultFieldMap() FieldMap {
 		DestinationBytes: "destination.bytes", // UNVERIFIED
 		SourceMAC:        "source.mac",        // UNVERIFIED — may not survive ECS mapping
 		DestinationMAC:   "destination.mac",   // UNVERIFIED — may not survive ECS mapping
+		ConnState:        "connection.state",  // UNVERIFIED — verify with `salient discover`; Task 0 records ground truth
 		Datasets: DatasetCandidates{
 			Conn:     []string{"conn", "zeek.conn"},
 			DNS:      []string{"dns", "zeek.dns"},
@@ -115,6 +120,7 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	merge(&fm.DestinationBytes, override.DestinationBytes)
 	merge(&fm.SourceMAC, override.SourceMAC)
 	merge(&fm.DestinationMAC, override.DestinationMAC)
+	merge(&fm.ConnState, override.ConnState)
 	mergeList(&fm.Datasets.Conn, override.Datasets.Conn)
 	mergeList(&fm.Datasets.DNS, override.Datasets.DNS)
 	mergeList(&fm.Datasets.Kerberos, override.Datasets.Kerberos)

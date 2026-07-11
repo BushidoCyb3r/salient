@@ -63,3 +63,48 @@ func TestLoadDriftModelMarksAppearedAndCounts(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadDriftModelFindsNewProvider(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	node := func(ip string, rank int) graph.Node {
+		return graph.Node{IP: ip, Subnet: "10.0.0.0/24", FirstSeen: t0, LastSeen: t0,
+			Scores: graph.ScoreSet{Composite: 0.9, Rank: rank}}
+	}
+	fromPath := filepath.Join(dataDir, "from.json.gz")
+	toPath := filepath.Join(dataDir, "to.json.gz")
+	writeSnapshot(t, fromPath, graph.Snapshot{
+		Meta:  graph.SnapshotMeta{CreatedAt: t0},
+		Nodes: []graph.Node{node("10.0.0.1", 1)},
+	})
+	writeSnapshot(t, toPath, graph.Snapshot{
+		Meta:  graph.SnapshotMeta{CreatedAt: t0.Add(24 * time.Hour)},
+		Nodes: []graph.Node{node("10.0.0.1", 1), node("10.0.0.99", 40)},
+		Edges: []graph.Edge{
+			{Src: "10.0.0.1", Dst: "10.0.0.99", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+		},
+	})
+	m, err := a.LoadDriftModel(fromPath, toPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var foundProvider bool
+	for _, f := range m.Findings {
+		if strings.Contains(f, "10.0.0.99") && strings.Contains(f, "dns") {
+			foundProvider = true
+		}
+	}
+	if !foundProvider {
+		t.Errorf("new provider finding missing: %v", m.Findings)
+	}
+	var foundSummary bool
+	for _, f := range m.Findings {
+		if strings.Contains(f, "1 new sensitive-service provider") {
+			foundSummary = true
+		}
+	}
+	if !foundSummary {
+		t.Errorf("new provider count missing from summary finding: %v", m.Findings)
+	}
+}

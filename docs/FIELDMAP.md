@@ -23,6 +23,7 @@ a scan is only trustworthy once this table is filled in and the defaults match.
 | Resp bytes | `destination.bytes` | | | ☐ |
 | Orig MAC | `source.mac` | | | ☐ |
 | Resp MAC | `destination.mac` | | | ☐ |
+| Conn state | `connection.state` | | | ☐ |
 
 The responder MAC drives two features: L2 gateway detection (a MAC answering
 for many IPs = that segment's router) and per-node vendor identification (OUI

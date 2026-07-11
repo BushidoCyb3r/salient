@@ -72,7 +72,10 @@ The console provides:
   and known roles also move the node to the correct map tier.
 - Drift comparison: pick any older snapshot as a baseline and see what
   appeared, vanished, changed role or rank, or began providing new service
-  dependencies.
+  dependencies — including new DNS/DHCP/auth/file/database providers at any
+  terrain rank, not just newcomers to the top. Edges carry a service-evidence
+  level (protocol-confirmed, responder-confirmed, or port-only); port-only
+  connection attempts never influence rankings or roles.
 - Asset reconciliation: load an inventory CSV and see undocumented hosts,
   documented-but-silent assets, and role contradictions flagged on the map,
   exposing potential rogue service providers for investigation.

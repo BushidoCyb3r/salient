@@ -19,6 +19,15 @@ type edge struct {
 	src, dst string
 	port     int
 	conns    int
+	state    string // Zeek conn_state; "" renders as "SF" (established)
+	proto    string // protocol-confirmed responder (network.protocol); "" means unconfirmed
+}
+
+// respondedStates mirrors internal/graph/evidence.go's respondedStates so
+// fixture bytes_in only comes out nonzero for states that actually prove
+// responder participation.
+var respondedStates = map[string]bool{
+	"SF": true, "S1": true, "S2": true, "S3": true, "RSTO": true, "RSTR": true,
 }
 
 func fixtureEdges() []edge {
@@ -26,23 +35,28 @@ func fixtureEdges() []edge {
 	ws := func(i int) string { return fmt.Sprintf("10.0.3.%d", 30+i) }
 	for i := 0; i < 15; i++ {
 		edges = append(edges,
-			edge{ws(i), "10.0.1.10", 88, 400 + i}, // kerberos -> DC
-			edge{ws(i), "10.0.1.11", 53, 900 + i}, // dns
-			edge{ws(i), "10.0.1.20", 445, 60 + i}, // smb
+			edge{src: ws(i), dst: "10.0.1.10", port: 88, conns: 400 + i},               // kerberos -> DC
+			edge{src: ws(i), dst: "10.0.1.11", port: 53, conns: 900 + i, proto: "dns"}, // dns, protocol-confirmed
+			edge{src: ws(i), dst: "10.0.1.20", port: 445, conns: 60 + i},               // smb
 		)
 	}
 	if *variant == 1 {
 		for i := 0; i < 8; i++ {
-			edges = append(edges, edge{ws(i), "10.0.2.50", 443, 120 + i}) // web
+			edges = append(edges, edge{src: ws(i), dst: "10.0.2.50", port: 443, conns: 120 + i}) // web
 		}
 	}
 	for i := 0; i < 3; i++ {
-		edges = append(edges, edge{ws(i), "10.0.1.30", 5432, 200 + i}) // db
+		edges = append(edges, edge{src: ws(i), dst: "10.0.1.30", port: 5432, conns: 200 + i}) // db
 	}
 	if *variant == 2 {
 		for i := 0; i < 12; i++ {
-			edges = append(edges, edge{ws(i), "10.0.1.40", 5432, 500 + i}) // NEW db server
+			edges = append(edges, edge{src: ws(i), dst: "10.0.1.40", port: 5432, conns: 500 + i}) // NEW db server
 		}
+	}
+	// SYN scanner: port-only evidence (no responder participation), present
+	// in every variant so drift comparisons don't flag it as a new provider.
+	for i := 0; i < 6; i++ {
+		edges = append(edges, edge{src: "10.0.3.66", dst: ws(i), port: 445, conns: 30, state: "S0"})
 	}
 	return edges
 }
@@ -146,11 +160,26 @@ func edgesPage(w http.ResponseWriter, body string) {
 		if i > 0 {
 			sb.WriteString(",")
 		}
+		state := e.state
+		if state == "" {
+			state = "SF"
+		}
+		bytesIn := e.conns * 4000
+		if !respondedStates[state] {
+			bytesIn = 0
+		}
+		protos := "[]"
+		if e.proto != "" {
+			protos = fmt.Sprintf(`[{"key":%q,"doc_count":%d}]`, e.proto, e.conns)
+		}
 		fmt.Fprintf(&sb, `{"key":{"src":%q,"dst":%q,"port":%d},"doc_count":%d,
 			"bytes_out":{"value":%d},"bytes_in":{"value":%d},
 			"first":{"value":1780000000000},"last":{"value":1780080000000},
-			"sensors":{"buckets":[{"key":"so-sensor-1","doc_count":%d}]}}`,
-			e.src, e.dst, e.port, e.conns, e.conns*900, e.conns*4000, e.conns)
+			"sensors":{"buckets":[{"key":"so-sensor-1","doc_count":%d}]},
+			"states":{"buckets":[{"key":%q,"doc_count":%d}]},
+			"protos":{"buckets":%s}}`,
+			e.src, e.dst, e.port, e.conns, e.conns*900, bytesIn, e.conns,
+			state, e.conns, protos)
 	}
 	reply(w, wrap(`{"edges":{"buckets":[`+sb.String()+`]`+after+`}}`))
 }

@@ -28,6 +28,19 @@ type RoleChange struct {
 	To   []graph.Role `json:"to"`
 }
 
+// NewProvider is a responder that began providing a sensitive service
+// between the snapshots, regardless of terrain rank — a new low-ranked
+// DNS/DHCP/auth/file/DB provider is an investigation lead, not proof of
+// malicious intent.
+type NewProvider struct {
+	IP      string `json:"ip"`
+	Port    uint16 `json:"port"`
+	Service string `json:"service"`
+	Clients int    `json:"clients"`
+	NewHost bool   `json:"new_host"`
+	Rank    int    `json:"rank"`
+}
+
 // Diff is the analyst-relevant drift between two snapshots.
 type Diff struct {
 	FromMeta              graph.SnapshotMeta `json:"from"`
@@ -38,6 +51,7 @@ type Diff struct {
 	NewEdgesToTop         []graph.Edge       `json:"new_edges_to_top"`
 	VanishedCriticalEdges []graph.Edge       `json:"vanished_critical_edges"`
 	RoleChanges           []RoleChange       `json:"role_changes"`
+	NewProviders          []NewProvider      `json:"new_providers"`
 }
 
 // Compare returns deterministic drift signals required by Phase 2.
@@ -82,6 +96,46 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 			d.VanishedCriticalEdges = append(d.VanishedCriticalEdges, e)
 		}
 	}
+
+	type provKey struct {
+		dst  string
+		port uint16
+	}
+	oldProv := map[provKey]bool{}
+	for _, e := range from.Edges {
+		if config.IsSensitiveServicePort(e.Port) && e.Confirmed() {
+			oldProv[provKey{e.Dst, e.Port}] = true
+		}
+	}
+	provClients := map[provKey]map[string]bool{}
+	for _, e := range to.Edges {
+		if !config.IsSensitiveServicePort(e.Port) || !e.Confirmed() ||
+			!graph.TerrainAddr(e.Dst) || oldProv[provKey{e.Dst, e.Port}] {
+			continue
+		}
+		k := provKey{e.Dst, e.Port}
+		if provClients[k] == nil {
+			provClients[k] = map[string]bool{}
+		}
+		provClients[k][e.Src] = true
+	}
+	for k, clients := range provClients {
+		_, existed := oldNodes[k.dst]
+		d.NewProviders = append(d.NewProviders, NewProvider{
+			IP: k.dst, Port: k.port, Service: config.ServiceName(k.port),
+			Clients: len(clients), NewHost: !existed, Rank: newNodes[k.dst].Scores.Rank,
+		})
+	}
+	sort.Slice(d.NewProviders, func(i, j int) bool {
+		a, b := d.NewProviders[i], d.NewProviders[j]
+		if a.Clients != b.Clients {
+			return a.Clients > b.Clients
+		}
+		if a.IP != b.IP {
+			return a.IP < b.IP
+		}
+		return a.Port < b.Port
+	})
 
 	sort.Slice(d.AppearedNodes, func(i, j int) bool { return d.AppearedNodes[i].IP < d.AppearedNodes[j].IP })
 	sort.Slice(d.DisappearedNodes, func(i, j int) bool { return d.DisappearedNodes[i].IP < d.DisappearedNodes[j].IP })

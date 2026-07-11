@@ -78,6 +78,21 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 		return Result{}, fmt.Errorf("no edges observed — check window, scope, and fieldmap (run `salient discover`)")
 	}
 
+	var pc, rc, po int
+	for _, e := range edges {
+		switch e.Evidence {
+		case graph.EvidenceProtocolConfirmed:
+			pc++
+		case graph.EvidenceResponderConfirmed:
+			rc++
+		case graph.EvidencePortOnly:
+			po++
+		}
+	}
+	emit("evidence", fmt.Sprintf(
+		"service evidence: %d protocol-confirmed, %d responder-confirmed, %d port-only (attempts only — excluded from scoring)",
+		pc, rc, po), pc == 0)
+
 	ev, err := cli.FetchEvidence(ctx, fm, opts.Window, opts.Scope)
 	if err != nil {
 		return Result{}, err
