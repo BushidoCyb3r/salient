@@ -68,3 +68,25 @@ func TestLoadFieldMapMissingFile(t *testing.T) {
 		t.Fatal("expected error for missing fieldmap file")
 	}
 }
+
+func TestFieldMapConnState(t *testing.T) {
+	fm := DefaultFieldMap()
+	if fm.ConnState != "connection.state" {
+		t.Errorf("default ConnState = %q, want connection.state", fm.ConnState)
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "fm.yaml")
+	if err := os.WriteFile(path, []byte("conn_state: zeek.conn.conn_state\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	fm, err := LoadFieldMap(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fm.ConnState != "zeek.conn.conn_state" {
+		t.Errorf("override ConnState = %q", fm.ConnState)
+	}
+	if fm.SourceIP != "source.ip" {
+		t.Errorf("unrelated default clobbered: SourceIP = %q", fm.SourceIP)
+	}
+}
