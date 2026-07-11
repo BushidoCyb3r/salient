@@ -18,6 +18,14 @@ and dependencies; and reconciliation flags observed behavior that is missing
 from or contradicts the asset inventory. Together these identify potential
 rogue or malicious service providers for analyst validation.
 
+The **Service Authority** panel lists every sensitive-service provider
+(DNS, DHCP, authentication, file, database) observed in the current
+snapshot, aggregated from confirmed edges only — client count, strongest
+evidence tier, and terrain rank per provider. Click a row for a dependency
+dossier (hostname, role, service/port, evidence, client count, first/last
+seen). This is the current-snapshot view; drift's new-provider detection
+(above) is its across-snapshot counterpart.
+
 **Not physical topology.** Flow data cannot see switches, physical links,
 port assignments, or any device that never talks across a monitored segment.
 The one concession: gateway placement via MAC-convergence inference where
