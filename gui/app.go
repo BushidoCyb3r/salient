@@ -246,6 +246,17 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 	return hosts, nil
 }
 
+// LoadServiceAuthority derives the Service Authority view from a snapshot:
+// one row per sensitive-service provider, sorted by client count. Pure
+// aggregation over the stored snapshot — no live ES query.
+func (a *App) LoadServiceAuthority(path string) ([]mapview.ServiceProvider, error) {
+	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	if err != nil {
+		return nil, err
+	}
+	return mapview.BuildServiceAuthority(snap), nil
+}
+
 // PickAssetCSV opens the native Open dialog for an asset inventory CSV.
 // Returns "" (no error) when the dialog is cancelled.
 func (a *App) PickAssetCSV() (string, error) {
