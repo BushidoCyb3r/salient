@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sensitive-service provider (DNS, DHCP, auth, file, database), aggregated
   from confirmed edges only, with client count, strongest evidence tier, and
   terrain rank per provider. Click a row for a dependency dossier.
+- **Hunt Leads**: prioritized investigation leads composed from Service
+  Authority, drift, and asset reconciliation — role contradictions and
+  undocumented providers first, then new providers/services, then
+  sole-observed providers, ordered by explicit facts (never a probability
+  score). Each lead includes a one-click Security Onion Hunt query copy.
 
 ## [0.2.0] - 2026-07-11
 

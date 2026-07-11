@@ -26,6 +26,15 @@ dossier (hostname, role, service/port, evidence, client count, first/last
 seen). This is the current-snapshot view; drift's new-provider detection
 (above) is its across-snapshot counterpart.
 
+**Hunt Leads** turns Service Authority, drift, and asset reconciliation into
+one prioritized list: role contradictions and undocumented providers first,
+then new providers/services, then sole-observed providers — ordered by
+explicit facts (evidence tier, client count, subnet spread, terrain rank),
+never a probability score. Each lead includes a one-click Security Onion
+Hunt query copy for further validation in Security Onion — Salient
+identifies and prioritizes, Security Onion remains the detailed
+investigation environment.
+
 **Not physical topology.** Flow data cannot see switches, physical links,
 port assignments, or any device that never talks across a monitored segment.
 The one concession: gateway placement via MAC-convergence inference where
