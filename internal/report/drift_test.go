@@ -14,9 +14,10 @@ func TestDriftHTMLRendersEverySignalAndHandlingBanner(t *testing.T) {
 		AppearedNodes:         []graph.Node{{IP: "10.0.0.4"}},
 		DisappearedNodes:      []graph.Node{{IP: "10.0.0.3"}},
 		RankChanges:           []snapshot.RankChange{{IP: "10.0.0.1", FromRank: 1, ToRank: 7, Delta: -6}},
-		NewEdgesToTop:         []graph.Edge{{Src: "10.0.0.4", Dst: "10.0.0.2", Port: 445}},
+		NewEdgesToTop:         []graph.Edge{{Src: "10.0.0.4", Dst: "10.0.0.2", Port: 445, Evidence: graph.EvidenceProtocolConfirmed}},
 		VanishedCriticalEdges: []graph.Edge{{Src: "10.0.0.2", Dst: "10.0.0.1", Port: 53}},
 		RoleChanges:           []snapshot.RoleChange{{IP: "10.0.0.1", From: []graph.Role{graph.RoleDNS}, To: []graph.Role{graph.RoleDC}}},
+		NewProviders:          []snapshot.NewProvider{{IP: "10.0.0.99", Port: 53, Service: "dns", Clients: 2, NewHost: true, Rank: 40}},
 	}
 	var out bytes.Buffer
 	if err := DriftHTML(&out, d); err != nil {
@@ -26,6 +27,7 @@ func TestDriftHTMLRendersEverySignalAndHandlingBanner(t *testing.T) {
 		"Handle at the classification", "Appeared nodes", "Disappeared nodes", "Rank changes",
 		"New edges to critical nodes", "Vanished critical edges", "Role changes",
 		"10.0.0.4", "10.0.0.3", "DNSServer", "DomainController",
+		"New sensitive-service providers", "10.0.0.99", "dns", "protocol-confirmed",
 	} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("HTML drift report missing %q", want)
