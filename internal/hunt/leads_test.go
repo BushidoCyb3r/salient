@@ -121,6 +121,38 @@ func TestBuildLeadsDedupPrefersHigherPriorityReason(t *testing.T) {
 	}
 }
 
+func TestBuildLeadsExcludesPortOnlyEdgesFromEnrichment(t *testing.T) {
+	// A confirmed provider with one real client plus a port-only scanner probe
+	// from an unrelated subnet: the scanner must not appear in SampleClients
+	// or Subnets, since it never confirmed the service.
+	snap := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.1.11", Subnet: "10.0.1.0/24", Scores: graph.ScoreSet{Rank: 3}},
+			{IP: "10.0.3.30", Subnet: "10.0.3.0/24"},
+			{IP: "10.0.9.90", Subnet: "10.0.9.0/24"},
+		},
+		Edges: []graph.Edge{
+			{Src: "10.0.3.30", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.9.90", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidencePortOnly},
+		},
+	}
+	leads := BuildLeads(snap, nil, nil)
+	if len(leads) != 1 || leads[0].IP != "10.0.1.11" {
+		t.Fatalf("want 1 lead for 10.0.1.11, got %+v", leads)
+	}
+	lead := leads[0]
+	for _, c := range lead.SampleClients {
+		if c == "10.0.9.90" {
+			t.Errorf("SampleClients contains port-only scanner: %+v", lead.SampleClients)
+		}
+	}
+	for _, s := range lead.Subnets {
+		if s == "10.0.9.0/24" {
+			t.Errorf("Subnets contains port-only scanner's subnet: %+v", lead.Subnets)
+		}
+	}
+}
+
 func TestBuildLeadsSortOrder(t *testing.T) {
 	// Contradicted must sort before sole-provider — reason priority is the
 	// primary sort key, ahead of client count.

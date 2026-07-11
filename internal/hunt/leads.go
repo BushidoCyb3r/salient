@@ -11,6 +11,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/BushidoCyb3r/salient/internal/config"
 	"github.com/BushidoCyb3r/salient/internal/graph"
 	"github.com/BushidoCyb3r/salient/internal/mapview"
 	"github.com/BushidoCyb3r/salient/internal/reconcile"
@@ -109,6 +110,9 @@ func enrichProviders(snap graph.Snapshot) map[providerKey]providerEnrichment {
 	seenSensor := map[providerKey]map[string]bool{}
 	out := map[providerKey]*providerEnrichment{}
 	for _, e := range snap.Edges {
+		if !config.IsSensitiveServicePort(e.Port) || !e.Confirmed() || !graph.TerrainAddr(e.Dst) {
+			continue
+		}
 		k := providerKey{e.Dst, e.Port}
 		if _, ok := out[k]; !ok {
 			out[k] = &providerEnrichment{}
