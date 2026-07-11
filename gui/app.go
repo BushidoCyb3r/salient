@@ -21,6 +21,7 @@ import (
 	"github.com/BushidoCyb3r/salient/internal/config"
 	"github.com/BushidoCyb3r/salient/internal/devices"
 	"github.com/BushidoCyb3r/salient/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/hunt"
 	"github.com/BushidoCyb3r/salient/internal/mapview"
 	"github.com/BushidoCyb3r/salient/internal/reconcile"
 	"github.com/BushidoCyb3r/salient/internal/report"
@@ -255,6 +256,46 @@ func (a *App) LoadServiceAuthority(path string) ([]mapview.ServiceProvider, erro
 		return nil, err
 	}
 	return mapview.BuildServiceAuthority(snap), nil
+}
+
+// LoadHuntLeads derives prioritized investigation leads from a snapshot,
+// optionally enriched with drift (basePath) and reconciliation (assetsPath)
+// context. Both are optional — an empty basePath skips drift-derived leads
+// (new-provider/new-service), an empty assetsPath skips reconciliation-
+// derived leads (undocumented/contradicted). Pure composition over
+// already-loaded snapshots — no live ES query.
+func (a *App) LoadHuntLeads(path, basePath, assetsPath string) ([]hunt.Lead, error) {
+	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	if err != nil {
+		return nil, err
+	}
+
+	var diff *snapshot.Diff
+	if basePath != "" {
+		base, err := snapshot.Load(a.resolveSnapshotPath(basePath))
+		if err != nil {
+			return nil, fmt.Errorf("baseline snapshot: %w", err)
+		}
+		d := snapshot.Compare(base, snap, snapshot.DiffOptions{})
+		diff = &d
+	}
+
+	var rec *reconcile.Result
+	if assetsPath != "" {
+		f, err := os.Open(assetsPath)
+		if err != nil {
+			return nil, fmt.Errorf("asset CSV: %w", err)
+		}
+		defer f.Close()
+		assets, _, err := reconcile.ParseCSV(f)
+		if err != nil {
+			return nil, fmt.Errorf("asset CSV: %w", err)
+		}
+		r := reconcile.Compare(snap, assets)
+		rec = &r
+	}
+
+	return hunt.BuildLeads(snap, diff, rec), nil
 }
 
 // PickAssetCSV opens the native Open dialog for an asset inventory CSV.

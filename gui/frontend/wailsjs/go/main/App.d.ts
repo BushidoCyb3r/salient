@@ -5,6 +5,7 @@ import {main} from '../models';
 import {escli} from '../models';
 import {devices} from '../models';
 import {snapshot} from '../models';
+import {hunt} from '../models';
 import {scan} from '../models';
 import {assist} from '../models';
 
@@ -37,6 +38,8 @@ export function ListSnapshots():Promise<Array<snapshot.ArtifactEntry>>;
 export function LoadDriftModel(arg1:string,arg2:string):Promise<mapview.Model>;
 
 export function LoadFocusedModel(arg1:string,arg2:string):Promise<mapview.Model>;
+
+export function LoadHuntLeads(arg1:string,arg2:string,arg3:string):Promise<Array<hunt.Lead>>;
 
 export function LoadModel(arg1:string):Promise<mapview.Model>;
 
