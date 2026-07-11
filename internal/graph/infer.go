@@ -16,6 +16,7 @@ type Evidence struct {
 	HTTP     map[string]RoleEvidence
 	SSL      map[string]RoleEvidence
 	LDAP     map[string]RoleEvidence // presence corroborates DC
+	DHCP     map[string]RoleEvidence // real lease-server evidence, not just port 67 traffic
 }
 
 // InferRoles applies the seven v1 rules (§7) to every node, using the
@@ -44,6 +45,15 @@ func (m *Model) InferRoles(ev Evidence) {
 		if d, ok := ev.DNS[ip]; ok && d.Clients >= config.RoleDNSMinClients {
 			roles = append(roles, assert(RoleDNS, d.Clients, config.RoleDNSMinClients,
 				fmt.Sprintf("%d distinct hosts issued DNS queries to this host", d.Clients)))
+		}
+		// DHCPServer: real lease evidence (server.address on an ACK/OFFER
+		// record), not a port-67 traffic guess — a host answering leases
+		// for ≥N distinct clients. A rogue DHCP server showing up here at
+		// all, even with few clients, is exactly the signal this role
+		// exists to surface; see hunt.BuildLeads for prioritization.
+		if h, ok := ev.DHCP[ip]; ok && h.Clients >= config.RoleDHCPMinClients {
+			roles = append(roles, assert(RoleDHCPServer, h.Clients, config.RoleDHCPMinClients,
+				fmt.Sprintf("%d distinct hosts received a DHCP lease from this host", h.Clients)))
 		}
 		// FileServer.
 		if s, ok := ev.SMB[ip]; ok && s.Clients >= config.RoleFileMinClients {

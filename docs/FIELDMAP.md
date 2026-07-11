@@ -27,6 +27,8 @@ against any new grid before trusting it blind.
 | Orig MAC | `source.mac` | mapped in schema but **0% populated** (0/4,038,914 conn docs) | ES 9.3.3 | ☑ |
 | Resp MAC | `destination.mac` | mapped in schema but **0% populated** | ES 9.3.3 | ☑ |
 | Conn state | `connection.state` | `connection.state` — real full Zeek vocabulary present: SF, S0, RSTR, OTH, RSTO, S3, S1, SH, RSTRH, SHR, REJ, S2, RSTOS0. **S0 (SYN-only/unanswered) is 1.85M of 3.9M conn docs on this grid — nearly as common as SF** — the port-only exclusion this session built is not a theoretical concern, it removes ~half of all traffic on this real network from scoring. | ES 9.3.3 | ☑ |
+| DHCP server | `server.address` | `server.address` — populated only on ACK/OFFER records (a REQUEST-only doc has no server field; that absence is itself the confirmation signal). 2,921 `zeek.dhcp` docs/7d on this grid — real production hosts confirmed correctly inferred as `DHCPServer` in a live 7-day scan. | ES 9.3.3 | ☑ |
+| DHCP client | `client.address` | `client.address` | ES 9.3.3 | ☑ |
 
 The responder MAC drives two features: L2 gateway detection and per-node
 vendor identification. **On this grid both are unavailable** — confirmed via

@@ -136,6 +136,12 @@ const (
 	RoleCameraMinClients      = 1
 	RoleMailMinClients        = 2
 	RoleNetworkGearMinClients = 1
+	// RoleDHCPMinClients is deliberately low: DHCP ACK/OFFER volume is
+	// naturally much sparser than DNS query volume on a real grid (leases
+	// renew hourly/daily, not per-request), and a DHCP server answering
+	// even a couple of leases is exactly the signal worth surfacing —
+	// unlike DNS's noise floor, there's little benign traffic to filter out.
+	RoleDHCPMinClients = 2
 )
 
 // Scoring weights (SALIENT_PLAN.md §10). Sum ≈ 1.0.

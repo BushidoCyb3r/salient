@@ -31,6 +31,7 @@ type Role string
 const (
 	RoleDC          Role = "DomainController"
 	RoleDNS         Role = "DNSServer"
+	RoleDHCPServer  Role = "DHCPServer"
 	RoleFileServer  Role = "FileServer"
 	RoleDatabase    Role = "Database"
 	RoleJumpBox     Role = "JumpBox"
