@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`salient mission`**: mission/enclave relevance overlay — walks outward
+  from operator-selected mission-system IPs over confirmed edges (up to 3
+  hops, either direction) and scores how closely other hosts support them.
+  Never replaces the canonical global terrain rank, purely an additional
+  lens. CLI-only for v1 (`internal/mission`), same scoping as `salient
+  stability`. Verified against real grid data.
 - **Alternate-provider detection**: every Hunt Lead now lists other observed
   providers of the same service that share at least one client — evidence
   of possible failover capacity. Worded as "no alternate provider observed"
