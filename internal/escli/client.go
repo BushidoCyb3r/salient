@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -46,6 +47,9 @@ func New(cfg Config) (*Client, error) {
 	if cfg.ESURL == "" {
 		return nil, errors.New("no Elasticsearch URL provided")
 	}
+	if err := checkScheme(cfg.ESURL); err != nil {
+		return nil, err
+	}
 	if cfg.Timeout <= 0 {
 		cfg.Timeout = 90 * time.Second
 	}
@@ -81,6 +85,23 @@ func New(cfg Config) (*Client, error) {
 		return nil, fmt.Errorf("building ES client: %w", err)
 	}
 	return &Client{es: es}, nil
+}
+
+// checkScheme rejects plaintext HTTP URLs except against loopback, so the
+// API key never travels the network in the clear.
+func checkScheme(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("parsing Elasticsearch URL: %w", err)
+	}
+	if u.Scheme != "http" {
+		return nil
+	}
+	host := u.Hostname()
+	if host == "localhost" || net.ParseIP(host).IsLoopback() {
+		return nil
+	}
+	return fmt.Errorf("refusing http:// Elasticsearch URL %q: the API key would travel in plaintext; use https:// or a loopback host", rawURL)
 }
 
 // ClusterInfo is the subset of GET / that test-connection reports.
