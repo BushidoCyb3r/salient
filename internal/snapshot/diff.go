@@ -30,6 +30,13 @@ type RoleChange struct {
 	To   []graph.Role `json:"to"`
 }
 
+type IdentityChange struct {
+	IP       string   `json:"ip"`
+	Protocol string   `json:"protocol"`
+	Added    []string `json:"added,omitempty"`
+	Removed  []string `json:"removed,omitempty"`
+}
+
 // NewProvider is a responder that began providing a sensitive service
 // between the snapshots, regardless of terrain rank — a new low-ranked
 // DNS/DHCP/auth/file/DB provider is an investigation lead, not proof of
@@ -76,6 +83,7 @@ type Diff struct {
 	NewEdgesToTop         []graph.Edge           `json:"new_edges_to_top"`
 	VanishedCriticalEdges []graph.Edge           `json:"vanished_critical_edges"`
 	RoleChanges           []RoleChange           `json:"role_changes"`
+	IdentityChanges       []IdentityChange       `json:"identity_changes,omitempty"`
 	NewProviders          []NewProvider          `json:"new_providers"`
 	ProviderDisplacements []ProviderDisplacement `json:"provider_displacements"`
 }
@@ -107,6 +115,9 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 		fromRoles, toRoles := roles(old), roles(n)
 		if !slices.Equal(fromRoles, toRoles) {
 			d.RoleChanges = append(d.RoleChanges, RoleChange{IP: ip, From: fromRoles, To: toRoles})
+		}
+		for _, change := range identityChanges(ip, old, n) {
+			d.IdentityChanges = append(d.IdentityChanges, change)
 		}
 	}
 	for ip, n := range oldNodes {
@@ -260,6 +271,12 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 	sort.Slice(d.DisappearedNodes, func(i, j int) bool { return d.DisappearedNodes[i].IP < d.DisappearedNodes[j].IP })
 	sort.Slice(d.RankChanges, func(i, j int) bool { return d.RankChanges[i].IP < d.RankChanges[j].IP })
 	sort.Slice(d.RoleChanges, func(i, j int) bool { return d.RoleChanges[i].IP < d.RoleChanges[j].IP })
+	sort.Slice(d.IdentityChanges, func(i, j int) bool {
+		if d.IdentityChanges[i].IP != d.IdentityChanges[j].IP {
+			return d.IdentityChanges[i].IP < d.IdentityChanges[j].IP
+		}
+		return d.IdentityChanges[i].Protocol < d.IdentityChanges[j].Protocol
+	})
 	sortEdges(d.NewEdgesToTop)
 	sortEdges(d.VanishedCriticalEdges)
 	return d
@@ -316,6 +333,17 @@ func roles(n graph.Node) []graph.Role {
 	return out
 }
 
+func identityChanges(ip string, from, to graph.Node) []IdentityChange {
+	var out []IdentityChange
+	if added, removed := stringSetDiff(from.TLSFingerprints, to.TLSFingerprints); len(added) > 0 || len(removed) > 0 {
+		out = append(out, IdentityChange{IP: ip, Protocol: "tls", Added: added, Removed: removed})
+	}
+	if added, removed := stringSetDiff(from.SSHHostKeys, to.SSHHostKeys); len(added) > 0 || len(removed) > 0 {
+		out = append(out, IdentityChange{IP: ip, Protocol: "ssh", Added: added, Removed: removed})
+	}
+	return out
+}
+
 func isTop(n graph.Node, topN int) bool { return n.Scores.Rank > 0 && n.Scores.Rank <= topN }
 
 func abs(n int) int {
@@ -339,6 +367,30 @@ func joinOrNone(in []string) string {
 		return "(none)"
 	}
 	return strings.Join(sortedStrings(in), ", ")
+}
+
+func stringSetDiff(from, to []string) ([]string, []string) {
+	var added, removed []string
+	fromSet, toSet := map[string]bool{}, map[string]bool{}
+	for _, v := range from {
+		fromSet[v] = true
+	}
+	for _, v := range to {
+		toSet[v] = true
+	}
+	for v := range toSet {
+		if !fromSet[v] {
+			added = append(added, v)
+		}
+	}
+	for v := range fromSet {
+		if !toSet[v] {
+			removed = append(removed, v)
+		}
+	}
+	sort.Strings(added)
+	sort.Strings(removed)
+	return added, removed
 }
 
 func sortEdges(edges []graph.Edge) {

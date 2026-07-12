@@ -132,6 +132,24 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 			}
 		}
 	}
+	if fps, err := cli.FetchTLSFingerprints(ctx, fm, opts.Window); err != nil {
+		emit("tls-identity", fmt.Sprintf("TLS identity query failed, nodes will have no certificate continuity evidence: %v", err), true)
+	} else {
+		for ip, vals := range fps {
+			if n, ok := m.Nodes[ip]; ok {
+				n.TLSFingerprints = vals
+			}
+		}
+	}
+	if keys, err := cli.FetchSSHHostKeys(ctx, fm, opts.Window); err != nil {
+		emit("ssh-identity", fmt.Sprintf("SSH identity query failed, nodes will have no host-key continuity evidence: %v", err), true)
+	} else {
+		for ip, vals := range keys {
+			if n, ok := m.Nodes[ip]; ok {
+				n.SSHHostKeys = vals
+			}
+		}
+	}
 
 	res := score.Score(m)
 	scored := fmt.Sprintf("%d nodes scored", res.NodeCount)

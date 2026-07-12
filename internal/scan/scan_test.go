@@ -51,10 +51,16 @@ func mockGrid(t *testing.T) *escli.Client {
 		case strings.Contains(b, `"responders"`):
 			io.WriteString(w, wrap(`{"responders":{"buckets":[{"key":"10.0.1.10","doc_count":1500,
 				"clients":{"value":15},"sample_hosts":{"buckets":[{"key":"10.0.3.30","doc_count":5}]}}]}}`))
+		case strings.Contains(b, `"pairs"`):
+			io.WriteString(w, wrap(`{"pairs":{"buckets":[{"key":{"dst":"10.0.1.10","name":"dc1.corp"}}]}}`))
 		case strings.Contains(b, `"sensors"`):
 			io.WriteString(w, wrap(`{"sensors":{"buckets":[{"key":"so-sensor-1","doc_count":9000}]}}`))
 		case strings.Contains(b, `"top_hostname"`):
 			io.WriteString(w, wrap(`{"by_ip":{"buckets":[{"key":"10.0.1.10","top_hostname":{"buckets":[{"key":"dc1.corp"}]},"top_mac":{"buckets":[]}}]}}`))
+		case strings.Contains(b, `"zeek.x509"`):
+			io.WriteString(w, `{"hits":{"hits":[{"_source":{"message":"{\"fingerprint\":\"tls-fp-1\"}","x509":{"san_dns":["dc1.corp"],"certificate":{"subject":"CN=dc1.corp,O=Test"}}}}]}}`)
+		case strings.Contains(b, `"zeek.ssh"`):
+			io.WriteString(w, `{"hits":{"hits":[{"_source":{"destination":{"ip":"10.0.1.10"},"ssh":{"host_key":"ssh-ed25519 AAAA-test"}}}]}}`)
 		default:
 			io.WriteString(w, wrap(`{}`))
 		}
@@ -123,6 +129,36 @@ func TestRunPopulatesHostnameFromDHCPLease(t *testing.T) {
 	if !found {
 		t.Fatal("expected 10.0.1.10 to carry hostname dc1.corp from its DHCP lease")
 	}
+}
+
+func TestRunPopulatesTLSAndSSHIdentity(t *testing.T) {
+	cli := mockGrid(t)
+	fm, err := escli.LoadFieldMap("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := scan.Run(
+		context.Background(), cli, fm,
+		escli.ClusterInfo{ClusterName: "fake-grid"},
+		scan.Options{Window: 336 * time.Hour, TZ: "UTC"},
+		t.TempDir(), nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range res.Snapshot.Nodes {
+		if n.IP != "10.0.1.10" {
+			continue
+		}
+		if len(n.TLSFingerprints) != 1 || n.TLSFingerprints[0] != "tls-fp-1" {
+			t.Fatalf("TLS fingerprints = %#v", n.TLSFingerprints)
+		}
+		if len(n.SSHHostKeys) != 1 || n.SSHHostKeys[0] != "ssh-ed25519 AAAA-test" {
+			t.Fatalf("SSH host keys = %#v", n.SSHHostKeys)
+		}
+		return
+	}
+	t.Fatal("expected 10.0.1.10 in snapshot")
 }
 
 func TestRunNoEdgesIsError(t *testing.T) {

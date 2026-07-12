@@ -11,7 +11,9 @@ func TestDefaultFieldMapComplete(t *testing.T) {
 	for name, v := range map[string]string{
 		"IndexPattern": fm.IndexPattern, "Timestamp": fm.Timestamp,
 		"DatasetField": fm.DatasetField, "ObserverName": fm.ObserverName,
-		"SourceIP": fm.SourceIP, "DestinationIP": fm.DestinationIP,
+		"MessageField": fm.MessageField, "SSLServerName": fm.SSLServerName,
+		"SSHHostKey": fm.SSHHostKey,
+		"SourceIP":   fm.SourceIP, "DestinationIP": fm.DestinationIP,
 		"DestinationPort": fm.DestinationPort, "Service": fm.Service,
 		"SourceBytes": fm.SourceBytes, "DestinationBytes": fm.DestinationBytes,
 		"SourceMAC": fm.SourceMAC, "DestinationMAC": fm.DestinationMAC,
@@ -37,7 +39,7 @@ func TestLoadFieldMapNoPathReturnsDefaults(t *testing.T) {
 
 func TestLoadFieldMapOverrideMergesOverDefaults(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "fm.yaml")
-	yaml := "index_pattern: \"so-zeek-*\"\nsource_mac: \"zeek.conn.orig_l2_addr\"\ndatasets:\n  conn: [\"zeek.conn\"]\n"
+	yaml := "index_pattern: \"so-zeek-*\"\nmessage_field: zeek_message\nssl_server_name: tls.server.name\nssh_host_key: ssh.server.key\nsource_mac: \"zeek.conn.orig_l2_addr\"\ndatasets:\n  conn: [\"zeek.conn\"]\n"
 	if err := os.WriteFile(path, []byte(yaml), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -50,6 +52,9 @@ func TestLoadFieldMapOverrideMergesOverDefaults(t *testing.T) {
 	}
 	if fm.SourceMAC != "zeek.conn.orig_l2_addr" {
 		t.Errorf("override not applied: SourceMAC=%q", fm.SourceMAC)
+	}
+	if fm.MessageField != "zeek_message" || fm.SSLServerName != "tls.server.name" || fm.SSHHostKey != "ssh.server.key" {
+		t.Errorf("identity overrides not applied: %+v", fm)
 	}
 	if len(fm.Datasets.Conn) != 1 || fm.Datasets.Conn[0] != "zeek.conn" {
 		t.Errorf("dataset override not applied: %v", fm.Datasets.Conn)

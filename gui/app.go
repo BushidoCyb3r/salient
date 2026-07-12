@@ -206,10 +206,15 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 		model.Findings = append(model.Findings, "comparison warning: "+warning)
 	}
 	model.Findings = append(model.Findings, fmt.Sprintf(
-		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges, %d new sensitive-service providers, %d provider displacements",
+		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges, %d identity changes, %d new sensitive-service providers, %d provider displacements",
 		from.Meta.CreatedAt.UTC().Format("20060102T150405Z"),
 		len(d.AppearedNodes), len(d.DisappearedNodes), len(d.RankChanges),
-		len(d.NewEdgesToTop), len(d.VanishedCriticalEdges), len(d.NewProviders), len(d.ProviderDisplacements)))
+		len(d.NewEdgesToTop), len(d.VanishedCriticalEdges), len(d.IdentityChanges), len(d.NewProviders), len(d.ProviderDisplacements)))
+	for _, change := range d.IdentityChanges {
+		model.Findings = append(model.Findings, fmt.Sprintf(
+			"%s identity changed on %s: added %v removed %v",
+			strings.ToUpper(change.Protocol), change.IP, change.Added, change.Removed))
+	}
 	for _, p := range d.NewProviders {
 		hostNote := ""
 		if p.NewHost {

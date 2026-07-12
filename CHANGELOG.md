@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-12
+
 ### Added
+- **TLS/SSH identity continuity**: scans now preserve per-host TLS
+  certificate fingerprints and SSH host keys in the snapshot, and drift
+  comparison reports when those identities change between windows. SSH uses
+  direct host-key evidence from `zeek.ssh`; TLS uses best-effort
+  `ssl.server_name` to `zeek.x509` SAN/CN matching, with the heuristic
+  ceiling documented in code and the handoff notes. Surfaced in the HTML
+  drift report and the desktop console's drift findings.
 - **`salient mission`**: mission/enclave relevance overlay — walks outward
   from operator-selected mission-system IPs over confirmed edges (up to 3
   hops, either direction) and scores how closely other hosts support them.
@@ -62,6 +71,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   See `docs/FIELDMAP.md` for the full write-up, including confirmed
   real-world evidence that ~92% of raw connection attempts on a live
   network are port-only noise, correctly excluded from scoring.
+
+### Changed
+- Desktop release builds now use the Salient logo instead of the default
+  Wails application icon.
 
 ## [0.2.0] - 2026-07-11
 

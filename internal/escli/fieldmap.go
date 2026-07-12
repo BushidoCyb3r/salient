@@ -24,8 +24,10 @@ type FieldMap struct {
 	// DatasetField discriminates Zeek log types within IndexPattern.
 	DatasetField string `yaml:"dataset_field"`
 	// ObserverName identifies which sensor recorded the event.
-	ObserverName string `yaml:"observer_name"`
-	MessageField string `yaml:"message_field"`
+	ObserverName  string `yaml:"observer_name"`
+	MessageField  string `yaml:"message_field"`
+	SSLServerName string `yaml:"ssl_server_name"`
+	SSHHostKey    string `yaml:"ssh_host_key"`
 
 	SourceIP         string `yaml:"source_ip"`
 	DestinationIP    string `yaml:"destination_ip"`
@@ -86,6 +88,8 @@ func DefaultFieldMap() FieldMap {
 		DatasetField:     "event.dataset",     // UNVERIFIED
 		ObserverName:     "observer.name",     // UNVERIFIED
 		MessageField:     "message",           // verified against a real SO 3.x/ES9 grid, 2026-07-11 — raw Zeek JSON blob when present
+		SSLServerName:    "ssl.server_name",   // verified against a real SO 3.x/ES9 grid, 2026-07-12 — used for TLS identity matching
+		SSHHostKey:       "ssh.host_key",      // verified against a real SO 3.x/ES9 grid, 2026-07-12 — SSH server host-key fingerprint
 		SourceIP:         "source.ip",         // UNVERIFIED
 		DestinationIP:    "destination.ip",    // UNVERIFIED
 		DestinationPort:  "destination.port",  // UNVERIFIED
@@ -136,6 +140,8 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	merge(&fm.DatasetField, override.DatasetField)
 	merge(&fm.ObserverName, override.ObserverName)
 	merge(&fm.MessageField, override.MessageField)
+	merge(&fm.SSLServerName, override.SSLServerName)
+	merge(&fm.SSHHostKey, override.SSHHostKey)
 	merge(&fm.SourceIP, override.SourceIP)
 	merge(&fm.DestinationIP, override.DestinationIP)
 	merge(&fm.DestinationPort, override.DestinationPort)

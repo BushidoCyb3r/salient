@@ -227,3 +227,39 @@ func TestCompareCompatibilityWarnings(t *testing.T) {
 		t.Fatalf("compatibility warnings = %#v", d.CompatibilityWarnings)
 	}
 }
+
+func TestCompareIdentityChanges(t *testing.T) {
+	base := graph.Snapshot{
+		Nodes: []graph.Node{{
+			IP:              "10.0.0.10",
+			TLSFingerprints: []string{"fp-a"},
+			SSHHostKeys:     []string{"ssh-a"},
+		}},
+	}
+	next := graph.Snapshot{
+		Nodes: []graph.Node{{
+			IP:              "10.0.0.10",
+			TLSFingerprints: []string{"fp-b"},
+			SSHHostKeys:     []string{"ssh-a", "ssh-b"},
+		}},
+	}
+	d := Compare(base, next, DiffOptions{TopN: 10, RankDelta: 5})
+	if len(d.IdentityChanges) != 2 {
+		t.Fatalf("identity changes = %#v", d.IdentityChanges)
+	}
+	if !reflect.DeepEqual(d.IdentityChanges[0], IdentityChange{
+		IP:       "10.0.0.10",
+		Protocol: "ssh",
+		Added:    []string{"ssh-b"},
+	}) {
+		t.Fatalf("ssh change = %#v", d.IdentityChanges[0])
+	}
+	if !reflect.DeepEqual(d.IdentityChanges[1], IdentityChange{
+		IP:       "10.0.0.10",
+		Protocol: "tls",
+		Added:    []string{"fp-b"},
+		Removed:  []string{"fp-a"},
+	}) {
+		t.Fatalf("tls change = %#v", d.IdentityChanges[1])
+	}
+}

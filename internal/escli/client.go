@@ -173,6 +173,42 @@ func (c *Client) search(ctx context.Context, pattern, body string) (map[string]j
 	return decoded, nil
 }
 
+// searchSources runs a one-page search and returns each hit's _source blob.
+// ponytail: single page by design; add search_after only if a real grid
+// exceeds this cap for the raw-doc features that use it.
+func (c *Client) searchSources(ctx context.Context, pattern, body string) ([]json.RawMessage, error) {
+	res, err := c.es.Search(
+		c.es.Search.WithContext(ctx),
+		c.es.Search.WithIndex(pattern),
+		c.es.Search.WithBody(strings.NewReader(body)),
+		c.es.Search.WithExpandWildcards("open"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search against %q: %w", pattern, err)
+	}
+	defer res.Body.Close()
+	if res.IsError() {
+		return nil, apiError("search", res.StatusCode, res.Body)
+	}
+	var decoded struct {
+		Hits struct {
+			Hits []struct {
+				Source json.RawMessage `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
+		return nil, fmt.Errorf("decoding search response: %w", err)
+	}
+	out := make([]json.RawMessage, 0, len(decoded.Hits.Hits))
+	for _, hit := range decoded.Hits.Hits {
+		if len(hit.Source) > 0 {
+			out = append(out, hit.Source)
+		}
+	}
+	return out, nil
+}
+
 // FieldPresence reports, via _field_caps, whether each requested field is
 // mapped anywhere under the pattern.
 func (c *Client) FieldPresence(ctx context.Context, pattern string, fields []string) (map[string]bool, error) {

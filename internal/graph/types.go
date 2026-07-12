@@ -103,6 +103,8 @@ type ScoreSet struct {
 type Node struct {
 	IP              string          `json:"ip"`
 	Hostnames       []string        `json:"hostnames,omitempty"`
+	TLSFingerprints []string        `json:"tls_fingerprints,omitempty"`
+	SSHHostKeys     []string        `json:"ssh_host_keys,omitempty"`
 	Roles           []RoleAssertion `json:"roles,omitempty"`
 	TerrainEvidence []string        `json:"terrain_evidence,omitempty"`
 	Subnet          string          `json:"subnet"`

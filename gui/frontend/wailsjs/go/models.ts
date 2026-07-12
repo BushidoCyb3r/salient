@@ -299,6 +299,8 @@ export namespace graph {
 	export class Node {
 	    ip: string;
 	    hostnames?: string[];
+	    tls_fingerprints?: string[];
+	    ssh_host_keys?: string[];
 	    roles?: RoleAssertion[];
 	    terrain_evidence?: string[];
 	    subnet: string;
@@ -318,6 +320,8 @@ export namespace graph {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.ip = source["ip"];
 	        this.hostnames = source["hostnames"];
+	        this.tls_fingerprints = source["tls_fingerprints"];
+	        this.ssh_host_keys = source["ssh_host_keys"];
 	        this.roles = this.convertValues(source["roles"], RoleAssertion);
 	        this.terrain_evidence = source["terrain_evidence"];
 	        this.subnet = source["subnet"];

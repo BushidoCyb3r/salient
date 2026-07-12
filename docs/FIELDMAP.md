@@ -33,6 +33,9 @@ against any new grid before trusting it blind.
 | DHCP hostname | `dhcp.host_name` | `dhcp.host_name` — field exists and is aggregatable, but **empty on every real lease observed this session** (no client in this grid's traffic sent DHCP Option 12). Code correctly handles this (no hostname enrichment fires, no error) — re-test on a grid with more Windows/managed clients, which populate this more often. | ES 9.3.3 | ☑ |
 | DHCP host MAC | `host.mac` | `host.mac` — populated. **This is the only working MAC source on this grid** (conn-log `source.mac`/`destination.mac` are 0% populated, see above) — 27 hosts gained a MAC/vendor in a single real 24h scan via this field alone. | ES 9.3.3 | ☑ |
 | DHCP lease time | `dhcp.lease_time` | `dhcp.lease_time` — exists, not yet consumed by any query (field-mapped for future use) | ES 9.3.3 | ☑ |
+| Raw message blob | `message` | `message` — raw Zeek JSON string; consumed for x509 fingerprint extraction | ES 9.3.3 | ☑ |
+| TLS server name | `ssl.server_name` | `ssl.server_name` — present on `zeek.ssl`, used as the TLS-side join hint | ES 9.3.3 | ☑ |
+| SSH host key | `ssh.host_key` | `ssh.host_key` — present on `zeek.ssh`, direct SSH identity evidence | ES 9.3.3 | ☑ |
 
 The responder MAC drives two features: L2 gateway detection and per-node
 vendor identification. **On this grid both are unavailable** — confirmed via
@@ -58,12 +61,26 @@ correctly with zero fieldmap edits needed).
 | http | `http`, `zeek.http` | **`zeek.http`** (232,684 docs/7d) |
 | dhcp | `dhcp`, `zeek.dhcp` | **`zeek.dhcp`** (2,921 docs/7d — low volume but present) |
 | ldap | `ldap`, `zeek.ldap` | **NOT FOUND** — dataset absent entirely on this grid |
+| x509 | `x509`, `zeek.x509` | **`zeek.x509`** (1,434 docs/7d) |
+| ssh | `ssh`, `zeek.ssh` | **`zeek.ssh`** (580 docs/7d) |
 
 Other datasets present but not currently consumed by Salient (candidates for
-future Phase 5 work): `zeek.x509` (1,434 docs — TLS cert identity),
-`zeek.ssh` (580 docs), `zeek.software`, `zeek.notice` (787 docs — Zeek's own
+future Phase 5 work): `zeek.software`, `zeek.notice` (787 docs — Zeek's own
 built-in detections, including scan detection), `zeek.weird`,
 `zeek.ja4d`/`zeek.ja4ssh` (JA4 fingerprinting).
+
+## Identity continuity notes
+
+- **SSH continuity is direct on this grid.** `zeek.ssh` carries both
+  `destination.ip` and `ssh.host_key`, so Salient can attach host keys to
+  the responder without inference.
+- **TLS continuity is approximate, by design.** `zeek.ssl` carries
+  `destination.ip` and `ssl.server_name`; `zeek.x509` carries the
+  certificate fingerprint and SAN/CN names, but not an indexed join key to
+  the corresponding `ssl` event. Salient therefore matches observed server
+  names against x509 SAN/CN names and records the resulting fingerprint set
+  as best-effort continuity evidence. This is good enough to surface
+  material cert drift, but it is not a per-connection proof.
 
 ## Phase 0 decision points — ANSWERED
 

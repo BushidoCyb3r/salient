@@ -194,3 +194,49 @@ func TestLoadDriftModelAddsCompatibilityWarnings(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadDriftModelFindsIdentityChanges(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	fromPath := filepath.Join(dataDir, "from.json.gz")
+	toPath := filepath.Join(dataDir, "to.json.gz")
+	writeSnapshot(t, fromPath, graph.Snapshot{
+		Meta: graph.SnapshotMeta{CreatedAt: t0},
+		Nodes: []graph.Node{{
+			IP:              "10.0.0.10",
+			Subnet:          "10.0.0.0/24",
+			FirstSeen:       t0,
+			LastSeen:        t0,
+			TLSFingerprints: []string{"fp-a"},
+			Scores:          graph.ScoreSet{Composite: 0.9, Rank: 1},
+		}},
+	})
+	writeSnapshot(t, toPath, graph.Snapshot{
+		Meta: graph.SnapshotMeta{CreatedAt: t0.Add(24 * time.Hour)},
+		Nodes: []graph.Node{{
+			IP:              "10.0.0.10",
+			Subnet:          "10.0.0.0/24",
+			FirstSeen:       t0,
+			LastSeen:        t0,
+			TLSFingerprints: []string{"fp-b"},
+			Scores:          graph.ScoreSet{Composite: 0.9, Rank: 1},
+		}},
+	})
+	m, err := a.LoadDriftModel(fromPath, toPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var foundSummary, foundDetail bool
+	for _, f := range m.Findings {
+		if strings.Contains(f, "1 identity changes") {
+			foundSummary = true
+		}
+		if strings.Contains(f, "TLS identity changed on 10.0.0.10") && strings.Contains(f, "fp-b") && strings.Contains(f, "fp-a") {
+			foundDetail = true
+		}
+	}
+	if !foundSummary || !foundDetail {
+		t.Fatalf("identity findings missing: %v", m.Findings)
+	}
+}
