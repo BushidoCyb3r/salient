@@ -77,6 +77,12 @@ type Lead struct {
 	LastSeen        time.Time           `json:"last_seen"`
 	Rank            int                 `json:"rank,omitempty"`
 	InventoryStatus string              `json:"inventory_status,omitempty"`
+	// AlternateProviders lists other observed providers of the same service
+	// that share at least one client with this one — evidence of possible
+	// failover capacity. Empty means no alternate provider was observed;
+	// passive traffic cannot prove a configured failover doesn't exist, so
+	// this is worded as an absence of evidence, never "no redundancy."
+	AlternateProviders []string `json:"alternate_providers,omitempty"`
 }
 
 const sampleClientCap = 5
@@ -107,8 +113,10 @@ type providerEnrichment struct {
 // enrichProviders re-scans confirmed sensitive-service edges to collect the
 // per-provider facts mapview.ServiceProvider's Clients count alone can't
 // give a lead: a few example client IPs, the distinct subnets they're in,
-// and which sensors observed the traffic.
-func enrichProviders(snap graph.Snapshot) map[providerKey]providerEnrichment {
+// which sensors observed the traffic, and (second return value) the full
+// per-provider client set — uncapped, unlike sampleClients — used for
+// alternate-provider overlap detection.
+func enrichProviders(snap graph.Snapshot) (map[providerKey]providerEnrichment, map[providerKey]map[string]bool) {
 	nodes := make(map[string]graph.Node, len(snap.Nodes))
 	for _, n := range snap.Nodes {
 		nodes[n.IP] = n
@@ -151,7 +159,49 @@ func enrichProviders(snap graph.Snapshot) map[providerKey]providerEnrichment {
 		sort.Strings(v.sensors)
 		result[k] = *v
 	}
-	return result
+	return result, seenClient
+}
+
+// alternateProviders finds, for each provider, other providers of the same
+// service that share at least one client — evidence of possible failover
+// capacity. Deterministic: sorted "ip:port" keys, no probability.
+func alternateProviders(providers []mapview.ServiceProvider, clients map[providerKey]map[string]bool) map[providerKey][]string {
+	byService := map[string][]providerKey{}
+	for _, p := range providers {
+		byService[p.Service] = append(byService[p.Service], providerKey{p.IP, p.Port})
+	}
+	out := map[providerKey][]string{}
+	for _, keys := range byService {
+		for _, p := range keys {
+			var alts []string
+			for _, q := range keys {
+				if q == p {
+					continue
+				}
+				if overlaps(clients[p], clients[q]) {
+					alts = append(alts, ProviderKey(q.ip, q.port))
+				}
+			}
+			if alts != nil {
+				sort.Strings(alts)
+				out[p] = alts
+			}
+		}
+	}
+	return out
+}
+
+func overlaps(a, b map[string]bool) bool {
+	small, big := a, b
+	if len(b) < len(a) {
+		small, big = b, a
+	}
+	for c := range small {
+		if big[c] {
+			return true
+		}
+	}
+	return false
 }
 
 // BuildLeads composes current-snapshot providers, drift new-provider
@@ -164,16 +214,19 @@ func enrichProviders(snap graph.Snapshot) map[providerKey]providerEnrichment {
 // Observed evidence is untouched; suppression is purely a display filter.
 func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Result, approved map[string]bool) []Lead {
 	providers := mapview.BuildServiceAuthority(current)
-	enrich := enrichProviders(current)
+	enrich, clients := enrichProviders(current)
+	alternates := alternateProviders(providers, clients)
 
 	byKey := map[providerKey]*Lead{}
 	makeLead := func(p mapview.ServiceProvider) *Lead {
-		e := enrich[providerKey{p.IP, p.Port}]
+		k := providerKey{p.IP, p.Port}
+		e := enrich[k]
 		return &Lead{
 			IP: p.IP, Hostname: p.Hostname, Service: p.Service, Port: p.Port,
 			Evidence: p.Evidence, Clients: p.Clients, Rank: p.Rank,
 			FirstSeen: p.FirstSeen, LastSeen: p.LastSeen,
 			SampleClients: e.sampleClients, Subnets: e.subnets, Sensors: e.sensors,
+			AlternateProviders: alternates[k],
 		}
 	}
 	providerByKey := make(map[providerKey]mapview.ServiceProvider, len(providers))

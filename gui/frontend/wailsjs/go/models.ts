@@ -452,6 +452,7 @@ export namespace hunt {
 	    last_seen: any;
 	    rank?: number;
 	    inventory_status?: string;
+	    alternate_providers?: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Lead(source);
@@ -473,6 +474,7 @@ export namespace hunt {
 	        this.last_seen = this.convertValues(source["last_seen"], null);
 	        this.rank = source["rank"];
 	        this.inventory_status = source["inventory_status"];
+	        this.alternate_providers = source["alternate_providers"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

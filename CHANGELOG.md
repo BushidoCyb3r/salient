@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Alternate-provider detection**: every Hunt Lead now lists other observed
+  providers of the same service that share at least one client — evidence
+  of possible failover capacity. Worded as "no alternate provider observed"
+  when none is found, never "no redundancy" (passive traffic can't prove a
+  configured failover doesn't exist). Verified against real grid data: NTP
+  pool servers correctly identified as sharing clients.
 - **Approved providers**: mark a Hunt Lead as an expected/benign provider
   from its dossier — it's suppressed on future scans without touching the
   underlying observed evidence. `devices.Registry.ApprovedProviders`,

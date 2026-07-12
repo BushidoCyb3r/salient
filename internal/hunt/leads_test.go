@@ -76,6 +76,66 @@ func TestBuildLeadsSuppressesApprovedProvider(t *testing.T) {
 	}
 }
 
+func TestBuildLeadsAlternateProvidersOverlap(t *testing.T) {
+	// Two DNS providers sharing one client (10.0.3.30 uses both) must list
+	// each other as alternates. Neither is a "sole provider" (there are two),
+	// so mark 10.0.1.11 undocumented via reconcile to give it a lead to
+	// attach the AlternateProviders evidence to — AlternateProviders is
+	// supplementary evidence on an existing lead, not a lead reason itself.
+	snap := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.1.11", Subnet: "10.0.1.0/24"},
+			{IP: "10.0.1.12", Subnet: "10.0.1.0/24"},
+			{IP: "10.0.3.30", Subnet: "10.0.3.0/24"},
+			{IP: "10.0.3.31", Subnet: "10.0.3.0/24"},
+		},
+		Edges: []graph.Edge{
+			{Src: "10.0.3.30", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.3.31", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+			{Src: "10.0.3.30", Dst: "10.0.1.12", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+		},
+	}
+	rec := &reconcile.Result{
+		ObservedUndocumented: []graph.Node{{IP: "10.0.1.11"}, {IP: "10.0.1.12"}},
+	}
+	leads := BuildLeads(snap, nil, rec, nil)
+	byIP := map[string]Lead{}
+	for _, l := range leads {
+		byIP[l.IP] = l
+	}
+	if got := byIP["10.0.1.11"].AlternateProviders; len(got) != 1 || got[0] != ProviderKey("10.0.1.12", 53) {
+		t.Errorf("10.0.1.11 alternates = %+v, want [%s]", got, ProviderKey("10.0.1.12", 53))
+	}
+	if got := byIP["10.0.1.12"].AlternateProviders; len(got) != 1 || got[0] != ProviderKey("10.0.1.11", 53) {
+		t.Errorf("10.0.1.12 alternates = %+v, want [%s]", got, ProviderKey("10.0.1.11", 53))
+	}
+}
+
+func TestBuildLeadsNoAlternateProviderWhenClientsDisjoint(t *testing.T) {
+	// baseSnapshot's two DNS providers (10.0.1.11 clients .30/.31,
+	// 10.0.1.99 client .40) share no clients — neither should list the
+	// other as an alternate. Force both into the lead list via reconcile
+	// (neither is a "sole provider," so without this the assertion below
+	// would silently check zero leads and pass vacuously).
+	rec := &reconcile.Result{
+		ObservedUndocumented: []graph.Node{{IP: "10.0.1.11"}, {IP: "10.0.1.99"}},
+	}
+	leads := BuildLeads(baseSnapshot(), nil, rec, nil)
+	var dnsLeadsChecked int
+	for _, l := range leads {
+		if l.Service != "dns" {
+			continue
+		}
+		dnsLeadsChecked++
+		if len(l.AlternateProviders) != 0 {
+			t.Errorf("%s: want no alternate providers (disjoint client sets), got %+v", l.IP, l.AlternateProviders)
+		}
+	}
+	if dnsLeadsChecked != 2 {
+		t.Fatalf("want 2 dns leads checked, got %d (leads: %+v)", dnsLeadsChecked, leads)
+	}
+}
+
 func TestBuildLeadsNewProviderAndNewService(t *testing.T) {
 	snap := baseSnapshot()
 	diff := &snapshot.Diff{

@@ -1161,6 +1161,7 @@ function showLeadDossier(l) {
     '\nclients: ' + l.clients + (l.sample_clients ? ' (' + l.sample_clients.join(', ') + ')' : '') +
     (l.subnets ? '\nsubnets: ' + l.subnets.join(', ') : '') +
     (l.sensors ? '\nsensors: ' + l.sensors.join(', ') : '') +
+    '\nalternate providers: ' + (l.alternate_providers && l.alternate_providers.length ? l.alternate_providers.join(', ') : 'no alternate provider observed') +
     '\nfirst seen: ' + l.first_seen +
     '\nlast seen: ' + l.last_seen;
   ev.appendChild(document.createTextNode(text));
