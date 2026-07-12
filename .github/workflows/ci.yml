@@ -46,10 +46,17 @@ jobs:
       - name: Test GUI module
         working-directory: gui
         run: go test ./...
+      - name: Archive macOS app
+        if: matrix.os == 'macos-latest'
+        working-directory: gui/build/bin
+        run: ditto -c -k --sequesterRsrc --keepParent Salient.app Salient-macOS.zip
       - uses: actions/upload-artifact@v4
         with:
           name: salient-gui-${{ matrix.os }}
-          path: gui/build/bin/*
+          path: |
+            gui/build/bin/salient
+            gui/build/bin/salient.exe
+            gui/build/bin/Salient-macOS.zip
 
   # Verifies the RHEL-family build path. On Fedora (RHEL upstream) webkit2gtk
   # ships as 4.1 — the same API the Rocky dev box uses — so `make gui`
@@ -118,8 +125,8 @@ jobs:
           set -euo pipefail
           mkdir -p release-assets
           cp artifacts/salient-gui-linux-packages/*.deb artifacts/salient-gui-linux-packages/*.rpm release-assets/
-          (cd artifacts/salient-gui-macos-latest && zip -r -y ../../release-assets/salient-gui-macos.zip gui.app)
-          cp artifacts/salient-gui-windows-latest/gui.exe release-assets/salient-gui-windows.exe
+          cp artifacts/salient-gui-macos-latest/Salient-macOS.zip release-assets/
+          cp artifacts/salient-gui-windows-latest/salient.exe release-assets/Salient-Windows.exe
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

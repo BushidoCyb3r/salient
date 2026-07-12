@@ -1,4 +1,4 @@
-name: salient-gui
+name: salient
 arch: amd64
 platform: linux
 version: ${VERSION}
@@ -10,7 +10,7 @@ homepage: "https://github.com/BushidoCyb3r/salient"
 license: Apache-2.0
 
 contents:
-  - src: build/bin/gui
+  - src: build/bin/salient
     dst: /usr/bin/salient-gui
     file_info:
       mode: 0755

@@ -142,13 +142,13 @@ Launch the resulting application:
 
 ~~~sh
 # Linux
-./gui/build/bin/gui
+./gui/build/bin/salient
 
 # macOS
-open gui/build/bin/gui.app
+open gui/build/bin/Salient.app
 
 # Windows PowerShell
-.\gui\build\bin\gui.exe
+.\gui\build\bin\salient.exe
 ~~~
 
 Platform-specific runtime packages and unsigned-build warnings are documented in
