@@ -53,6 +53,8 @@ func mockGrid(t *testing.T) *escli.Client {
 				"clients":{"value":15},"sample_hosts":{"buckets":[{"key":"10.0.3.30","doc_count":5}]}}]}}`))
 		case strings.Contains(b, `"sensors"`):
 			io.WriteString(w, wrap(`{"sensors":{"buckets":[{"key":"so-sensor-1","doc_count":9000}]}}`))
+		case strings.Contains(b, `"top_hostname"`):
+			io.WriteString(w, wrap(`{"by_ip":{"buckets":[{"key":"10.0.1.10","top_hostname":{"buckets":[{"key":"dc1.corp"}]},"top_mac":{"buckets":[]}}]}}`))
 		default:
 			io.WriteString(w, wrap(`{}`))
 		}
@@ -92,6 +94,34 @@ func TestRunProducesSnapshotAndOrderedStages(t *testing.T) {
 	want := []string{"aggregating-edges", "scoring", "saving", "report", "map"}
 	if !isSubsequence(want, stages) {
 		t.Fatalf("stages %v missing ordered subsequence %v", stages, want)
+	}
+}
+
+func TestRunPopulatesHostnameFromDHCPLease(t *testing.T) {
+	cli := mockGrid(t)
+	fm, err := escli.LoadFieldMap("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := scan.Run(
+		context.Background(), cli, fm,
+		escli.ClusterInfo{ClusterName: "fake-grid"},
+		scan.Options{Window: 336 * time.Hour, TZ: "UTC"},
+		t.TempDir(), nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var found bool
+	for _, n := range res.Snapshot.Nodes {
+		if n.IP == "10.0.1.10" {
+			if len(n.Hostnames) == 1 && n.Hostnames[0] == "dc1.corp" {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatal("expected 10.0.1.10 to carry hostname dc1.corp from its DHCP lease")
 	}
 }
 

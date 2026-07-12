@@ -29,6 +29,10 @@ against any new grid before trusting it blind.
 | Conn state | `connection.state` | `connection.state` — real full Zeek vocabulary present: SF, S0, RSTR, OTH, RSTO, S3, S1, SH, RSTRH, SHR, REJ, S2, RSTOS0. **S0 (SYN-only/unanswered) is 1.85M of 3.9M conn docs on this grid — nearly as common as SF** — the port-only exclusion this session built is not a theoretical concern, it removes ~half of all traffic on this real network from scoring. | ES 9.3.3 | ☑ |
 | DHCP server | `server.address` | `server.address` — populated only on ACK/OFFER records (a REQUEST-only doc has no server field; that absence is itself the confirmation signal). 2,921 `zeek.dhcp` docs/7d on this grid — real production hosts confirmed correctly inferred as `DHCPServer` in a live 7-day scan. | ES 9.3.3 | ☑ |
 | DHCP client | `client.address` | `client.address` | ES 9.3.3 | ☑ |
+| DHCP assigned IP | `dhcp.assigned_ip` | `dhcp.assigned_ip` — the leased IP, used as the join key to `graph.Node.IP` | ES 9.3.3 | ☑ |
+| DHCP hostname | `dhcp.host_name` | `dhcp.host_name` — field exists and is aggregatable, but **empty on every real lease observed this session** (no client in this grid's traffic sent DHCP Option 12). Code correctly handles this (no hostname enrichment fires, no error) — re-test on a grid with more Windows/managed clients, which populate this more often. | ES 9.3.3 | ☑ |
+| DHCP host MAC | `host.mac` | `host.mac` — populated. **This is the only working MAC source on this grid** (conn-log `source.mac`/`destination.mac` are 0% populated, see above) — 27 hosts gained a MAC/vendor in a single real 24h scan via this field alone. | ES 9.3.3 | ☑ |
+| DHCP lease time | `dhcp.lease_time` | `dhcp.lease_time` — exists, not yet consumed by any query (field-mapped for future use) | ES 9.3.3 | ☑ |
 
 The responder MAC drives two features: L2 gateway detection and per-node
 vendor identification. **On this grid both are unavailable** — confirmed via

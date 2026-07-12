@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/netip"
 	"path/filepath"
+	"slices"
 	"sort"
 	"time"
 
@@ -108,6 +109,26 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 		for ip, mac := range macs {
 			if n, ok := m.Nodes[ip]; ok {
 				n.MAC = mac
+			}
+		}
+	}
+
+	// DHCP lease identity: real hostname/MAC evidence for the leased IP,
+	// not a guess. Best-effort — no DHCP dataset just means no hostnames
+	// from this source.
+	if leases, err := cli.FetchDHCPLeases(ctx, fm, opts.Window); err != nil {
+		emit("dhcp-leases", fmt.Sprintf("DHCP lease query failed, nodes will have no lease-derived hostname: %v", err), true)
+	} else {
+		for ip, lease := range leases {
+			n, ok := m.Nodes[ip]
+			if !ok {
+				continue
+			}
+			if lease.Hostname != "" && !slices.Contains(n.Hostnames, lease.Hostname) {
+				n.Hostnames = append(n.Hostnames, lease.Hostname)
+			}
+			if lease.MAC != "" && n.MAC == "" {
+				n.MAC = lease.MAC
 			}
 		}
 	}

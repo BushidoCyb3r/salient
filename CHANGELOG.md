@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **DHCP lease identity enrichment**: real hostname and MAC evidence from
+  DHCP ACK records populates `Node.Hostnames` (previously never written by
+  the scan pipeline) and fills in MAC/vendor data even on grids where
+  conn-log MAC fields are unpopulated. Verified against a real grid where
+  this is the *only* working MAC source (conn-log MACs are 0% populated
+  there) — 27 hosts gained a MAC in a single 24h scan.
 - **Drift compatibility warnings**: comparing snapshots from different
   clusters, windows, scopes, or sensor sets now warns instead of silently
   pretending they are equivalent. Surfaced in the HTML drift report and the
