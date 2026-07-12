@@ -104,6 +104,19 @@ func (a *App) UnpinFromMap(ip string) error {
 	return a.mutateRegistry(func(r *devices.Registry) error { r.Unpin(ip); return nil })
 }
 
+// ApproveProvider marks a hunt lead (identified by "ip:port", see
+// hunt.ProviderKey) as an expected/benign provider — it stops appearing in
+// LoadHuntLeads. UnapproveProvider reverses it. Both idempotent; the caller
+// reloads leads to see the change.
+func (a *App) ApproveProvider(key string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { r.ApproveProvider(key); return nil })
+}
+
+// UnapproveProvider removes a key from the approved-provider set.
+func (a *App) UnapproveProvider(key string) error {
+	return a.mutateRegistry(func(r *devices.Registry) error { r.UnapproveProvider(key); return nil })
+}
+
 // SetShowAllPrivate toggles promoting every RFC1918 host to its own overview
 // node. Persisted so the choice survives reloads; the caller reloads the map.
 func (a *App) SetShowAllPrivate(on bool) error {

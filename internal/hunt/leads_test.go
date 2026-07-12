@@ -45,12 +45,34 @@ func TestBuildLeadsSoleProvider(t *testing.T) {
 			{Src: "10.0.3.30", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
 		},
 	}
-	leads := BuildLeads(snap, nil, nil)
+	leads := BuildLeads(snap, nil, nil, nil)
 	if len(leads) != 1 || leads[0].Reason != ReasonSoleProvider || leads[0].IP != "10.0.1.11" {
 		t.Fatalf("want 1 sole-provider lead, got %+v", leads)
 	}
 	if len(leads[0].Subnets) != 1 || leads[0].Subnets[0] != "10.0.3.0/24" {
 		t.Errorf("bad subnets: %+v", leads[0].Subnets)
+	}
+}
+
+func TestBuildLeadsSuppressesApprovedProvider(t *testing.T) {
+	snap := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.1.11", Subnet: "10.0.1.0/24", Scores: graph.ScoreSet{Rank: 3}},
+			{IP: "10.0.3.30", Subnet: "10.0.3.0/24"},
+		},
+		Edges: []graph.Edge{
+			{Src: "10.0.3.30", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
+		},
+	}
+	approved := map[string]bool{ProviderKey("10.0.1.11", 53): true}
+	leads := BuildLeads(snap, nil, nil, approved)
+	if len(leads) != 0 {
+		t.Fatalf("approved provider must be suppressed entirely, got %+v", leads)
+	}
+	// Guard the guard: an unrelated approval must not suppress this lead.
+	leads = BuildLeads(snap, nil, nil, map[string]bool{ProviderKey("10.0.1.99", 445): true})
+	if len(leads) != 1 {
+		t.Fatalf("unrelated approval must not suppress this lead, got %+v", leads)
 	}
 }
 
@@ -62,7 +84,7 @@ func TestBuildLeadsNewProviderAndNewService(t *testing.T) {
 			{IP: "10.0.1.11", Port: 53, Service: "dns", Clients: 2, NewHost: false, Rank: 3},
 		},
 	}
-	leads := BuildLeads(snap, diff, nil)
+	leads := BuildLeads(snap, diff, nil, nil)
 	byIP := map[string]Lead{}
 	for _, l := range leads {
 		byIP[l.IP] = l
@@ -81,7 +103,7 @@ func TestBuildLeadsUndocumentedAndContradicted(t *testing.T) {
 		ObservedUndocumented: []graph.Node{{IP: "10.0.1.99"}},
 		RoleContradicted:     []reconcile.Contradiction{{IP: "10.0.1.11", Documented: "web server", Expected: graph.RoleWebServer, Observed: []graph.Role{graph.RoleDNS}}},
 	}
-	leads := BuildLeads(snap, nil, rec)
+	leads := BuildLeads(snap, nil, rec, nil)
 	byIP := map[string]Lead{}
 	for _, l := range leads {
 		byIP[l.IP] = l
@@ -104,7 +126,7 @@ func TestBuildLeadsDedupPrefersHigherPriorityReason(t *testing.T) {
 	rec := &reconcile.Result{
 		RoleContradicted: []reconcile.Contradiction{{IP: "10.0.1.11", Documented: "web server", Expected: graph.RoleWebServer, Observed: []graph.Role{graph.RoleDNS}}},
 	}
-	leads := BuildLeads(snap, diff, rec)
+	leads := BuildLeads(snap, diff, rec, nil)
 	count := 0
 	var found Lead
 	for _, l := range leads {
@@ -136,7 +158,7 @@ func TestBuildLeadsExcludesPortOnlyEdgesFromEnrichment(t *testing.T) {
 			{Src: "10.0.9.90", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidencePortOnly},
 		},
 	}
-	leads := BuildLeads(snap, nil, nil)
+	leads := BuildLeads(snap, nil, nil, nil)
 	if len(leads) != 1 || leads[0].IP != "10.0.1.11" {
 		t.Fatalf("want 1 lead for 10.0.1.11, got %+v", leads)
 	}
@@ -174,7 +196,7 @@ func TestBuildLeadsSortOrder(t *testing.T) {
 	rec := &reconcile.Result{
 		RoleContradicted: []reconcile.Contradiction{{IP: "10.0.1.11", Documented: "web server", Expected: graph.RoleWebServer, Observed: []graph.Role{graph.RoleDNS}}},
 	}
-	leads := BuildLeads(snap, nil, rec)
+	leads := BuildLeads(snap, nil, rec, nil)
 	if len(leads) != 2 || leads[0].Reason != ReasonContradicted || leads[1].Reason != ReasonSoleProvider {
 		t.Fatalf("want [contradicted, sole-provider] order, got %+v", leads)
 	}

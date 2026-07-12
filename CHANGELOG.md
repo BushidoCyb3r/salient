@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Approved providers**: mark a Hunt Lead as an expected/benign provider
+  from its dossier — it's suppressed on future scans without touching the
+  underlying observed evidence. `devices.Registry.ApprovedProviders`,
+  `hunt.BuildLeads`'s new `approved` parameter, GUI "approve" button.
 - **DHCP lease identity enrichment**: real hostname and MAC evidence from
   DHCP ACK records populates `Node.Hostnames` (previously never written by
   the scan pipeline) and fills in MAC/vendor data even on grids where

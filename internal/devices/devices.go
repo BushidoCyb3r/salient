@@ -83,6 +83,12 @@ type Registry struct {
 	Pinned         []string            `json:"pinned_ips,omitempty"`       // IPs force-retained as their own map node
 	ShowAllPrivate bool                `json:"show_all_private,omitempty"` // promote every RFC1918 host to its own overview node
 	Segments       []Segment           `json:"segments,omitempty"`         // operator-declared real subnets overriding auto-/24 grouping
+	// ApprovedProviders holds "ip:port" keys the operator has confirmed as
+	// expected/benign service providers — a hunt lead for one of these is
+	// suppressed rather than re-surfaced every scan. Observed evidence
+	// (Service Authority, drift, reconciliation) is never touched by this;
+	// it's a pure overlay, same as every other operator annotation here.
+	ApprovedProviders []string `json:"approved_providers,omitempty"`
 }
 
 // Segment is an operator-declared real subnet with an optional display name.
@@ -334,6 +340,35 @@ func (r *Registry) Unpin(ip string) {
 func (r *Registry) IsPinned(ip string) bool {
 	for _, p := range r.Pinned {
 		if p == ip {
+			return true
+		}
+	}
+	return false
+}
+
+// ApproveProvider marks an "ip:port" hunt-lead key as an expected/benign
+// provider — the lead is suppressed on future scans. Idempotent.
+func (r *Registry) ApproveProvider(key string) {
+	if !r.IsApprovedProvider(key) {
+		r.ApprovedProviders = append(r.ApprovedProviders, key)
+	}
+}
+
+// UnapproveProvider removes an "ip:port" key from the approved set, so its
+// lead (if the underlying evidence still applies) surfaces again.
+func (r *Registry) UnapproveProvider(key string) {
+	for i, k := range r.ApprovedProviders {
+		if k == key {
+			r.ApprovedProviders = append(r.ApprovedProviders[:i], r.ApprovedProviders[i+1:]...)
+			return
+		}
+	}
+}
+
+// IsApprovedProvider reports whether an "ip:port" key has been approved.
+func (r *Registry) IsApprovedProvider(key string) bool {
+	for _, k := range r.ApprovedProviders {
+		if k == key {
 			return true
 		}
 	}

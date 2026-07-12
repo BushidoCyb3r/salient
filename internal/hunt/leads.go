@@ -8,6 +8,7 @@
 package hunt
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -87,6 +88,13 @@ type providerKey struct {
 	port uint16
 }
 
+// ProviderKey builds the "ip:port" string key used for operator-approval
+// lookups (devices.Registry.ApprovedProviders) — the single canonical
+// format, so callers never hand-format it inconsistently.
+func ProviderKey(ip string, port uint16) string {
+	return fmt.Sprintf("%s:%d", ip, port)
+}
+
 // providerEnrichment holds the per-(ip,port) facts BuildServiceAuthority
 // doesn't retain (it only keeps a count): sample client IPs, distinct
 // client subnets, and observing sensors.
@@ -150,8 +158,11 @@ func enrichProviders(snap graph.Snapshot) map[providerKey]providerEnrichment {
 // findings, and reconciliation results into a deduplicated, prioritized
 // lead list. diff and rec are both optional (nil skips that source) — a
 // first-ever scan has no baseline to diff against, and reconciliation
-// requires an operator-supplied asset list.
-func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Result) []Lead {
+// requires an operator-supplied asset list. approved is an optional set of
+// "ip:port" keys (see ProviderKey) the operator has already confirmed as
+// expected/benign — a matching lead is suppressed entirely, never returned.
+// Observed evidence is untouched; suppression is purely a display filter.
+func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Result, approved map[string]bool) []Lead {
 	providers := mapview.BuildServiceAuthority(current)
 	enrich := enrichProviders(current)
 
@@ -230,6 +241,9 @@ func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Resu
 
 	leads := make([]Lead, 0, len(byKey))
 	for _, l := range byKey {
+		if approved[ProviderKey(l.IP, l.Port)] {
+			continue
+		}
 		leads = append(leads, *l)
 	}
 	sort.Slice(leads, func(i, j int) bool {

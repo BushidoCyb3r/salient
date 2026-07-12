@@ -305,7 +305,16 @@ func (a *App) LoadHuntLeads(path, basePath, assetsPath string) ([]hunt.Lead, err
 		rec = &r
 	}
 
-	return hunt.BuildLeads(snap, diff, rec), nil
+	reg, err := devices.Load(a.registryPath())
+	if err != nil {
+		a.emit("device:warning", "device registry unreadable — approved-provider suppression skipped: "+err.Error())
+		return hunt.BuildLeads(snap, diff, rec, nil), nil
+	}
+	approved := make(map[string]bool, len(reg.ApprovedProviders))
+	for _, k := range reg.ApprovedProviders {
+		approved[k] = true
+	}
+	return hunt.BuildLeads(snap, diff, rec, approved), nil
 }
 
 // PickAssetCSV opens the native Open dialog for an asset inventory CSV.

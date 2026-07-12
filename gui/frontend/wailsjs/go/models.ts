@@ -95,6 +95,7 @@ export namespace devices {
 	    pinned_ips?: string[];
 	    show_all_private?: boolean;
 	    segments?: Segment[];
+	    approved_providers?: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Registry(source);
@@ -109,6 +110,7 @@ export namespace devices {
 	        this.pinned_ips = source["pinned_ips"];
 	        this.show_all_private = source["show_all_private"];
 	        this.segments = this.convertValues(source["segments"], Segment);
+	        this.approved_providers = source["approved_providers"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

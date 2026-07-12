@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/hunt"
 )
 
 func TestLoadHuntLeadsCurrentOnly(t *testing.T) {
@@ -31,6 +32,44 @@ func TestLoadHuntLeadsCurrentOnly(t *testing.T) {
 	}
 	if len(leads) != 1 || leads[0].IP != "10.0.1.11" || leads[0].Reason != "sole-provider" {
 		t.Fatalf("bad leads: %+v", leads)
+	}
+}
+
+func TestLoadHuntLeadsSuppressesApprovedProvider(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	t0 := time.Date(2026, 7, 1, 8, 0, 0, 0, time.UTC)
+	path := filepath.Join(dataDir, "snap.json.gz")
+	writeSnapshot(t, path, graph.Snapshot{
+		Meta: graph.SnapshotMeta{CreatedAt: t0},
+		Nodes: []graph.Node{
+			{IP: "10.0.1.11", Subnet: "10.0.1.0/24"},
+			{IP: "10.0.3.30", Subnet: "10.0.3.0/24"},
+		},
+		Edges: []graph.Edge{
+			{Src: "10.0.3.30", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed,
+				FirstSeen: t0, LastSeen: t0},
+		},
+	})
+	if err := a.ApproveProvider(hunt.ProviderKey("10.0.1.11", 53)); err != nil {
+		t.Fatal(err)
+	}
+	leads, err := a.LoadHuntLeads(path, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(leads) != 0 {
+		t.Fatalf("approved provider must be suppressed, got %+v", leads)
+	}
+	if err := a.UnapproveProvider(hunt.ProviderKey("10.0.1.11", 53)); err != nil {
+		t.Fatal(err)
+	}
+	leads, err = a.LoadHuntLeads(path, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(leads) != 1 {
+		t.Fatalf("unapproved provider must reappear, got %+v", leads)
 	}
 }
 

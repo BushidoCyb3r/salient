@@ -6,6 +6,10 @@ export function AggregateHosts(arg1, arg2) {
   return window['go']['main']['App']['AggregateHosts'](arg1, arg2);
 }
 
+export function ApproveProvider(arg1) {
+  return window['go']['main']['App']['ApproveProvider'](arg1);
+}
+
 export function AssignIP(arg1, arg2) {
   return window['go']['main']['App']['AssignIP'](arg1, arg2);
 }
@@ -128,6 +132,10 @@ export function SuggestTags(arg1) {
 
 export function SuggestTagsForHosts(arg1, arg2) {
   return window['go']['main']['App']['SuggestTagsForHosts'](arg1, arg2);
+}
+
+export function UnapproveProvider(arg1) {
+  return window['go']['main']['App']['UnapproveProvider'](arg1);
 }
 
 export function UnassignIP(arg1) {

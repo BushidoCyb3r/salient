@@ -180,6 +180,23 @@ func TestPinUnpin(t *testing.T) {
 	}
 }
 
+func TestApproveUnapproveProvider(t *testing.T) {
+	var r Registry
+	key := "10.0.0.99:53"
+	if r.IsApprovedProvider(key) {
+		t.Fatal("nothing approved yet")
+	}
+	r.ApproveProvider(key)
+	r.ApproveProvider(key) // idempotent
+	if !r.IsApprovedProvider(key) || len(r.ApprovedProviders) != 1 {
+		t.Fatalf("ApproveProvider bookkeeping wrong: %#v", r.ApprovedProviders)
+	}
+	r.UnapproveProvider(key)
+	if r.IsApprovedProvider(key) || len(r.ApprovedProviders) != 0 {
+		t.Fatalf("UnapproveProvider left state: %#v", r.ApprovedProviders)
+	}
+}
+
 func TestSetRoleSetClearValidate(t *testing.T) {
 	var r Registry
 	if err := r.SetRole("10.0.0.1", "Camera"); err != nil {

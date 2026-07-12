@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -1175,7 +1175,20 @@ function showLeadDossier(l) {
       () => logLine('copied Hunt query for ' + l.ip, 'ok'),
       () => logLine('clipboard copy failed — query: ' + query, 'warn'));
   };
+  const approveBtn = document.createElement('button');
+  approveBtn.textContent = 'approve (hide this lead)';
+  approveBtn.title = 'Marks this as an expected/benign provider — it stops appearing in future scans. Observed evidence is never changed, only this display filter.';
+  approveBtn.onclick = async () => {
+    try {
+      await ApproveProvider(l.ip + ':' + l.port);
+      hlHosts = hlHosts.filter((x) => !(x.ip === l.ip && x.port === l.port));
+      renderHostList($('hl-filter').value.toLowerCase());
+      ev.textContent = 'approved — lead hidden';
+      logLine('approved ' + l.ip + ':' + l.port + ' as an expected provider', 'ok');
+    } catch (err) { logLine('approve failed: ' + err, 'err'); }
+  };
   row.appendChild(copyBtn);
+  row.appendChild(approveBtn);
   ev.appendChild(row);
 }
 

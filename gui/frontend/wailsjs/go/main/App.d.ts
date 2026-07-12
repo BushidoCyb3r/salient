@@ -11,6 +11,8 @@ import {assist} from '../models';
 
 export function AggregateHosts(arg1:string,arg2:string):Promise<Array<mapview.MapNode>>;
 
+export function ApproveProvider(arg1:string):Promise<void>;
+
 export function AssignIP(arg1:string,arg2:string):Promise<string>;
 
 export function CancelScan():Promise<void>;
@@ -72,6 +74,8 @@ export function SetShowAllPrivate(arg1:boolean):Promise<void>;
 export function SuggestTags(arg1:main.TagRequest):Promise<assist.TagResult>;
 
 export function SuggestTagsForHosts(arg1:main.TagRequest,arg2:Array<string>):Promise<assist.TagResult>;
+
+export function UnapproveProvider(arg1:string):Promise<void>;
 
 export function UnassignIP(arg1:string):Promise<void>;
 
