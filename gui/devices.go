@@ -229,7 +229,11 @@ func macHints(nodes []graph.Node, reg *devices.Registry) []Hint {
 			continue
 		}
 		sort.Strings(ips)
-		hints = append(hints, Hint{Key: key, Hostname: config.VendorForMAC(mac), IPs: ips})
+		name := config.VendorForMAC(mac)
+		if name == "" {
+			name = mac
+		}
+		hints = append(hints, Hint{Key: key, Hostname: name, IPs: ips})
 	}
 	sort.Slice(hints, func(i, j int) bool { return hints[i].Key < hints[j].Key })
 	return hints

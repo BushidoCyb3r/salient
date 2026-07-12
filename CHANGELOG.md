@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Shared-MAC device hints fall back to the MAC address when the OUI vendor is
+  unknown instead of displaying an empty device name.
+
 ## [0.3.1] - 2026-07-12
 
 ### Fixed

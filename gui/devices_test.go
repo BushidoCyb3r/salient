@@ -306,22 +306,20 @@ func TestMACHints(t *testing.T) {
 		{IP: "10.0.0.2", MAC: "24:5a:4c:11:22:33"}, // same NIC, two VLAN IPs
 		{IP: "10.0.0.5", MAC: "aa:bb:cc:dd:ee:ff"}, // single IP — no hint
 		{IP: "10.0.0.6"}, // no MAC
+		{IP: "10.0.0.7", MAC: "aa:bb:cc:00:00:01"},
+		{IP: "10.0.0.8", MAC: "aa:bb:cc:00:00:01"}, // unknown vendor falls back to MAC
 	}
 	var reg devices.Registry
 	hints := macHints(nodes, &reg)
-	if len(hints) != 1 {
+	if len(hints) != 2 {
 		t.Fatalf("hints = %#v", hints)
 	}
-	if hints[0].Key != "mac:24:5a:4c:11:22:33" || len(hints[0].IPs) != 2 {
-		t.Fatalf("hint = %#v", hints[0])
-	}
-	// Vendor rides the Hostname field for display.
-	if hints[0].Hostname != "Ubiquiti" {
-		t.Errorf("expected vendor Ubiquiti in hint, got %q", hints[0].Hostname)
+	if hints[0].Hostname != "Ubiquiti" || hints[1].Hostname != "aa:bb:cc:00:00:01" {
+		t.Fatalf("hint labels = %#v", hints)
 	}
 	// Dismissed MAC hints stay dismissed.
 	reg.Dismiss("mac:24:5a:4c:11:22:33")
-	if got := macHints(nodes, &reg); len(got) != 0 {
+	if got := macHints(nodes, &reg); len(got) != 1 || got[0].Hostname != "aa:bb:cc:00:00:01" {
 		t.Errorf("dismissed MAC hint reappeared: %#v", got)
 	}
 }
