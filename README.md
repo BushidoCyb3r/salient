@@ -2,19 +2,22 @@
 
 ![Salient](docs/salient-logo.png)
 
-**A desktop operator console for passive terrain analysis on Security Onion grids.**
+**A common operational picture (COP) for the network domain — built passively, from telemetry the grid already has.**
 
 Salient connects read-only to Elasticsearch, aggregates existing Zeek telemetry,
-and turns observed traffic into a scored dependency graph and ranked key-terrain
-report with the evidence behind each ranking. It is built for hunting teams that
-are new to an environment and need to understand its key systems and dependencies
-without active scanning or changes to the Security Onion deployment.
+and turns observed traffic into a scored dependency graph and ranked
+Mission Relevant Terrain-Cyber (MRT-C) report: what's out there, what depends
+on what, and which terrain matters most to the mission — with the evidence
+behind every ranking. It is built for hunting teams new to an environment who
+need a COP of that terrain and its dependencies fast, without active scanning
+or any change to the Security Onion deployment they're operating on.
 
 The same evidence can identify potential rogue or malicious service providers:
-Salient infers the services hosts actually provide, flags systems and roles that
-contradict the asset inventory, and highlights newly appeared hosts, roles, and
-service dependencies across snapshots. These are investigation leads backed by
-observed behavior, not automatic declarations of malicious intent.
+Salient infers the services hosts actually provide, flags systems and roles
+that contradict the asset inventory, and highlights newly appeared hosts,
+roles, and service dependencies across snapshots. These are investigation
+leads backed by observed behavior, not automatic declarations of malicious
+intent.
 
 Dropped into an unfamiliar network, a hunt team's biggest cost is time: figuring
 out what actually matters before an active scan tips off an adversary or trips
@@ -53,6 +56,9 @@ The console provides:
   vendor. Right-click any row to assign it to a device or correct its role, and
   use **Suggest tags for listed hosts** to AI-tag just the filtered set, or
   **Pin to map** to promote a collapsed host to its own node.
+- Flow-arrow drill-in: clicking a bundled flow arrow whose endpoint is a
+  grouped node (for example the external traffic bucket) opens the same
+  panel with the real IPs behind that specific arrow.
 - Per-host service lists derived from observed responder ports (~110 recognized
   services): the full Active Directory protocol set plus network-vendor
   protocols for UniFi, Cisco, Aruba, Meraki, and Juniper gear.
@@ -79,6 +85,12 @@ The console provides:
 - Asset reconciliation: load an inventory CSV and see undocumented hosts,
   documented-but-silent assets, and role contradictions flagged on the map,
   exposing potential rogue service providers for investigation.
+- Service Authority view: one row per sensitive-service provider, sorted by
+  client count, each with a dossier of role, evidence, and first/last seen.
+- Hunt Leads: auto-prioritized investigation queue — undocumented hosts,
+  contradicted roles, new or displaced service providers — each with the
+  evidence behind it and a one-click copy of the matching Hunt query;
+  approve a lead to suppress it as an expected/benign provider going forward.
 - Optional model-assisted device tags based on observed network communication,
   grounded in operator-confirmed device names, roles, and labels; suggestions
   can be accepted into durable labels or dismissed permanently.
@@ -342,6 +354,18 @@ export SALIENT_API_KEY="<base64 id:key>"
 Stored snapshots can also be rendered as HTML, SVG, JSON, or GraphML; compared
 with the diff command; or reconciled against an asset CSV. See
 [docs/MAPS.md](docs/MAPS.md) for map interpretation and export guidance.
+
+Two CLI-only lenses read an existing snapshot without re-deriving its
+canonical terrain rank:
+
+- `./bin/salient mission --snapshot FILE --scope IP1,IP2,...` — mission
+  relevance overlay. Walks outward from operator-selected mission-system IPs
+  over confirmed edges (up to 3 hops) and scores how closely other hosts
+  support them. An additional lens over the snapshot's evidence, distinct
+  from and never replacing key-terrain/MRT-C rank.
+- `./bin/salient stability` — longitudinal terrain stability across at least
+  3 stored snapshots in `--data-dir`, showing which key terrain holds rank
+  over time versus which is volatile.
 
 ## Security model
 

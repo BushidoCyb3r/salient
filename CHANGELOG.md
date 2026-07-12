@@ -7,9 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-07-12
+
+### Added
+- Clicking a flow arrow whose endpoint is a grouped/aggregate node (e.g. the
+  external traffic bucket) opens a side panel listing the real IPs behind it,
+  reusing the aggregate-grouping logic the map already applies.
+
+### Fixed
+- Service Authority and Hunt Leads sidebar buttons now match Key Terrain's
+  full-width style — the three primary drawer buttons are uniform.
+
+## [0.3.2] - 2026-07-12
+
 ### Fixed
 - Shared-MAC device hints fall back to the MAC address when the OUI vendor is
   unknown instead of displaying an empty device name.
+- macOS release build is now a universal (arm64 + x86_64) binary; the
+  Intel-Mac launch failure traced to an arm64-only build.
+- The release job now depends on the test job passing — a release can no
+  longer publish before CI's tests, race checks, and cross-compiles are green.
+- The Elasticsearch client refuses plaintext `http://` URLs except against a
+  loopback host, so the API key can no longer travel the network in the clear.
 
 ## [0.3.1] - 2026-07-12
 
@@ -218,5 +237,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `refreshDevices` dropped the pin set from the in-memory registry, which could
   leave the pin/unpin menu label stale.
 
-[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/BushidoCyb3r/salient/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/BushidoCyb3r/salient/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/BushidoCyb3r/salient/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/BushidoCyb3r/salient/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/BushidoCyb3r/salient/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/BushidoCyb3r/salient/releases/tag/v0.1.0
