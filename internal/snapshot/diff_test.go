@@ -202,3 +202,28 @@ func TestCompareProviderDisplacementExcludesPortOnlyEdges(t *testing.T) {
 		t.Fatalf("scanner must not appear as a client: %+v", pd)
 	}
 }
+
+func TestCompareCompatibilityWarnings(t *testing.T) {
+	base := graph.Snapshot{Meta: graph.SnapshotMeta{
+		ClusterName: "alpha",
+		Window:      "24h",
+		Scope:       []string{"10.0.0.0/24", "10.0.1.0/24"},
+		Sensors:     []string{"sensor-a"},
+	}}
+	next := graph.Snapshot{Meta: graph.SnapshotMeta{
+		ClusterName: "bravo",
+		Window:      "168h",
+		Scope:       []string{"10.0.2.0/24"},
+		Sensors:     []string{"sensor-b", "sensor-a"},
+	}}
+
+	d := Compare(base, next, DiffOptions{TopN: 10, RankDelta: 5})
+	if !reflect.DeepEqual(d.CompatibilityWarnings, []string{
+		`cluster differs: "alpha" vs "bravo"`,
+		`window differs: "24h" vs "168h"`,
+		`scope differs: 10.0.0.0/24, 10.0.1.0/24 vs 10.0.2.0/24`,
+		`sensors differ: sensor-a vs sensor-a, sensor-b`,
+	}) {
+		t.Fatalf("compatibility warnings = %#v", d.CompatibilityWarnings)
+	}
+}

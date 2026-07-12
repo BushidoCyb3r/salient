@@ -1,8 +1,10 @@
 package snapshot
 
 import (
+	"fmt"
 	"slices"
 	"sort"
+	"strings"
 
 	"github.com/BushidoCyb3r/salient/internal/config"
 	"github.com/BushidoCyb3r/salient/internal/graph"
@@ -67,6 +69,7 @@ type MigrationSource struct {
 type Diff struct {
 	FromMeta              graph.SnapshotMeta     `json:"from"`
 	ToMeta                graph.SnapshotMeta     `json:"to"`
+	CompatibilityWarnings []string               `json:"compatibility_warnings,omitempty"`
 	AppearedNodes         []graph.Node           `json:"appeared_nodes"`
 	DisappearedNodes      []graph.Node           `json:"disappeared_nodes"`
 	RankChanges           []RankChange           `json:"rank_changes"`
@@ -85,7 +88,11 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 	if opts.TopN <= 0 {
 		opts.TopN = config.DriftTopN
 	}
-	d := Diff{FromMeta: from.Meta, ToMeta: to.Meta}
+	d := Diff{
+		FromMeta:              from.Meta,
+		ToMeta:                to.Meta,
+		CompatibilityWarnings: compatibilityWarnings(from.Meta, to.Meta),
+	}
 	oldNodes, newNodes := nodesByIP(from.Nodes), nodesByIP(to.Nodes)
 	for ip, n := range newNodes {
 		old, exists := oldNodes[ip]
@@ -258,6 +265,23 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 	return d
 }
 
+func compatibilityWarnings(from, to graph.SnapshotMeta) []string {
+	var warnings []string
+	if from.ClusterName != "" && to.ClusterName != "" && from.ClusterName != to.ClusterName {
+		warnings = append(warnings, fmt.Sprintf("cluster differs: %q vs %q", from.ClusterName, to.ClusterName))
+	}
+	if from.Window != "" && to.Window != "" && from.Window != to.Window {
+		warnings = append(warnings, fmt.Sprintf("window differs: %q vs %q", from.Window, to.Window))
+	}
+	if !slices.Equal(sortedStrings(from.Scope), sortedStrings(to.Scope)) {
+		warnings = append(warnings, fmt.Sprintf("scope differs: %s vs %s", joinOrNone(from.Scope), joinOrNone(to.Scope)))
+	}
+	if !slices.Equal(sortedStrings(from.Sensors), sortedStrings(to.Sensors)) {
+		warnings = append(warnings, fmt.Sprintf("sensors differ: %s vs %s", joinOrNone(from.Sensors), joinOrNone(to.Sensors)))
+	}
+	return warnings
+}
+
 type edgeKey struct {
 	src, dst string
 	port     uint16
@@ -299,6 +323,22 @@ func abs(n int) int {
 		return -n
 	}
 	return n
+}
+
+func sortedStrings(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	out := append([]string(nil), in...)
+	sort.Strings(out)
+	return out
+}
+
+func joinOrNone(in []string) string {
+	if len(in) == 0 {
+		return "(none)"
+	}
+	return strings.Join(sortedStrings(in), ", ")
 }
 
 func sortEdges(edges []graph.Edge) {

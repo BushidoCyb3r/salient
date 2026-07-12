@@ -25,6 +25,7 @@ type FieldMap struct {
 	DatasetField string `yaml:"dataset_field"`
 	// ObserverName identifies which sensor recorded the event.
 	ObserverName string `yaml:"observer_name"`
+	MessageField string `yaml:"message_field"`
 
 	SourceIP         string `yaml:"source_ip"`
 	DestinationIP    string `yaml:"destination_ip"`
@@ -43,8 +44,12 @@ type FieldMap struct {
 	// ACK/OFFER records (a REQUEST alone has no server field) — that
 	// absence is itself the confirmation signal, no message-type filter
 	// needed.
-	DHCPServer string `yaml:"dhcp_server"`
-	DHCPClient string `yaml:"dhcp_client"`
+	DHCPServer     string `yaml:"dhcp_server"`
+	DHCPClient     string `yaml:"dhcp_client"`
+	DHCPAssignedIP string `yaml:"dhcp_assigned_ip"`
+	DHCPHostname   string `yaml:"dhcp_hostname"`
+	DHCPHostMAC    string `yaml:"dhcp_host_mac"`
+	DHCPLeaseTime  string `yaml:"dhcp_lease_time"`
 
 	// Datasets holds candidate DatasetField values per Zeek log type.
 	// Security Onion releases have shipped both bare ("conn") and
@@ -65,6 +70,8 @@ type DatasetCandidates struct {
 	HTTP     []string `yaml:"http"`
 	DHCP     []string `yaml:"dhcp"`
 	LDAP     []string `yaml:"ldap"`
+	X509     []string `yaml:"x509"`
+	SSH      []string `yaml:"ssh"`
 }
 
 // DefaultFieldMap returns the assumed SO 2.4-era mapping.
@@ -78,6 +85,7 @@ func DefaultFieldMap() FieldMap {
 		Timestamp:        "@timestamp",        // UNVERIFIED
 		DatasetField:     "event.dataset",     // UNVERIFIED
 		ObserverName:     "observer.name",     // UNVERIFIED
+		MessageField:     "message",           // verified against a real SO 3.x/ES9 grid, 2026-07-11 — raw Zeek JSON blob when present
 		SourceIP:         "source.ip",         // UNVERIFIED
 		DestinationIP:    "destination.ip",    // UNVERIFIED
 		DestinationPort:  "destination.port",  // UNVERIFIED
@@ -89,6 +97,10 @@ func DefaultFieldMap() FieldMap {
 		ConnState:        "connection.state",  // UNVERIFIED — verify with `salient discover`; Task 0 records ground truth
 		DHCPServer:       "server.address",    // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
 		DHCPClient:       "client.address",    // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
+		DHCPAssignedIP:   "dhcp.assigned_ip",  // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
+		DHCPHostname:     "dhcp.host_name",    // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
+		DHCPHostMAC:      "host.mac",          // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
+		DHCPLeaseTime:    "dhcp.lease_time",   // verified against a real SO 3.x/ES9 grid, 2026-07-11 — docs/FIELDMAP.md
 		Datasets: DatasetCandidates{
 			Conn:     []string{"conn", "zeek.conn"},
 			DNS:      []string{"dns", "zeek.dns"},
@@ -98,6 +110,8 @@ func DefaultFieldMap() FieldMap {
 			HTTP:     []string{"http", "zeek.http"},
 			DHCP:     []string{"dhcp", "zeek.dhcp"},
 			LDAP:     []string{"ldap", "zeek.ldap"},
+			X509:     []string{"x509", "zeek.x509"},
+			SSH:      []string{"ssh", "zeek.ssh"},
 		},
 	}
 }
@@ -121,6 +135,7 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	merge(&fm.Timestamp, override.Timestamp)
 	merge(&fm.DatasetField, override.DatasetField)
 	merge(&fm.ObserverName, override.ObserverName)
+	merge(&fm.MessageField, override.MessageField)
 	merge(&fm.SourceIP, override.SourceIP)
 	merge(&fm.DestinationIP, override.DestinationIP)
 	merge(&fm.DestinationPort, override.DestinationPort)
@@ -132,6 +147,10 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	merge(&fm.ConnState, override.ConnState)
 	merge(&fm.DHCPServer, override.DHCPServer)
 	merge(&fm.DHCPClient, override.DHCPClient)
+	merge(&fm.DHCPAssignedIP, override.DHCPAssignedIP)
+	merge(&fm.DHCPHostname, override.DHCPHostname)
+	merge(&fm.DHCPHostMAC, override.DHCPHostMAC)
+	merge(&fm.DHCPLeaseTime, override.DHCPLeaseTime)
 	mergeList(&fm.Datasets.Conn, override.Datasets.Conn)
 	mergeList(&fm.Datasets.DNS, override.Datasets.DNS)
 	mergeList(&fm.Datasets.Kerberos, override.Datasets.Kerberos)
@@ -140,6 +159,8 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	mergeList(&fm.Datasets.HTTP, override.Datasets.HTTP)
 	mergeList(&fm.Datasets.DHCP, override.Datasets.DHCP)
 	mergeList(&fm.Datasets.LDAP, override.Datasets.LDAP)
+	mergeList(&fm.Datasets.X509, override.Datasets.X509)
+	mergeList(&fm.Datasets.SSH, override.Datasets.SSH)
 	return fm, nil
 }
 

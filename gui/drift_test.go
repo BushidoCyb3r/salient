@@ -147,3 +147,50 @@ func TestLoadDriftModelFindsProviderDisplacement(t *testing.T) {
 		t.Errorf("provider displacement finding missing: %v", m.Findings)
 	}
 }
+
+func TestLoadDriftModelAddsCompatibilityWarnings(t *testing.T) {
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	t0 := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	fromPath := filepath.Join(dataDir, "from.json.gz")
+	toPath := filepath.Join(dataDir, "to.json.gz")
+	writeSnapshot(t, fromPath, graph.Snapshot{
+		Meta: graph.SnapshotMeta{
+			CreatedAt:   t0,
+			ClusterName: "alpha",
+			Window:      "24h",
+			Scope:       []string{"10.0.0.0/24"},
+			Sensors:     []string{"sensor-a"},
+		},
+	})
+	writeSnapshot(t, toPath, graph.Snapshot{
+		Meta: graph.SnapshotMeta{
+			CreatedAt:   t0.Add(24 * time.Hour),
+			ClusterName: "bravo",
+			Window:      "168h",
+			Scope:       []string{"10.0.1.0/24"},
+			Sensors:     []string{"sensor-b"},
+		},
+	})
+	m, err := a.LoadDriftModel(fromPath, toPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		`comparison warning: cluster differs: "alpha" vs "bravo"`,
+		`comparison warning: window differs: "24h" vs "168h"`,
+		`comparison warning: scope differs: 10.0.0.0/24 vs 10.0.1.0/24`,
+		`comparison warning: sensors differ: sensor-a vs sensor-b`,
+	} {
+		found := false
+		for _, f := range m.Findings {
+			if f == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("missing compatibility warning %q in findings: %v", want, m.Findings)
+		}
+	}
+}

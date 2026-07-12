@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Drift compatibility warnings**: comparing snapshots from different
+  clusters, windows, scopes, or sensor sets now warns instead of silently
+  pretending they are equivalent. Surfaced in the HTML drift report and the
+  desktop console's drift findings.
 - **Service Authority view**: a snapshot-derived panel listing every
   sensitive-service provider (DNS, DHCP, auth, file, database), aggregated
   from confirmed edges only, with client count, strongest evidence tier, and

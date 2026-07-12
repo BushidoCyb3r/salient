@@ -202,6 +202,9 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 	}
 	d := snapshot.Compare(from, to, snapshot.DiffOptions{})
 	model := mapview.BuildDrift(to, d, a.mapOptions())
+	for _, warning := range d.CompatibilityWarnings {
+		model.Findings = append(model.Findings, "comparison warning: "+warning)
+	}
 	model.Findings = append(model.Findings, fmt.Sprintf(
 		"drift vs %s: %d appeared, %d vanished, %d rank changes, %d new edges to top terrain, %d vanished critical edges, %d new sensitive-service providers, %d provider displacements",
 		from.Meta.CreatedAt.UTC().Format("20060102T150405Z"),
