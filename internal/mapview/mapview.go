@@ -162,6 +162,52 @@ type Model struct {
 	// Excluded from JSON so map exports don't carry thousands of entries;
 	// interactive callers drill in via the GUI's AggregateHosts binding.
 	AggMembers map[string][]MapNode `json:"-"`
+
+	// resolve/visible/byIP are the grouping context this model was built
+	// with — unexported (never marshaled), kept only so EdgeMemberIPs can
+	// re-walk raw snapshot edges with the exact same bundling the map used.
+	resolve func(string) string
+	visible map[string]bool
+	byIP    map[string]*graph.Node
+}
+
+// EdgeMemberIPs re-walks the raw snapshot edges and returns the real IPs
+// behind whichever end of a bundled flow arrow (srcID/dstID, as shown on the
+// map) is an aggregate/group node — e.g. the specific external IPs behind a
+// "g:external:clients" destination. Empty when neither end is aggregated.
+func (m *Model) EdgeMemberIPs(snap graph.Snapshot, srcID, dstID, classLabel string) []string {
+	if m.resolve == nil {
+		return nil
+	}
+	endpoint := func(ip string) string {
+		if m.visible[ip] {
+			return ip
+		}
+		if _, ok := m.byIP[ip]; ok {
+			return m.resolve(ip) + ":clients"
+		}
+		return ""
+	}
+	seen := map[string]bool{}
+	var out []string
+	for _, e := range snap.Edges {
+		if endpoint(e.Src) != srcID || endpoint(e.Dst) != dstID {
+			continue
+		}
+		if config.ClassLabel(config.ClassForPort(e.Port)) != classLabel {
+			continue
+		}
+		if e.Src != srcID && !seen[e.Src] {
+			seen[e.Src] = true
+			out = append(out, e.Src)
+		}
+		if e.Dst != dstID && !seen[e.Dst] {
+			seen[e.Dst] = true
+			out = append(out, e.Dst)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // addAggMember records a host collapsed into the aggregate node aggID.
@@ -363,6 +409,7 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 	m.Groups = groups
 	m.findings(snap, opts)
 	sortModel(m)
+	m.resolve, m.visible, m.byIP = resolve, visible, byIP
 
 	// §8.5: an unfocused map beyond the hard cap is unreadable — rebuild it
 	// as a condensed briefing overview. CIDR --focus keeps full detail;

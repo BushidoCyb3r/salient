@@ -262,6 +262,20 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 	return hosts, nil
 }
 
+// FlowEndpointIPs returns the real IPs behind a bundled flow arrow's
+// aggregated endpoint (srcID or dstID, whichever is a group node like
+// "g:external:clients"), identified as shown on the map plus the arrow's
+// service class label. Empty when neither end is aggregated.
+func (a *App) FlowEndpointIPs(path, srcID, dstID, class string) ([]string, error) {
+	resolved := a.resolveSnapshotPath(path)
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return nil, err
+	}
+	model := mapview.Build(snap, a.mapOptions())
+	return model.EdgeMemberIPs(snap, srcID, dstID, class), nil
+}
+
 // LoadServiceAuthority derives the Service Authority view from a snapshot:
 // one row per sensitive-service provider, sorted by client count. Pure
 // aggregation over the stored snapshot — no live ES query.

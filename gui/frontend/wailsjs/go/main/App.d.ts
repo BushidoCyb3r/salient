@@ -31,6 +31,8 @@ export function ExportImage(arg1:string):Promise<string>;
 
 export function ExportMap(arg1:string,arg2:string):Promise<string>;
 
+export function FlowEndpointIPs(arg1:string,arg2:string,arg3:string,arg4:string):Promise<Array<string>>;
+
 export function Legend():Promise<Array<main.LegendItem>>;
 
 export function ListDevices():Promise<devices.Registry>;

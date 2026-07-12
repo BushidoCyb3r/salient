@@ -46,6 +46,10 @@ export function ExportMap(arg1, arg2) {
   return window['go']['main']['App']['ExportMap'](arg1, arg2);
 }
 
+export function FlowEndpointIPs(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['FlowEndpointIPs'](arg1, arg2, arg3, arg4);
+}
+
 export function Legend() {
   return window['go']['main']['App']['Legend']();
 }
