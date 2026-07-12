@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -715,7 +715,7 @@ function renderModel(model) {
   for (let i = 0; i < edges.length; i++) {
     const e = edges[i];
     els.push({
-      data: { id: 'e' + i, source: e.src, target: e.dst, color: e.color, width: e.width, label: e.label, drift: e.drift || '' },
+      data: { id: 'e' + i, source: e.src, target: e.dst, color: e.color, width: e.width, label: e.label, drift: e.drift || '', cls: e.class || '' },
       classes: 'host-edge' + (e.drift ? ' drift-' + e.drift : ''),
     });
   }
@@ -814,6 +814,17 @@ function renderModel(model) {
     lightEdgesFor(n);
     if (n.data('agg') > 0) { openHostList(n.data('id'), n.data('device') || n.data('label')); return; }
     showNodeEvidence(n);
+  });
+  // A flow arrow whose src or dst is a grouped/aggregate node (e.g.
+  // "g:external:clients") hides which real IP the traffic went to —
+  // clicking the arrow itself reveals it.
+  cy.on('tap', 'edge.host-edge', (e) => {
+    const ed = e.target;
+    const src = ed.source(), dst = ed.target();
+    const srcAgg = src.data('agg') > 0, dstAgg = dst.data('agg') > 0;
+    if (!srcAgg && !dstAgg) return;
+    openFlowIPs(ed.data('source'), ed.data('target'), ed.data('cls'),
+      (src.data('label') || ed.data('source')) + ' → ' + (dst.data('label') || ed.data('target')));
   });
   // Segment interaction: single-tap a VLAN box lights up that whole segment's
   // flows (what it talks to); double-tap drills into its full detail.
@@ -1025,6 +1036,41 @@ function openTerrainList(model) {
   $('hl-filter').focus();
 }
 
+async function openFlowIPs(srcID, dstID, cls, title) {
+  let ips;
+  try {
+    ips = await FlowEndpointIPs(currentSnapshotPath, srcID, dstID, cls);
+  } catch (err) {
+    logLine('could not load flow IPs: ' + err, 'err');
+    return;
+  }
+  if (!ips || !ips.length) { logLine('no underlying IPs found for that flow', 'warn'); return; }
+  hlHosts = ips;
+  hlMode = 'flowip';
+  aggListNode = '';
+  $('hl-title').textContent = title;
+  $('hl-filter').value = '';
+  $('hl-tag').style.display = 'none';
+  $('hostlist').style.display = 'flex';
+  renderHostList('');
+  $('hl-filter').focus();
+}
+
+function renderFlowIPRows(q) {
+  const list = $('hl-list');
+  list.innerHTML = '';
+  const match = q ? hlHosts.filter((ip) => ip.toLowerCase().includes(q)) : hlHosts;
+  hlShown = match.slice(0, HL_MAX_ROWS);
+  for (const ip of hlShown) {
+    const li = document.createElement('li');
+    li.textContent = ip;
+    list.appendChild(li);
+  }
+  $('hl-note').textContent = match.length > HL_MAX_ROWS
+    ? ('showing first ' + HL_MAX_ROWS + ' of ' + match.length)
+    : (match.length + ' IP' + (match.length === 1 ? '' : 's'));
+}
+
 function closeHostList() {
   $('hostlist').style.display = 'none';
   hlHosts = [];
@@ -1197,6 +1243,7 @@ function renderHostList(q) {
   if (hlMode === 'snapshots') { renderSnapshotRows(q); return; }
   if (hlMode === 'services') { renderServiceAuthorityRows(q); return; }
   if (hlMode === 'leads') { renderLeadRows(q); return; }
+  if (hlMode === 'flowip') { renderFlowIPRows(q); return; }
   const list = $('hl-list');
   list.innerHTML = '';
   const match = q

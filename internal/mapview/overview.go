@@ -232,6 +232,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 
 	visible := retained
 	m.bundleEdges(filterFocusEdges(snap.Edges, byIP), visible, byIP, resolve, opts.MinConns, edgeDrift)
+	m.resolve, m.visible, m.byIP = resolve, visible, byIP
 
 	// Edges are the dependency story — budget them before inferred gateways,
 	// and protect cross-group (inter-VLAN) bundles inside the trim so routed

@@ -308,6 +308,40 @@ func TestOverviewInternetHeavySnapshot(t *testing.T) {
 	}
 }
 
+// TestEdgeMemberIPsRecoversGroupedRealIPs checks the flow-arrow-click panel's
+// backend: clicking a bundled edge whose src is the "g:external:clients"
+// aggregate must recover the real public IPs the arrow bundles, not just the
+// group id.
+func TestEdgeMemberIPsRecoversGroupedRealIPs(t *testing.T) {
+	snap := largeInternetFixture()
+	mm := mapview.Build(snap, mapview.Options{})
+
+	var target *mapview.MapEdge
+	for i := range mm.Edges {
+		if mm.Edges[i].Src == "g:external:clients" && mm.Edges[i].Dst == "10.10.40.1" {
+			target = &mm.Edges[i]
+			break
+		}
+	}
+	if target == nil {
+		t.Fatal("expected a bundled edge from g:external:clients to 10.10.40.1")
+	}
+
+	ips := mm.EdgeMemberIPs(snap, target.Src, target.Dst, target.Class)
+	if len(ips) < 3000 {
+		t.Errorf("EdgeMemberIPs returned %d IPs, want >= 3000 public peers", len(ips))
+	}
+	for _, ip := range ips {
+		if ip == "g:external:clients" || ip == "10.10.40.1" {
+			t.Errorf("EdgeMemberIPs must return real member IPs, not endpoint ids or the group itself, got %q", ip)
+		}
+	}
+
+	if got := mm.EdgeMemberIPs(snap, "10.10.40.1", "g:external:clients", target.Class); len(got) != 0 {
+		t.Errorf("reversed src/dst should not match this bundle, got %d IPs", len(got))
+	}
+}
+
 func TestFocusPrivatePublicKeywords(t *testing.T) {
 	snap := largeInternetFixture()
 
