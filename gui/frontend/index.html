@@ -64,7 +64,19 @@
  .ctl input{width:auto}
  .lg{display:flex;align-items:center;gap:7px;margin:2px 0}
  .lg i{width:22px;height:4px;display:inline-block;border-radius:2px}
- #ev{white-space:pre-wrap;color:var(--mut)}
+ #ev{white-space:pre-wrap;color:var(--mut);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px}
+
+ /* sidebar tabs */
+ .tabbar{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);margin:-12px -12px 10px;padding:0 6px}
+ .tab{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--mut);padding:9px 10px}
+ .tab:hover{color:var(--fg);border-bottom-color:transparent}
+ .tab.active{color:var(--fg);border-bottom-color:var(--accent)}
+ .tabspacer{flex:1}
+ .gearbtn{background:transparent;border:0;color:var(--mut);padding:6px 8px;font-size:15px;line-height:1}
+ .gearbtn:hover{color:var(--accent)}
+ .tabpane{display:none}
+ .tabpane.active{display:block}
+ #aicfg{position:absolute;display:none;top:82px;right:12px;z-index:12;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;width:280px;box-shadow:0 8px 24px #000a;max-height:calc(100vh - 140px);overflow:auto}
  .ai-grid{display:grid;gap:7px}
  .ai-grid label{margin:0}
  .ai-grid .check{display:flex;align-items:flex-start;gap:7px;color:var(--fg);font-size:11px;text-transform:none;letter-spacing:0}
@@ -164,6 +176,32 @@
     <button class="primary" id="scango" style="width:100%">Start scan</button>
   </div>
 
+  <div id="aicfg">
+    <div class="ai-grid">
+      <label>Platform / API shape</label>
+      <select id="ai-provider">
+        <option value="openai">OpenAI-compatible / Llama / Ask Sage / GenAI</option>
+        <option value="anthropic">Claude / Anthropic Messages / Ask Sage</option>
+        <option value="gemini">Gemini GenerateContent / Ask Sage</option>
+      </select>
+      <label>Endpoint</label>
+      <input id="ai-endpoint" value="https://api.openai.com/v1/chat/completions" placeholder="cloud, local, or approved tenant endpoint" spellcheck="false">
+      <label>Model</label>
+      <input id="ai-model" list="ai-models" value="gpt-4.1-mini" placeholder="provider or local model name" spellcheck="false">
+      <datalist id="ai-models">
+        <option value="gpt-4.1-mini"></option>
+        <option value="claude-sonnet-4-5"></option>
+        <option value="gemini-2.5-flash"></option>
+        <option value="llama3.2"></option>
+      </datalist>
+      <label>API key</label>
+      <input id="ai-key" type="password" autocomplete="off" placeholder="optional for local endpoints" spellcheck="false">
+      <label class="check"><input type="checkbox" id="ai-egress"> Allow summarized network data to leave this host</label>
+      <button id="ai-tagbtn" disabled>Suggest Tags</button>
+      <div id="ai-status">load a snapshot to enable tagging</div>
+    </div>
+  </div>
+
   <div id="wrap">
     <div id="cy"></div>
     <div id="hostlist">
@@ -176,101 +214,82 @@
       </div>
     </div>
     <aside>
-      <h2>Key Terrain</h2>
-      <button id="terrainbtn" disabled>Open key terrain</button>
-      <button id="svcauthbtn" disabled>Service Authority</button>
-      <button id="huntbtn" disabled>Hunt Leads</button>
-      <h2>Snapshots</h2>
-      <button id="snapshotbtn" disabled>No snapshots</button>
-      <h2>Drift</h2>
-      <select id="drift-base" disabled></select>
-      <div style="display:flex;gap:6px;margin-top:6px">
-        <button id="drift-go" disabled style="flex:1">Compare</button>
-        <button id="drift-clear" style="flex:1">Clear</button>
+      <div class="tabbar">
+        <button class="tab" data-tab="investigate">Investigate</button>
+        <button class="tab" data-tab="view">View</button>
+        <button class="tab" data-tab="data">Data</button>
+        <span class="tabspacer"></span>
+        <button id="gearbtn" class="gearbtn" title="Settings">⚙</button>
       </div>
-      <h2>Reconcile</h2>
-      <div style="display:flex;gap:6px">
-        <button id="rec-load" style="flex:1">Load asset CSV…</button>
-        <button id="rec-manual" style="flex:1" title="Type the asset list into an in-app grid — columns are pre-loaded">Enter manually…</button>
+
+      <div class="tabpane" data-pane="investigate">
+        <h2>Search</h2>
+        <input id="search" placeholder="IP, hostname, role...">
+        <h2>Key Terrain</h2>
+        <button id="terrainbtn" disabled>Open key terrain</button>
+        <button id="svcauthbtn" disabled>Service Authority</button>
+        <button id="huntbtn" disabled>Hunt Leads</button>
+        <h2>Evidence</h2>
+        <div id="ev">click a node</div>
+        <h2>Devices</h2>
+        <div id="devhints"></div>
+        <ul id="devlist"></ul>
+        <div id="devempty" class="hint">right-click a map node to assign it to a device</div>
       </div>
-      <div id="rec-chip" style="display:none;margin-top:6px;align-items:center;gap:6px">
-        <span id="rec-label" class="hint" style="flex:1"></span><button id="rec-clear">×</button>
-      </div>
-      <h2>Layout</h2>
-      <button id="b-grid" class="on">grid</button><button id="b-fcose">organic</button><button id="b-dagre" title="Layered network map: external at top, then the boundary/router/switch devices you declare, then VLAN boxes banded by traffic — flows route up through the devices that own each range">topology</button>
-      <button id="backbtn" style="display:none;margin-top:6px;width:100%" title="Return to the segment-flow overview">← overview</button>
-      <h2>Layers</h2>
-      <div class="ctl">
-        <label><input type="checkbox" id="l-heat"> criticality heat</label>
-        <label><input type="checkbox" id="l-lbl" checked> edge labels</label>
-        <label title="Overview hides the full mesh and lights up a host's connections when you click it. Check this to draw every flow at once (dense)."><input type="checkbox" id="l-flows"> show all flows</label>
-        <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
-        <label title="Escape hatch: promote every private (RFC1918) host to its own node. Dense on large grids — the default segment view is usually clearer; drill into a VLAN box instead."><input type="checkbox" id="l-allpriv"> show every private host (dense)</label>
-      </div>
-      <h2 title="Override the auto-/24 grouping with your real subnets. Declare a CIDR (e.g. 10.10.40.0/25) and hosts fall into the most-specific one you defined; anything undeclared still groups by /24.">Segments</h2>
-      <div class="ctl">
-        <div style="display:flex;gap:6px">
-          <input id="seg-cidr" placeholder="CIDR e.g. 10.10.40.0/25" style="flex:2;min-width:0">
-          <input id="seg-name" placeholder="name" style="flex:1;min-width:0">
-          <button id="seg-add">add</button>
+
+      <div class="tabpane" data-pane="view">
+        <h2>Layout</h2>
+        <button id="b-grid" class="on">grid</button><button id="b-fcose">organic</button><button id="b-dagre" title="Layered network map: external at top, then the boundary/router/switch devices you declare, then VLAN boxes banded by traffic — flows route up through the devices that own each range">topology</button>
+        <button id="backbtn" style="display:none;margin-top:6px;width:100%" title="Return to the segment-flow overview">← overview</button>
+        <h2>Layers</h2>
+        <div class="ctl">
+          <label><input type="checkbox" id="l-heat"> criticality heat</label>
+          <label><input type="checkbox" id="l-lbl" checked> edge labels</label>
+          <label title="Overview hides the full mesh and lights up a host's connections when you click it. Check this to draw every flow at once (dense)."><input type="checkbox" id="l-flows"> show all flows</label>
+          <label><input type="checkbox" id="l-drift" checked> drift highlights</label>
+          <label title="Escape hatch: promote every private (RFC1918) host to its own node. Dense on large grids — the default segment view is usually clearer; drill into a VLAN box instead."><input type="checkbox" id="l-allpriv"> show every private host (dense)</label>
         </div>
-        <ul id="seglist"></ul>
-        <div id="segempty" class="hint">no overrides — grouping by /24</div>
+        <h2 title="Override the auto-/24 grouping with your real subnets. Declare a CIDR (e.g. 10.10.40.0/25) and hosts fall into the most-specific one you defined; anything undeclared still groups by /24.">Segments</h2>
+        <div class="ctl">
+          <div style="display:flex;gap:6px">
+            <input id="seg-cidr" placeholder="CIDR e.g. 10.10.40.0/25" style="flex:2;min-width:0">
+            <input id="seg-name" placeholder="name" style="flex:1;min-width:0">
+            <button id="seg-add">add</button>
+          </div>
+          <ul id="seglist"></ul>
+          <div id="segempty" class="hint">no overrides — grouping by /24</div>
+        </div>
+        <h2>Legend</h2>
+        <div id="legend"></div>
       </div>
-      <h2>Search</h2>
-      <input id="search" placeholder="IP, hostname, role...">
-      <h2>Devices</h2>
-      <div id="devhints"></div>
-      <ul id="devlist"></ul>
-      <div id="devempty" class="hint">right-click a map node to assign it to a device</div>
-      <h2>Export</h2>
-      <div style="display:flex;gap:6px">
-        <select id="exportfmt" style="flex:1">
-          <option value="png">PNG (current view)</option>
-          <option value="html">HTML</option>
-          <option value="graphml">GraphML</option>
-        </select>
-        <button id="exportbtn" disabled>Export</button>
+
+      <div class="tabpane" data-pane="data">
+        <h2>Snapshots</h2>
+        <button id="snapshotbtn" disabled>No snapshots</button>
+        <h2>Drift</h2>
+        <select id="drift-base" disabled></select>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button id="drift-go" disabled style="flex:1">Compare</button>
+          <button id="drift-clear" style="flex:1">Clear</button>
+        </div>
+        <h2>Reconcile</h2>
+        <div style="display:flex;gap:6px">
+          <button id="rec-load" style="flex:1">Load asset CSV…</button>
+          <button id="rec-manual" style="flex:1" title="Type the asset list into an in-app grid — columns are pre-loaded">Enter manually…</button>
+        </div>
+        <div id="rec-chip" style="display:none;margin-top:6px;align-items:center;gap:6px">
+          <span id="rec-label" class="hint" style="flex:1"></span><button id="rec-clear">×</button>
+        </div>
+        <h2>Export</h2>
+        <div style="display:flex;gap:6px">
+          <select id="exportfmt" style="flex:1">
+            <option value="png">PNG (current view)</option>
+            <option value="html">HTML</option>
+            <option value="graphml">GraphML</option>
+          </select>
+          <button id="exportbtn" disabled>Export</button>
+        </div>
       </div>
-      <h2>AI Device Tagging</h2>
-      <div class="ai-grid">
-        <label>Platform / API shape</label>
-        <select id="ai-provider">
-          <option value="openai">OpenAI-compatible / Llama / Ask Sage / GenAI</option>
-          <option value="anthropic">Claude / Anthropic Messages / Ask Sage</option>
-          <option value="gemini">Gemini GenerateContent / Ask Sage</option>
-        </select>
-        <label>Endpoint</label>
-        <input id="ai-endpoint" value="https://api.openai.com/v1/chat/completions" placeholder="cloud, local, or approved tenant endpoint" spellcheck="false">
-        <label>Model</label>
-        <input id="ai-model" list="ai-models" value="gpt-4.1-mini" placeholder="provider or local model name" spellcheck="false">
-        <datalist id="role-list">
-          <option value="DomainController"></option>
-          <option value="DNSServer"></option>
-          <option value="FileServer"></option>
-          <option value="Database"></option>
-          <option value="WebServer"></option>
-          <option value="JumpBox"></option>
-          <option value="MailServer"></option>
-          <option value="Printer"></option>
-          <option value="Camera"></option>
-          <option value="Workstation"></option>
-        </datalist>
-        <datalist id="ai-models">
-          <option value="gpt-4.1-mini"></option>
-          <option value="claude-sonnet-4-5"></option>
-          <option value="gemini-2.5-flash"></option>
-          <option value="llama3.2"></option>
-        </datalist>
-        <label>API key</label>
-        <input id="ai-key" type="password" autocomplete="off" placeholder="optional for local endpoints" spellcheck="false">
-        <label class="check"><input type="checkbox" id="ai-egress"> Allow summarized network data to leave this host</label>
-        <button id="ai-tagbtn" disabled>Suggest Tags</button>
-        <div id="ai-status">load a snapshot to enable tagging</div>
-      </div>
-      <h2>Legend</h2>
-      <div id="legend"></div>
-      <h2>Evidence</h2><div id="ev">click a node</div>
     </aside>
   </div>
 
@@ -282,6 +301,20 @@
 </div>
 
 <div id="ctxmenu"></div>
+
+<!-- role autocomplete for the dynamically created "Set role…" ctx-menu input -->
+<datalist id="role-list">
+  <option value="DomainController"></option>
+  <option value="DNSServer"></option>
+  <option value="FileServer"></option>
+  <option value="Database"></option>
+  <option value="WebServer"></option>
+  <option value="JumpBox"></option>
+  <option value="MailServer"></option>
+  <option value="Printer"></option>
+  <option value="Camera"></option>
+  <option value="Workstation"></option>
+</datalist>
 
 <!-- manual asset entry grid -->
 <div id="recgrid">

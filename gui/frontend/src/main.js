@@ -253,6 +253,22 @@ $('scanbtn').onclick = () => {
   cfg.style.display = cfg.style.display === 'block' ? 'none' : 'block';
 };
 
+// sidebar tabs: show/hide .tabpane, persist active tab in localStorage
+function activateTab(name) {
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tabpane').forEach((p) => p.classList.toggle('active', p.dataset.pane === name));
+  try { localStorage.setItem('salient.paneltab', name); } catch (e) { /* private mode */ }
+}
+document.querySelectorAll('.tab').forEach((t) => { t.onclick = () => activateTab(t.dataset.tab); });
+let savedTab = 'investigate';
+try { savedTab = localStorage.getItem('salient.paneltab') || 'investigate'; } catch (e) { /* private mode */ }
+activateTab(savedTab);
+
+$('gearbtn').onclick = () => {
+  const p = $('aicfg');
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+};
+
 $('scango').onclick = async () => {
   if (scanning) return;
   $('scancfg').style.display = 'none';
@@ -948,6 +964,7 @@ $('backbtn').onclick = () => {
 function showNodeEvidence(n) {
   const ev = $('ev');
   ev.textContent = '';
+  activateTab('investigate');
   const ip = n.data('id');
   const aiDismissed = registry.dismissed_hints.includes('ai:' + ip);
   const override = n.data('roleOverride');
@@ -1127,6 +1144,7 @@ function renderServiceAuthorityRows(q) {
 function showProviderDossier(r) {
   const ev = $('ev');
   ev.textContent = '';
+  activateTab('investigate');
   const text =
     r.ip + (r.hostname ? ' (' + r.hostname + ')' : '') +
     '\nservice: ' + r.service + ' (port ' + r.port + ')' +
@@ -1197,6 +1215,7 @@ function renderLeadRows(q) {
 function showLeadDossier(l) {
   const ev = $('ev');
   ev.textContent = '';
+  activateTab('investigate');
   const text =
     l.ip + (l.hostname ? ' (' + l.hostname + ')' : '') +
     '\nreason: ' + (LEAD_REASON_LABELS[l.reason] || l.reason) +
@@ -1300,6 +1319,7 @@ function renderHostList(q) {
         zoomToTerrain(h);
         return;
       }
+      activateTab('investigate');
       $('ev').textContent =
         h.label +
         (h.role_override ? '\nrole: ✎ ' + h.role_override + ' (operator)\ninferred: ' + h.role : '\nrole: ' + h.role) +
@@ -1532,6 +1552,7 @@ function showDeviceCard(name) {
   if (!d) return;
   const ev = $('ev');
   ev.textContent = '';
+  activateTab('investigate');
   const card = document.createElement('div');
   card.className = 'devcard';
   const head = document.createElement('div');
@@ -1630,6 +1651,8 @@ document.addEventListener('click', (e) => {
   if (!ctxmenu.contains(e.target)) ctxmenu.style.display = 'none';
   const cfg = $('scancfg');
   if (cfg.style.display === 'block' && !cfg.contains(e.target) && e.target !== $('scanbtn')) cfg.style.display = 'none';
+  const ai = $('aicfg');
+  if (ai.style.display === 'block' && !ai.contains(e.target) && e.target !== $('gearbtn')) ai.style.display = 'none';
 });
 
 function ctxAddItem(label, fn) {
