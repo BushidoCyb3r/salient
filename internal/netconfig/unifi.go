@@ -40,28 +40,44 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 	}
 	sort.Strings(keys)
 
+	var items []map[string]any
 	for _, k := range keys {
-		for _, item := range unifiItems(files[k]) {
-			switch {
-			case has(item, "purpose") && has(item, "ip_subnet"):
-				recognized++
-				addNetwork(&dev, item)
-			case has(item, "ruleset") && has(item, "action"):
-				recognized++
-				switch added, cav := addRules(&dev, item, rulesetIdx); {
-				case added == statusBadAction:
-					unknownAction++
-				case added == statusDisabled:
-					disabled++
-				default:
-					caveated += cav
-				}
-			case has(item, "mac") && has(item, "type"):
-				recognized++
-				addDevice(&dev, item)
-			default:
-				unknownItems++
+		items = append(items, unifiItems(files[k])...)
+	}
+
+	// Pass 1: networks first, so rules in any file (or ordered before their
+	// networkconf) can resolve src/dst_networkconf_id references.
+	netByID := map[string]string{}
+	for _, item := range items {
+		if has(item, "purpose") && has(item, "ip_subnet") {
+			recognized++
+			addNetwork(&dev, item)
+			if id := ustr(item, "_id"); id != "" {
+				netByID[id] = ustr(item, "ip_subnet")
 			}
+		}
+	}
+
+	// Pass 2: rules and devices.
+	for _, item := range items {
+		switch {
+		case has(item, "purpose") && has(item, "ip_subnet"):
+			// handled in pass 1
+		case has(item, "ruleset") && has(item, "action"):
+			recognized++
+			switch added, cav := addRules(&dev, item, rulesetIdx, netByID); {
+			case added == statusBadAction:
+				unknownAction++
+			case added == statusDisabled:
+				disabled++
+			default:
+				caveated += cav
+			}
+		case has(item, "mac") && has(item, "type"):
+			recognized++
+			addDevice(&dev, item)
+		default:
+			unknownItems++
 		}
 	}
 
@@ -138,7 +154,7 @@ const (
 // expands to two). It returns (added, caveated): added is the number of Rule
 // entries appended, or a status sentinel; caveated is how many of them carry
 // a Caveat.
-func addRules(dev *DeclaredDevice, m map[string]any, rulesetIdx func(string) int) (int, int) {
+func addRules(dev *DeclaredDevice, m map[string]any, rulesetIdx func(string) int, netByID map[string]string) (int, int) {
 	var act Action
 	switch strings.ToLower(ustr(m, "action")) {
 	case "accept":
@@ -152,8 +168,24 @@ func addRules(dev *DeclaredDevice, m map[string]any, rulesetIdx func(string) int
 		return statusDisabled, 0
 	}
 
-	src := unifiAddr(ustr(m, "src_address"))
-	dst := unifiAddr(ustr(m, "dst_address"))
+	// Endpoint: explicit address wins; otherwise a *_networkconf_id reference
+	// resolves to the network's subnet. An unresolvable id must NOT widen the
+	// rule to "any" (that would fabricate policy hits) — the caller caveats it
+	// so Rule.Matches rejects it.
+	resolve := func(addrKey, idKey string) (cidr string, ok bool) {
+		if a := strings.TrimSpace(ustr(m, addrKey)); a != "" {
+			return unifiAddr(a), true
+		}
+		if id := ustr(m, idKey); id != "" {
+			if sub, found := netByID[id]; found && sub != "" {
+				return sub, true
+			}
+			return anyCIDR, false
+		}
+		return anyCIDR, true
+	}
+	src, srcOK := resolve("src_address", "src_networkconf_id")
+	dst, dstOK := resolve("dst_address", "dst_networkconf_id")
 	rsName := ustr(m, "ruleset")
 	line, _ := unum(m, "rule_index")
 
@@ -170,6 +202,9 @@ func addRules(dev *DeclaredDevice, m map[string]any, rulesetIdx func(string) int
 		if base.Caveat == "" {
 			base.Caveat = s
 		}
+	}
+	if !srcOK || !dstOK {
+		setCaveat("network-scoped rule unresolved")
 	}
 
 	var protos []string

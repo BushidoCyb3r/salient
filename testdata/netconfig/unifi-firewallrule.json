@@ -81,6 +81,44 @@
       "protocol": "tcp",
       "src_port": "1024",
       "dst_address": "10.0.1.5"
+    },
+    {
+      "_id": "r8",
+      "ruleset": "LAN_LOCAL",
+      "rule_index": 4000,
+      "name": "guest net to lan host",
+      "action": "accept",
+      "enabled": true,
+      "protocol": "all",
+      "src_address": "",
+      "src_networkconf_id": "60a2",
+      "src_networkconf_type": "NETv4",
+      "dst_address": "10.0.1.1"
+    },
+    {
+      "_id": "r9",
+      "ruleset": "LAN_LOCAL",
+      "rule_index": 4001,
+      "name": "unknown net ref",
+      "action": "drop",
+      "enabled": true,
+      "protocol": "all",
+      "src_address": "",
+      "src_networkconf_id": "does-not-exist",
+      "dst_address": ""
+    },
+    {
+      "_id": "r10",
+      "ruleset": "LAN_LOCAL",
+      "rule_index": 4002,
+      "name": "address beats id",
+      "action": "accept",
+      "enabled": true,
+      "protocol": "all",
+      "src_address": "10.9.9.9",
+      "src_networkconf_id": "60a3",
+      "src_networkconf_type": "ADDRv4",
+      "dst_address": "10.0.1.1"
     }
   ]
 }

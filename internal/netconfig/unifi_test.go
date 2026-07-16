@@ -125,6 +125,26 @@ func TestParseUniFi_FirewallGroupCaveat(t *testing.T) {
 	}
 }
 
+func TestParseUniFi_NetworkScopedRules(t *testing.T) {
+	dev := loadUniFi(t)
+	rs := ruleset(t, dev, "LAN_LOCAL")
+	if len(rs.Rules) != 3 {
+		t.Fatalf("LAN_LOCAL rule count = %d, want 3: %+v", len(rs.Rules), rs.Rules)
+	}
+	// r8: src resolved from networkconf id 60a2 (GUEST) -> its subnet.
+	if r := rs.Rules[0]; r.Src != "10.0.40.1/24" || r.Caveat != "" {
+		t.Errorf("r8 network-scoped src = %+v", r)
+	}
+	// r9: unknown id -> caveated, never widened to any-that-matches.
+	if r := rs.Rules[1]; r.Caveat != "network-scoped rule unresolved" {
+		t.Errorf("r9 caveat = %q", r.Caveat)
+	}
+	// r10: explicit address present -> address wins over the id.
+	if r := rs.Rules[2]; r.Src != "10.9.9.9/32" || r.Caveat != "" {
+		t.Errorf("r10 address-precedence src = %+v", r)
+	}
+}
+
 func TestParseUniFi_DisabledWarning(t *testing.T) {
 	dev := loadUniFi(t)
 	all := strings.Join(dev.Warnings, "\n")
