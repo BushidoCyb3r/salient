@@ -12,11 +12,11 @@ func fixture() (graph.Snapshot, []DeclaredDevice) {
 	snap := graph.Snapshot{
 		Meta: graph.SnapshotMeta{ZeroCovCIDRs: []string{"10.0.9.0/24"}},
 		Nodes: []graph.Node{
-			{IP: "10.0.1.1", Subnet: "10.0.1.0/24"},                            // cisco gw
+			{IP: "10.0.1.1", Subnet: "10.0.1.0/24"},                            // cisco gw (IP observed)
 			{IP: "10.0.1.10", Subnet: "10.0.1.0/24", MAC: "aa:bb:cc:dd:ee:ff"}, // unifi ap (by MAC)
 			{IP: "10.0.1.20", Subnet: "10.0.1.0/24"},                           // host
-			{IP: "10.0.2.1", Subnet: "10.0.2.0/24"},                            // cisco gw
-			{IP: "10.0.2.30", Subnet: "10.0.2.0/24"},                           // host
+			{IP: "10.0.2.30", Subnet: "10.0.2.0/24"},                           // host; gw 10.0.2.1 NOT observed
+			{IP: "10.0.2.31", Subnet: "10.0.2.0/24"},                           // host
 			{IP: "10.0.3.5", Subnet: "10.0.3.0/24"},                            // undeclared subnet
 		},
 	}
@@ -45,7 +45,7 @@ func TestDiffInventory(t *testing.T) {
 	want := InventoryResult{
 		Matches: []DeviceMatch{
 			{Device: "ap-01", Source: "unifi.json", IPs: []string{"10.0.1.10"}, ByMAC: true},
-			{Device: "core-rtr", Source: "core.cfg", IPs: []string{"10.0.1.1", "10.0.2.1"}, ByMAC: false},
+			{Device: "core-rtr", Source: "core.cfg", IPs: []string{"10.0.1.1"}, ByMAC: false}, // 10.0.2.1 gw IP not observed
 		},
 		DeclaredGateways: map[string]string{"10.0.1.1": "core-rtr", "10.0.2.1": "core-rtr"},
 		SilentSubnets:    []SilentSubnet{{CIDR: "10.0.9.0/24", Device: "core-rtr", InBlindSpot: true}},

@@ -89,10 +89,13 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 					continue
 				}
 				own, masked := p.Addr(), p.Masked()
-				if _, ok := byIP[own]; !ok {
-					continue
+				if _, ok := byIP[own]; ok {
+					add(own.String(), false) // DeviceMatch needs the IP observed
 				}
-				add(own.String(), false)
+				// Gateway entry does NOT require the router's own IP to be
+				// observed: real routers often terminate no tracked flows, but
+				// mapview must still stamp declared identity onto the inferred
+				// gateway. Enough that the subnet holds an observed node.
 				for _, a := range nodeAddrs {
 					if a != own && masked.Contains(a) {
 						res.DeclaredGateways[own.String()] = d.Hostname
