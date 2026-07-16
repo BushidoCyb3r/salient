@@ -83,6 +83,7 @@ type Interface struct {
 	VLAN     int       `json:"vlan,omitempty"`
 	Shutdown bool      `json:"shutdown,omitempty"`
 	Bindings []Binding `json:"bindings,omitempty"`
+	MAC      string    `json:"mac,omitempty"` // UniFi device inventory match
 }
 
 type VLAN struct {

@@ -1,0 +1,86 @@
+{
+  "meta": { "rc": "ok" },
+  "data": [
+    {
+      "_id": "r1",
+      "ruleset": "LAN_IN",
+      "rule_index": 2000,
+      "name": "allow web",
+      "action": "accept",
+      "enabled": true,
+      "protocol": "tcp",
+      "src_address": "",
+      "dst_address": "10.0.1.10",
+      "dst_port": "443",
+      "src_firewallgroup_ids": [],
+      "dst_firewallgroup_ids": []
+    },
+    {
+      "_id": "r2",
+      "ruleset": "LAN_IN",
+      "rule_index": 2001,
+      "name": "drop iot to lan",
+      "action": "drop",
+      "enabled": true,
+      "protocol": "all",
+      "src_address": "10.0.50.0/24",
+      "dst_address": "10.0.1.0/24"
+    },
+    {
+      "_id": "r3",
+      "ruleset": "LAN_IN",
+      "rule_index": 2002,
+      "name": "allow dns tcpudp",
+      "action": "accept",
+      "enabled": true,
+      "protocol": "tcp_udp",
+      "src_address": "",
+      "dst_address": "10.0.1.1",
+      "dst_port": "53"
+    },
+    {
+      "_id": "r4",
+      "ruleset": "WAN_IN",
+      "rule_index": 3000,
+      "name": "block bad group",
+      "action": "drop",
+      "enabled": true,
+      "protocol": "all",
+      "src_address": "",
+      "dst_address": "",
+      "src_firewallgroup_ids": ["grp-abc"]
+    },
+    {
+      "_id": "r5",
+      "ruleset": "LAN_IN",
+      "rule_index": 2003,
+      "name": "disabled ssh",
+      "action": "accept",
+      "enabled": false,
+      "protocol": "tcp",
+      "dst_port": "22"
+    },
+    {
+      "_id": "r6",
+      "ruleset": "LAN_IN",
+      "rule_index": 2004,
+      "name": "udp range",
+      "action": "accept",
+      "enabled": true,
+      "protocol": "udp",
+      "dst_address": "10.0.1.20",
+      "dst_port": "8000-8080"
+    },
+    {
+      "_id": "r7",
+      "ruleset": "LAN_IN",
+      "rule_index": 2005,
+      "name": "src port rule",
+      "action": "accept",
+      "enabled": true,
+      "protocol": "tcp",
+      "src_port": "1024",
+      "dst_address": "10.0.1.5"
+    }
+  ]
+}

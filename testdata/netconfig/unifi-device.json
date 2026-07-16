@@ -1,0 +1,27 @@
+{
+  "meta": { "rc": "ok" },
+  "data": [
+    {
+      "_id": "d1",
+      "mac": "aa:bb:cc:dd:ee:01",
+      "type": "ugw",
+      "name": "USG-Gateway",
+      "ip": "10.0.1.1",
+      "x_authkey": "secret-authkey"
+    },
+    {
+      "_id": "d2",
+      "mac": "aa:bb:cc:dd:ee:02",
+      "type": "usw",
+      "name": "Switch-24",
+      "ip": "10.0.1.2"
+    },
+    {
+      "_id": "d3",
+      "mac": "aa:bb:cc:dd:ee:03",
+      "type": "uap",
+      "name": "AP-Office",
+      "ip": "10.0.1.3"
+    }
+  ]
+}

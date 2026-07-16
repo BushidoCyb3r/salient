@@ -1,0 +1,38 @@
+{
+  "meta": { "rc": "ok" },
+  "data": [
+    {
+      "_id": "60a1",
+      "name": "LAN",
+      "purpose": "corporate",
+      "ip_subnet": "10.0.1.1/24",
+      "vlan_enabled": false,
+      "dhcpd_enabled": true,
+      "dhcpd_start": "10.0.1.100",
+      "dhcpd_stop": "10.0.1.254",
+      "dhcpd_gateway": "10.0.1.1",
+      "dhcpd_dns_1": "10.0.1.1",
+      "dhcpd_dns_2": "1.1.1.1",
+      "x_passphrase": "should-not-appear"
+    },
+    {
+      "_id": "60a2",
+      "name": "GUEST",
+      "purpose": "guest",
+      "ip_subnet": "10.0.40.1/24",
+      "vlan": 40,
+      "vlan_enabled": true,
+      "dhcpd_enabled": true,
+      "dhcpd_dns_1": "10.0.40.1"
+    },
+    {
+      "_id": "60a3",
+      "name": "IOT",
+      "purpose": "corporate",
+      "ip_subnet": "10.0.50.1/24",
+      "vlan": 50,
+      "vlan_enabled": true,
+      "dhcpd_enabled": false
+    }
+  ]
+}
