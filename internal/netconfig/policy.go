@@ -1,7 +1,6 @@
 package netconfig
 
 import (
-	"fmt"
 	"net/netip"
 	"sort"
 
@@ -40,12 +39,17 @@ var defaultDeny = Rule{Action: Deny, Proto: "ip", Src: anyCIDR, Dst: anyCIDR, Ra
 // rulesets. Pure and deterministic: every output slice is sorted, so two runs
 // on equal input are reflect.DeepEqual.
 //
-// IOS: a ruleset applies where it is bound. Direction In → the edge's src is
-// inside the bound interface's prefix; Out → the edge's dst is. UniFi has no
-// bindings, so its rulesets apply by name: LAN_IN scopes to any declared VLAN
-// subnet, WAN_IN to sources outside every declared subnet. GUEST_IN cannot be
-// scoped — the parser records no per-VLAN network purpose, so guest and
-// corporate subnets are indistinguishable — and is skipped with a warning.
+// All scopes are traversal-only: a ruleset judges a flow only when its src and
+// dst sit on opposite sides of the enforcement point (same-subnet flows switch
+// locally and never reach it).
+//
+// IOS: a ruleset applies where it is bound. Direction In → src inside the bound
+// interface's prefix and dst outside it; Out → dst inside and src outside.
+//
+// UniFi has no bindings, so its rulesets apply by name: LAN_IN scopes to
+// corporate (and unknown-purpose) VLAN subnets, GUEST_IN to guest-purpose
+// subnets — src in a scoped subnet, dst in a different subnet. WAN_IN scopes to
+// an external src reaching an internal dst.
 func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 	var res PolicyResult
 
@@ -91,29 +95,45 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 		var apps []application
 
 		if dev.Vendor == "unifi" {
-			var vlanNets, declared []netip.Prefix
+			// Scope by network purpose. Guest is the only purpose the model
+			// treats specially; every other value (including empty/unknown)
+			// counts as corporate — safer to evaluate a subnet than to ignore
+			// its policy. ponytail: split out wan/vpn purposes if they ever
+			// need distinct handling.
+			var corpNets, guestNets []netip.Prefix
 			for _, v := range dev.VLANs {
-				if p, err := netip.ParsePrefix(v.Subnet); err == nil {
-					vlanNets = append(vlanNets, p.Masked())
+				p, err := netip.ParsePrefix(v.Subnet)
+				if err != nil {
+					continue
+				}
+				p = p.Masked()
+				if v.Purpose == "guest" {
+					guestNets = append(guestNets, p)
+				} else {
+					corpNets = append(corpNets, p)
 				}
 			}
-			declared = dev.OwnedPrefixes()
+			declared := dev.OwnedPrefixes()
 			for i := range dev.Rulesets {
 				rs := &dev.Rulesets[i]
 				switch rs.Name {
 				case "LAN_IN":
-					nets := vlanNets
-					apps = append(apps, application{rs.Name, rs, func(src, _ netip.Addr) bool {
-						return containsAny(nets, src)
-					}})
-				case "WAN_IN":
-					nets := declared
-					apps = append(apps, application{rs.Name, rs, func(src, _ netip.Addr) bool {
-						return !containsAny(nets, src)
+					nets := corpNets
+					apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
+						return traverses(nets, src, dst)
 					}})
 				case "GUEST_IN":
-					res.Warnings = append(res.Warnings, fmt.Sprintf(
-						"device %s: GUEST_IN ruleset skipped — VLAN network purpose is not recorded, so guest subnets cannot be distinguished from corporate", dev.Hostname))
+					nets := guestNets
+					apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
+						return traverses(nets, src, dst)
+					}})
+				case "WAN_IN":
+					// External src into an internal dst traverses the gateway;
+					// external→external never reaches it.
+					nets := declared
+					apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
+						return !containsAny(nets, src) && containsAny(nets, dst)
+					}})
 				}
 				// Other ruleset names (WAN_OUT, *_LOCAL, ...) are not
 				// observed-ingress policy; skip. ponytail: add named scopes if
@@ -136,13 +156,17 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 						continue
 					}
 					nets := prefixes
+					// Traversal only: a flow the ACL never sees can't be denied.
+					// In → src enters the segment from outside it; Out → dst is
+					// in the segment and src is not. Same-subnet flows switch
+					// locally and never reach the router.
 					if b.Direction == In {
-						apps = append(apps, application{rs.Name, rs, func(src, _ netip.Addr) bool {
-							return containsAny(nets, src)
+						apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
+							return containsAny(nets, src) && !containsAny(nets, dst)
 						}})
 					} else {
-						apps = append(apps, application{rs.Name, rs, func(_, dst netip.Addr) bool {
-							return containsAny(nets, dst)
+						apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
+							return containsAny(nets, dst) && !containsAny(nets, src)
 						}})
 					}
 				}
@@ -244,6 +268,19 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 		return a.Rule.Line < b.Rule.Line
 	})
 	return res
+}
+
+// traverses reports whether a flow crosses the gateway for one of nets: src is
+// inside a scoped subnet and dst is not in that same subnet. Same-subnet flows
+// switch locally and never reach the enforcement point; cross-subnet flows
+// (including between two scoped subnets) do.
+func traverses(nets []netip.Prefix, src, dst netip.Addr) bool {
+	for _, p := range nets {
+		if p.Contains(src) {
+			return !p.Contains(dst)
+		}
+	}
+	return false
 }
 
 func containsAny(nets []netip.Prefix, a netip.Addr) bool {

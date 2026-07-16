@@ -87,9 +87,10 @@ type Interface struct {
 }
 
 type VLAN struct {
-	ID     int    `json:"id"`
-	Name   string `json:"name,omitempty"`
-	Subnet string `json:"subnet,omitempty"` // CIDR, may be ""
+	ID      int    `json:"id"`
+	Name    string `json:"name,omitempty"`
+	Subnet  string `json:"subnet,omitempty"`  // CIDR, may be ""
+	Purpose string `json:"purpose,omitempty"` // UniFi network purpose: "corporate"|"guest"|...
 }
 
 type Pool struct {

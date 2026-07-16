@@ -107,20 +107,66 @@ func TestDiffPolicy_ImplicitDeny(t *testing.T) {
 func TestDiffPolicy_UniFiDefaultPermit(t *testing.T) {
 	dev := DeclaredDevice{
 		Vendor: "unifi", Hostname: "udm",
-		VLANs: []VLAN{{ID: 10, Subnet: "10.0.1.0/24"}},
+		VLANs: []VLAN{{ID: 10, Subnet: "10.0.1.0/24", Purpose: "corporate"}},
 		Rulesets: []Ruleset{{
 			Name: "LAN_IN", Default: Permit, // controller lists only exceptions
-			Rules: []Rule{{Action: Deny, Proto: "tcp", Src: "10.0.1.0/24", Dst: "10.0.1.0/24",
+			Rules: []Rule{{Action: Deny, Proto: "tcp", Src: "10.0.1.0/24", Dst: anyCIDR,
 				DstPorts: PortRange{3389, 3389}, Line: 0, Raw: "unifi LAN_IN: drop"}},
 		}},
 	}
 	snap := graph.Snapshot{Edges: []graph.Edge{
-		edge("10.0.1.5", "10.0.2.9", 80),   // in LAN scope, no rule match -> default permit -> ok
-		edge("10.0.1.5", "10.0.1.9", 3389), // hits the deny -> violation
+		edge("10.0.1.5", "10.0.2.9", 80),   // cross-subnet, no rule match -> default permit -> ok
+		edge("10.0.1.5", "10.0.2.9", 3389), // cross-subnet, hits the deny -> violation
+		edge("10.0.1.5", "10.0.1.9", 3389), // same-VLAN, switches locally -> not evaluated
 	}}
 	res := DiffPolicy(snap, []DeclaredDevice{dev})
-	if len(res.Violations) != 1 || res.Violations[0].Edge.Port != 3389 {
-		t.Fatalf("want 1 violation on 3389, got %+v", res.Violations)
+	if len(res.Violations) != 1 || res.Violations[0].Edge.Dst != "10.0.2.9" {
+		t.Fatalf("want 1 cross-subnet violation on 3389, got %+v", res.Violations)
+	}
+}
+
+// Intra-subnet flows switch locally and never reach the router's ACL; an
+// In-bound deny must not flag them (false-positive regression guard).
+func TestDiffPolicy_IntraSubnetNoViolation(t *testing.T) {
+	dev := edgeIOSDevice() // EDGE_IN: deny tcp 10.0.1.0/24 any eq 445
+	snap := graph.Snapshot{Edges: []graph.Edge{
+		edge("10.0.1.5", "10.0.1.9", 445), // both in 10.0.1.0/24 -> non-traversing
+	}}
+	res := DiffPolicy(snap, []DeclaredDevice{dev})
+	if len(res.Violations) != 0 {
+		t.Fatalf("intra-subnet flow must not violate, got %+v", res.Violations)
+	}
+}
+
+// GUEST_IN scopes to guest-purpose subnets; LAN_IN to corporate. A guest-src
+// flow is judged by GUEST_IN, a corporate-src flow by LAN_IN.
+func TestDiffPolicy_UniFiPurposeScoping(t *testing.T) {
+	dev := DeclaredDevice{
+		Vendor: "unifi", Hostname: "udm",
+		VLANs: []VLAN{
+			{ID: 10, Subnet: "10.0.1.0/24", Purpose: "corporate"},
+			{ID: 40, Subnet: "10.0.40.0/24", Purpose: "guest"},
+		},
+		Rulesets: []Ruleset{
+			{Name: "LAN_IN", Default: Permit, Rules: []Rule{
+				{Action: Deny, Proto: "tcp", Src: anyCIDR, Dst: anyCIDR, DstPorts: PortRange{22, 22}, Line: 1, Raw: "lan drop 22"}}},
+			{Name: "GUEST_IN", Default: Permit, Rules: []Rule{
+				{Action: Deny, Proto: "tcp", Src: anyCIDR, Dst: anyCIDR, DstPorts: PortRange{445, 445}, Line: 1, Raw: "guest drop 445"}}},
+		},
+	}
+	snap := graph.Snapshot{Edges: []graph.Edge{
+		edge("10.0.1.5", "10.0.2.9", 22),    // corporate src, cross-subnet -> LAN_IN deny 22
+		edge("10.0.40.5", "10.0.2.9", 445),  // guest src, cross-subnet -> GUEST_IN deny 445
+		edge("10.0.40.5", "10.0.40.9", 445), // same guest VLAN -> not evaluated
+		edge("10.0.1.5", "10.0.2.9", 445),   // corporate src on 445 -> LAN_IN permits (no deny 445)
+	}}
+	res := DiffPolicy(snap, []DeclaredDevice{dev})
+	got := map[string]uint16{}
+	for _, v := range res.Violations {
+		got[v.Ruleset] = v.Edge.Port
+	}
+	if len(res.Violations) != 2 || got["LAN_IN"] != 22 || got["GUEST_IN"] != 445 {
+		t.Fatalf("want LAN_IN:22 + GUEST_IN:445, got %+v", res.Violations)
 	}
 }
 
@@ -144,22 +190,21 @@ func TestDiffPolicy_UniFiWANIn(t *testing.T) {
 	}
 }
 
-func TestDiffPolicy_GuestInSkippedWithWarning(t *testing.T) {
+// Unknown/empty VLAN purpose defaults to corporate (LAN_IN), never silently
+// dropped.
+func TestDiffPolicy_UnknownPurposeIsCorporate(t *testing.T) {
 	dev := DeclaredDevice{
 		Vendor: "unifi", Hostname: "udm",
-		VLANs: []VLAN{{ID: 20, Subnet: "10.0.5.0/24"}},
+		VLANs: []VLAN{{ID: 20, Subnet: "10.0.5.0/24"}}, // no Purpose
 		Rulesets: []Ruleset{{
-			Name: "GUEST_IN", Default: Permit,
-			Rules: []Rule{{Action: Deny, Proto: "ip", Src: anyCIDR, Dst: "10.0.1.0/24", Line: 0, Raw: "drop"}},
+			Name: "LAN_IN", Default: Permit,
+			Rules: []Rule{{Action: Deny, Proto: "ip", Src: anyCIDR, Dst: anyCIDR, DstPorts: PortRange{445, 445}, Line: 0, Raw: "drop"}},
 		}},
 	}
 	snap := graph.Snapshot{Edges: []graph.Edge{edge("10.0.5.5", "10.0.1.9", 445)}}
 	res := DiffPolicy(snap, []DeclaredDevice{dev})
-	if len(res.Violations) != 0 {
-		t.Fatalf("GUEST_IN must be skipped, got violations %+v", res.Violations)
-	}
-	if len(res.Warnings) != 1 {
-		t.Fatalf("want 1 GUEST_IN warning, got %+v", res.Warnings)
+	if len(res.Violations) != 1 {
+		t.Fatalf("unknown-purpose subnet must be evaluated under LAN_IN, got %+v", res.Violations)
 	}
 }
 

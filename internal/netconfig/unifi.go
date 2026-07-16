@@ -120,7 +120,7 @@ func unifiItems(b []byte) []map[string]any {
 func addNetwork(dev *DeclaredDevice, m map[string]any) {
 	subnet := ustr(m, "ip_subnet")
 	vlan, _ := unum(m, "vlan")
-	dev.VLANs = append(dev.VLANs, VLAN{ID: vlan, Name: ustr(m, "name"), Subnet: subnet})
+	dev.VLANs = append(dev.VLANs, VLAN{ID: vlan, Name: ustr(m, "name"), Subnet: subnet, Purpose: ustr(m, "purpose")})
 
 	if ubool(m, "dhcpd_enabled") {
 		p := Pool{Network: subnet, Router: ustr(m, "dhcpd_gateway")}
