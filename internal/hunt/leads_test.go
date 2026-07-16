@@ -2,10 +2,12 @@
 package hunt
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/netconfig"
 	"github.com/BushidoCyb3r/salient/internal/reconcile"
 	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
@@ -45,7 +47,7 @@ func TestBuildLeadsSoleProvider(t *testing.T) {
 			{Src: "10.0.3.30", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidenceProtocolConfirmed},
 		},
 	}
-	leads := BuildLeads(snap, nil, nil, nil)
+	leads := BuildLeads(snap, nil, nil, nil, nil)
 	if len(leads) != 1 || leads[0].Reason != ReasonSoleProvider || leads[0].IP != "10.0.1.11" {
 		t.Fatalf("want 1 sole-provider lead, got %+v", leads)
 	}
@@ -65,12 +67,12 @@ func TestBuildLeadsSuppressesApprovedProvider(t *testing.T) {
 		},
 	}
 	approved := map[string]bool{ProviderKey("10.0.1.11", 53): true}
-	leads := BuildLeads(snap, nil, nil, approved)
+	leads := BuildLeads(snap, nil, nil, nil, approved)
 	if len(leads) != 0 {
 		t.Fatalf("approved provider must be suppressed entirely, got %+v", leads)
 	}
 	// Guard the guard: an unrelated approval must not suppress this lead.
-	leads = BuildLeads(snap, nil, nil, map[string]bool{ProviderKey("10.0.1.99", 445): true})
+	leads = BuildLeads(snap, nil, nil, nil, map[string]bool{ProviderKey("10.0.1.99", 445): true})
 	if len(leads) != 1 {
 		t.Fatalf("unrelated approval must not suppress this lead, got %+v", leads)
 	}
@@ -98,7 +100,7 @@ func TestBuildLeadsAlternateProvidersOverlap(t *testing.T) {
 	rec := &reconcile.Result{
 		ObservedUndocumented: []graph.Node{{IP: "10.0.1.11"}, {IP: "10.0.1.12"}},
 	}
-	leads := BuildLeads(snap, nil, rec, nil)
+	leads := BuildLeads(snap, nil, rec, nil, nil)
 	byIP := map[string]Lead{}
 	for _, l := range leads {
 		byIP[l.IP] = l
@@ -120,7 +122,7 @@ func TestBuildLeadsNoAlternateProviderWhenClientsDisjoint(t *testing.T) {
 	rec := &reconcile.Result{
 		ObservedUndocumented: []graph.Node{{IP: "10.0.1.11"}, {IP: "10.0.1.99"}},
 	}
-	leads := BuildLeads(baseSnapshot(), nil, rec, nil)
+	leads := BuildLeads(baseSnapshot(), nil, rec, nil, nil)
 	var dnsLeadsChecked int
 	for _, l := range leads {
 		if l.Service != "dns" {
@@ -144,7 +146,7 @@ func TestBuildLeadsNewProviderAndNewService(t *testing.T) {
 			{IP: "10.0.1.11", Port: 53, Service: "dns", Clients: 2, NewHost: false, Rank: 3},
 		},
 	}
-	leads := BuildLeads(snap, diff, nil, nil)
+	leads := BuildLeads(snap, diff, nil, nil, nil)
 	byIP := map[string]Lead{}
 	for _, l := range leads {
 		byIP[l.IP] = l
@@ -163,7 +165,7 @@ func TestBuildLeadsUndocumentedAndContradicted(t *testing.T) {
 		ObservedUndocumented: []graph.Node{{IP: "10.0.1.99"}},
 		RoleContradicted:     []reconcile.Contradiction{{IP: "10.0.1.11", Documented: "web server", Expected: graph.RoleWebServer, Observed: []graph.Role{graph.RoleDNS}}},
 	}
-	leads := BuildLeads(snap, nil, rec, nil)
+	leads := BuildLeads(snap, nil, rec, nil, nil)
 	byIP := map[string]Lead{}
 	for _, l := range leads {
 		byIP[l.IP] = l
@@ -186,7 +188,7 @@ func TestBuildLeadsDedupPrefersHigherPriorityReason(t *testing.T) {
 	rec := &reconcile.Result{
 		RoleContradicted: []reconcile.Contradiction{{IP: "10.0.1.11", Documented: "web server", Expected: graph.RoleWebServer, Observed: []graph.Role{graph.RoleDNS}}},
 	}
-	leads := BuildLeads(snap, diff, rec, nil)
+	leads := BuildLeads(snap, diff, rec, nil, nil)
 	count := 0
 	var found Lead
 	for _, l := range leads {
@@ -218,7 +220,7 @@ func TestBuildLeadsExcludesPortOnlyEdgesFromEnrichment(t *testing.T) {
 			{Src: "10.0.9.90", Dst: "10.0.1.11", Port: 53, Evidence: graph.EvidencePortOnly},
 		},
 	}
-	leads := BuildLeads(snap, nil, nil, nil)
+	leads := BuildLeads(snap, nil, nil, nil, nil)
 	if len(leads) != 1 || leads[0].IP != "10.0.1.11" {
 		t.Fatalf("want 1 lead for 10.0.1.11, got %+v", leads)
 	}
@@ -232,6 +234,82 @@ func TestBuildLeadsExcludesPortOnlyEdgesFromEnrichment(t *testing.T) {
 		if s == "10.0.9.0/24" {
 			t.Errorf("Subnets contains port-only scanner's subnet: %+v", lead.Subnets)
 		}
+	}
+}
+
+func TestBuildLeadsPolicyDenied(t *testing.T) {
+	t0 := time.Date(2026, 7, 1, 8, 0, 0, 0, time.UTC)
+	t1 := t0.Add(time.Hour)
+	snap := graph.Snapshot{
+		Nodes: []graph.Node{
+			{IP: "10.0.1.99", Subnet: "10.0.1.0/24"},
+			{IP: "10.0.3.30", Subnet: "10.0.3.0/24"},
+			{IP: "10.0.3.31", Subnet: "10.0.3.0/24"},
+		},
+	}
+	mkEdge := func(src string, ts time.Time, ev graph.EvidenceLevel) graph.Edge {
+		return graph.Edge{Src: src, Dst: "10.0.1.99", Port: 445, Service: "smb", Evidence: ev, FirstSeen: ts, LastSeen: ts}
+	}
+	rule := netconfig.Rule{Line: 10, Raw: "deny tcp any host 10.0.1.99 eq 445"}
+	// Two violations, same responder (10.0.1.99:445), distinct sources.
+	pol := &netconfig.PolicyResult{Violations: []netconfig.Violation{
+		{Device: "edge-rtr", Source: "/etc/configs/edge.cfg", Ruleset: "EDGE_IN", Rule: rule,
+			Edge: mkEdge("10.0.3.30", t0, graph.EvidenceResponderConfirmed), Confidence: "full"},
+		{Device: "edge-rtr", Source: "/etc/configs/edge.cfg", Ruleset: "EDGE_IN", Rule: rule,
+			Edge: mkEdge("10.0.3.31", t1, graph.EvidenceProtocolConfirmed), Confidence: "full"},
+	}}
+
+	var pd []Lead
+	for _, l := range BuildLeads(snap, nil, nil, pol, nil) {
+		if l.Reason == ReasonPolicyDenied {
+			pd = append(pd, l)
+		}
+	}
+	if len(pd) != 1 {
+		t.Fatalf("want 1 policy-denied lead for shared responder, got %d: %+v", len(pd), pd)
+	}
+	l := pd[0]
+	if l.IP != "10.0.1.99" || l.Port != 445 || l.Clients != 2 || l.Service != "smb" {
+		t.Errorf("bad policy-denied lead: %+v", l)
+	}
+	if want := "edge-rtr edge.cfg:10 — deny tcp any host 10.0.1.99 eq 445"; l.RuleEvidence != want {
+		t.Errorf("RuleEvidence = %q, want %q", l.RuleEvidence, want)
+	}
+	if !l.FirstSeen.Equal(t0) || !l.LastSeen.Equal(t1) {
+		t.Errorf("time span = %v..%v, want %v..%v", l.FirstSeen, l.LastSeen, t0, t1)
+	}
+	// Sorts alongside contradicted: identical primary priority.
+	if reasonPriority(ReasonPolicyDenied) != reasonPriority(ReasonContradicted) {
+		t.Errorf("policy-denied must share sort priority with contradicted")
+	}
+	// Approved-provider key suppresses it entirely.
+	for _, x := range BuildLeads(snap, nil, nil, pol, map[string]bool{ProviderKey("10.0.1.99", 445): true}) {
+		if x.IP == "10.0.1.99" && x.Port == 445 {
+			t.Errorf("approved provider must suppress policy-denied lead, got %+v", x)
+		}
+	}
+	// Regression: nil pol must not produce any policy-denied lead.
+	for _, x := range BuildLeads(snap, nil, nil, nil, nil) {
+		if x.Reason == ReasonPolicyDenied {
+			t.Errorf("nil pol must not produce policy-denied leads, got %+v", x)
+		}
+	}
+	// Partial confidence surfaces in the evidence string.
+	partial := &netconfig.PolicyResult{Violations: []netconfig.Violation{
+		{Device: "edge-rtr", Source: "edge.cfg", Ruleset: "EDGE_IN", Rule: rule,
+			Edge: mkEdge("10.0.3.30", t0, graph.EvidenceResponderConfirmed), Confidence: "partial"},
+	}}
+	var sawPartial bool
+	for _, x := range BuildLeads(snap, nil, nil, partial, nil) {
+		if x.Reason == ReasonPolicyDenied {
+			sawPartial = true
+			if !strings.HasSuffix(x.RuleEvidence, " (confidence: partial)") {
+				t.Errorf("partial RuleEvidence = %q, want partial suffix", x.RuleEvidence)
+			}
+		}
+	}
+	if !sawPartial {
+		t.Error("partial policy-denied lead missing")
 	}
 }
 
@@ -256,7 +334,7 @@ func TestBuildLeadsSortOrder(t *testing.T) {
 	rec := &reconcile.Result{
 		RoleContradicted: []reconcile.Contradiction{{IP: "10.0.1.11", Documented: "web server", Expected: graph.RoleWebServer, Observed: []graph.Role{graph.RoleDNS}}},
 	}
-	leads := BuildLeads(snap, nil, rec, nil)
+	leads := BuildLeads(snap, nil, rec, nil, nil)
 	if len(leads) != 2 || leads[0].Reason != ReasonContradicted || leads[1].Reason != ReasonSoleProvider {
 		t.Fatalf("want [contradicted, sole-provider] order, got %+v", leads)
 	}

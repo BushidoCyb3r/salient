@@ -10,6 +10,7 @@ import (
 // Violation is an observed flow that a declared device's policy denies.
 type Violation struct {
 	Device     string     `json:"device"`
+	Source     string     `json:"source"` // config file the deny rule was parsed from
 	Ruleset    string     `json:"ruleset"`
 	Rule       Rule       `json:"rule"`       // the deny rule hit (Raw+Line ride along)
 	Edge       graph.Edge `json:"edge"`       // the observed flow
@@ -214,7 +215,7 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 				}
 				if denied {
 					res.Violations = append(res.Violations, Violation{
-						Device: dev.Hostname, Ruleset: app.name,
+						Device: dev.Hostname, Source: dev.Source, Ruleset: app.name,
 						Rule: denyRule, Edge: pe.e, Confidence: conf,
 					})
 				}

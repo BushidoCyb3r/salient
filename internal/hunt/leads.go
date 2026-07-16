@@ -9,12 +9,14 @@ package hunt
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"time"
 
 	"github.com/BushidoCyb3r/salient/internal/config"
 	"github.com/BushidoCyb3r/salient/internal/graph"
 	"github.com/BushidoCyb3r/salient/internal/mapview"
+	"github.com/BushidoCyb3r/salient/internal/netconfig"
 	"github.com/BushidoCyb3r/salient/internal/reconcile"
 	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
@@ -24,6 +26,7 @@ import (
 type Reason string
 
 const (
+	ReasonPolicyDenied Reason = "policy-denied" // observed flow a declared device's config denies
 	ReasonContradicted Reason = "contradicted"  // documented role disagrees with what's observed
 	ReasonUndocumented Reason = "undocumented"  // provider has no entry in the asset list
 	ReasonNewProvider  Reason = "new-provider"  // a brand-new host began providing this service
@@ -37,7 +40,7 @@ const (
 // more than one condition — the lead is never duplicated, only upgraded.
 func reasonPriority(r Reason) int {
 	switch r {
-	case ReasonContradicted:
+	case ReasonPolicyDenied, ReasonContradicted:
 		return 0
 	case ReasonUndocumented:
 		return 1
@@ -77,6 +80,12 @@ type Lead struct {
 	LastSeen        time.Time           `json:"last_seen"`
 	Rank            int                 `json:"rank,omitempty"`
 	InventoryStatus string              `json:"inventory_status,omitempty"`
+	// RuleEvidence names the declared deny rule this responder's traffic
+	// violated: "<device> <config-file>:<line> — <raw rule>", plus a
+	// "(confidence: partial)" suffix when the device had caveated rules the
+	// diff couldn't evaluate. A named fact quoting the operator's own config,
+	// never a severity or probability.
+	RuleEvidence string `json:"rule_evidence,omitempty"`
 	// AlternateProviders lists other observed providers of the same service
 	// that share at least one client with this one — evidence of possible
 	// failover capacity. Empty means no alternate provider was observed;
@@ -205,14 +214,16 @@ func overlaps(a, b map[string]bool) bool {
 }
 
 // BuildLeads composes current-snapshot providers, drift new-provider
-// findings, and reconciliation results into a deduplicated, prioritized
-// lead list. diff and rec are both optional (nil skips that source) — a
-// first-ever scan has no baseline to diff against, and reconciliation
-// requires an operator-supplied asset list. approved is an optional set of
-// "ip:port" keys (see ProviderKey) the operator has already confirmed as
-// expected/benign — a matching lead is suppressed entirely, never returned.
-// Observed evidence is untouched; suppression is purely a display filter.
-func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Result, approved map[string]bool) []Lead {
+// findings, reconciliation results, and declared-config policy violations
+// into a deduplicated, prioritized lead list. diff, rec, and pol are all
+// optional (nil skips that source) — a first-ever scan has no baseline to
+// diff against, reconciliation requires an operator-supplied asset list, and
+// policy diffing requires declared device configs. approved is an optional
+// set of "ip:port" keys (see ProviderKey) the operator has already confirmed
+// as expected/benign — a matching lead is suppressed entirely, never
+// returned. Observed evidence is untouched; suppression is purely a display
+// filter.
+func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Result, pol *netconfig.PolicyResult, approved map[string]bool) []Lead {
 	providers := mapview.BuildServiceAuthority(current)
 	enrich, clients := enrichProviders(current)
 	alternates := alternateProviders(providers, clients)
@@ -292,6 +303,68 @@ func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Resu
 		}
 	}
 
+	if pol != nil {
+		// One lead per distinct (responder, port) among violations —
+		// responder-centric like every other lead, aggregating the denied
+		// flows' sources, service, evidence, and time span.
+		type polAgg struct {
+			clients   map[string]bool
+			sample    []string
+			service   string
+			evidence  graph.EvidenceLevel
+			firstSeen time.Time
+			lastSeen  time.Time
+			ruleEv    string
+		}
+		agg := map[providerKey]*polAgg{}
+		for _, v := range pol.Violations {
+			k := providerKey{v.Edge.Dst, v.Edge.Port}
+			a := agg[k]
+			if a == nil {
+				a = &polAgg{clients: map[string]bool{}, ruleEv: ruleEvidence(v)}
+				a.service = v.Edge.Service
+				if a.service == "" {
+					a.service = config.ServiceName(v.Edge.Port)
+				}
+				agg[k] = a
+			}
+			if !a.clients[v.Edge.Src] {
+				a.clients[v.Edge.Src] = true
+				if len(a.sample) < sampleClientCap {
+					a.sample = append(a.sample, v.Edge.Src)
+				}
+			}
+			if evidenceStrength(v.Edge.Evidence) > evidenceStrength(a.evidence) {
+				a.evidence = v.Edge.Evidence
+			}
+			if a.firstSeen.IsZero() || v.Edge.FirstSeen.Before(a.firstSeen) {
+				a.firstSeen = v.Edge.FirstSeen
+			}
+			if v.Edge.LastSeen.After(a.lastSeen) {
+				a.lastSeen = v.Edge.LastSeen
+			}
+		}
+		for k, a := range agg {
+			// RuleEvidence is a true fact about this responder regardless of
+			// which reason wins the tiebreak, so attach it either way.
+			if existing, has := byKey[k]; has {
+				existing.RuleEvidence = a.ruleEv
+				if reasonPriority(ReasonPolicyDenied) < reasonPriority(existing.Reason) {
+					existing.Reason = ReasonPolicyDenied
+				}
+				continue
+			}
+			byKey[k] = &Lead{
+				Reason: ReasonPolicyDenied,
+				IP:     k.ip, Port: k.port, Service: a.service,
+				Evidence: a.evidence, Clients: len(a.clients),
+				SampleClients: a.sample,
+				FirstSeen:     a.firstSeen, LastSeen: a.lastSeen,
+				RuleEvidence: a.ruleEv,
+			}
+		}
+	}
+
 	leads := make([]Lead, 0, len(byKey))
 	for _, l := range byKey {
 		if approved[ProviderKey(l.IP, l.Port)] {
@@ -329,4 +402,16 @@ func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Resu
 		return a.Port < b.Port
 	})
 	return leads
+}
+
+// ruleEvidence renders a policy violation as the RuleEvidence string: the
+// declared device, the config file and line of the deny rule, and the raw
+// rule text — plus a partial-confidence note when the device had caveated
+// rules the diff couldn't evaluate. Named facts only, no probability.
+func ruleEvidence(v netconfig.Violation) string {
+	s := fmt.Sprintf("%s %s:%d — %s", v.Device, filepath.Base(v.Source), v.Rule.Line, v.Rule.Raw)
+	if v.Confidence == "partial" {
+		s += " (confidence: partial)"
+	}
+	return s
 }
