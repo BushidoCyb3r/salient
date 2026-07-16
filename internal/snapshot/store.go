@@ -1,10 +1,13 @@
 // Package snapshot persists and lists Snapshots as gzipped JSON. No database:
-// one file per run under salient-data/snapshots plus an index.json. Files are
+// one immutable file per run under salient-data/snapshots. Files are
 // written 0600 in 0700 dirs — topology artifacts are sensitive (§14).
 package snapshot
 
 import (
+	"bytes"
 	"compress/gzip"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,11 +34,15 @@ type IndexEntry struct {
 // SnapshotsDir returns the snapshots directory under the data root.
 func SnapshotsDir(dataRoot string) string { return filepath.Join(dataRoot, "snapshots") }
 
-// Save writes the snapshot as <timestamp>.json.gz and appends to index.json.
+// Save writes the snapshot as <timestamp>.json.gz.
 // Returns the file path.
 func Save(dataRoot string, snap graph.Snapshot) (string, error) {
 	dir := SnapshotsDir(dataRoot)
-	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".json.gz"
+	var nonce [8]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return "", fmt.Errorf("creating snapshot name: %w", err)
+	}
+	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405.000000000Z") + "-" + hex.EncodeToString(nonce[:]) + ".json.gz"
 	path := filepath.Join(dir, name)
 
 	if err := safefile.Write(path, func(w io.Writer) error {
@@ -47,16 +54,6 @@ func Save(dataRoot string, snap graph.Snapshot) (string, error) {
 			return fmt.Errorf("writing snapshot: %w", err)
 		}
 		return gz.Close()
-	}); err != nil {
-		return "", err
-	}
-	if err := appendIndex(dir, IndexEntry{
-		File:      name,
-		CreatedAt: snap.Meta.CreatedAt,
-		Window:    snap.Meta.Window,
-		Nodes:     len(snap.Nodes),
-		Edges:     len(snap.Edges),
-		Cluster:   snap.Meta.ClusterName,
 	}); err != nil {
 		return "", err
 	}
@@ -75,53 +72,73 @@ func Load(path string) (graph.Snapshot, error) {
 		return snap, fmt.Errorf("opening snapshot: %w", err)
 	}
 	defer f.Close()
+	if info, statErr := f.Stat(); statErr != nil {
+		return snap, fmt.Errorf("stating snapshot: %w", statErr)
+	} else if info.Size() > config.SnapshotMaxCompressedBytes {
+		return snap, fmt.Errorf("snapshot compressed size exceeds %d bytes", config.SnapshotMaxCompressedBytes)
+	}
 	gz, err := gzip.NewReader(f)
 	if err != nil {
 		return snap, fmt.Errorf("reading gzip: %w", err)
 	}
-	defer gz.Close()
-	if err := json.NewDecoder(gz).Decode(&snap); err != nil {
-		return snap, fmt.Errorf("decoding snapshot: %w", err)
+	snap, err = readSnapshot(gz, config.SnapshotMaxDecompressedBytes)
+	closeErr := gz.Close()
+	if err != nil {
+		return snap, err
+	}
+	if closeErr != nil {
+		return snap, fmt.Errorf("reading gzip trailer: %w", closeErr)
 	}
 	return snap, nil
 }
 
-// List returns index entries, newest first.
+func readSnapshot(r io.Reader, limit int64) (graph.Snapshot, error) {
+	raw, err := io.ReadAll(io.LimitReader(r, limit+1))
+	if err != nil {
+		return graph.Snapshot{}, fmt.Errorf("reading snapshot: %w", err)
+	}
+	if int64(len(raw)) > limit {
+		return graph.Snapshot{}, fmt.Errorf("snapshot decompressed size exceeds %d bytes", limit)
+	}
+	return decodeSnapshot(raw)
+}
+
+func decodeSnapshot(raw []byte) (graph.Snapshot, error) {
+	var snap graph.Snapshot
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	if err := dec.Decode(&snap); err != nil {
+		return snap, fmt.Errorf("decoding snapshot: %w", err)
+	}
+	var extra any
+	if err := dec.Decode(&extra); err != io.EOF {
+		if err == nil {
+			return snap, fmt.Errorf("decoding snapshot: trailing JSON value")
+		}
+		return snap, fmt.Errorf("decoding snapshot trailer: %w", err)
+	}
+	return snap, nil
+}
+
+// List derives entries from immutable snapshot files, avoiding a shared index
+// read-modify-write race when multiple processes save concurrently.
 func List(dataRoot string) ([]IndexEntry, error) {
-	entries, err := readIndex(SnapshotsDir(dataRoot))
+	dir := SnapshotsDir(dataRoot)
+	files, err := filepath.Glob(filepath.Join(dir, "*.json.gz"))
 	if err != nil {
 		return nil, err
 	}
+	entries := make([]IndexEntry, 0, len(files))
+	for _, path := range files {
+		snap, err := Load(path)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, IndexEntry{
+			File: filepath.Base(path), CreatedAt: snap.Meta.CreatedAt,
+			Window: snap.Meta.Window, Nodes: len(snap.Nodes), Edges: len(snap.Edges),
+			Cluster: snap.Meta.ClusterName,
+		})
+	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].CreatedAt.After(entries[j].CreatedAt) })
 	return entries, nil
-}
-
-func indexPath(dir string) string { return filepath.Join(dir, "index.json") }
-
-func readIndex(dir string) ([]IndexEntry, error) {
-	raw, err := os.ReadFile(indexPath(dir))
-	if os.IsNotExist(err) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("reading index: %w", err)
-	}
-	var entries []IndexEntry
-	if err := json.Unmarshal(raw, &entries); err != nil {
-		return nil, fmt.Errorf("parsing index: %w", err)
-	}
-	return entries, nil
-}
-
-func appendIndex(dir string, e IndexEntry) error {
-	entries, err := readIndex(dir)
-	if err != nil {
-		return err
-	}
-	entries = append(entries, e)
-	raw, err := json.MarshalIndent(entries, "", " ")
-	if err != nil {
-		return err
-	}
-	return safefile.WriteFile(indexPath(dir), raw)
 }

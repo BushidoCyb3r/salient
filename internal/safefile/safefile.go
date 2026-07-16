@@ -4,6 +4,8 @@ package safefile
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,26 +27,41 @@ func Write(path string, render func(io.Writer) error) error {
 	if err != nil {
 		return err
 	}
-	abs = filepath.Join(dir, filepath.Base(abs))
-
-	f, err := os.CreateTemp(dir, ".salient-*")
+	root, err := os.OpenRoot(dir)
 	if err != nil {
 		return err
 	}
-	tmp := f.Name()
-	defer os.Remove(tmp)
-	if err := f.Chmod(config.OutputFileMode); err != nil {
+	defer root.Close()
+
+	var token [16]byte
+	if _, err := rand.Read(token[:]); err != nil {
+		return err
+	}
+	tmp := ".salient-" + hex.EncodeToString(token[:])
+	f, err := root.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, config.OutputFileMode)
+	if err != nil {
+		return err
+	}
+	defer root.Remove(tmp)
+	if err := render(f); err != nil {
 		_ = f.Close()
 		return err
 	}
-	if err := render(f); err != nil {
+	if err := f.Sync(); err != nil {
 		_ = f.Close()
 		return err
 	}
 	if err := f.Close(); err != nil {
 		return err
 	}
-	return os.Rename(tmp, abs)
+	if err := root.Rename(tmp, filepath.Base(abs)); err != nil {
+		return err
+	}
+	if d, err := root.Open("."); err == nil {
+		_ = d.Sync()
+		_ = d.Close()
+	}
+	return nil
 }
 
 // WriteFile atomically writes an in-memory artifact.

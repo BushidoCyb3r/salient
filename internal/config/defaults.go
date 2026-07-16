@@ -26,13 +26,17 @@ const (
 	DatasetTermsSize = 200
 	// SensorTermsSize caps the observer.name terms aggregation.
 	SensorTermsSize = 100
+	// ESMaxResponseBytes caps any decoded Elasticsearch response body.
+	ESMaxResponseBytes = 64 << 20
 )
 
 // Output handling (SALIENT_PLAN.md §14): topology artifacts are sensitive.
 const (
-	OutputDirMode  = 0o700
-	OutputFileMode = 0o600
-	DataDirName    = "salient-data"
+	OutputDirMode                = 0o700
+	OutputFileMode               = 0o600
+	DataDirName                  = "salient-data"
+	SnapshotMaxCompressedBytes   = 128 << 20
+	SnapshotMaxDecompressedBytes = 512 << 20
 )
 
 // Optional snapshot analysis. This path is never used unless the operator
@@ -49,6 +53,7 @@ const (
 	DefaultWindow           = 14 * 24 * time.Hour // §11 scan --window default
 	CompositePageSize       = 1000                // §6.1 composite agg page size
 	DefaultMaxEdges         = 500_000             // §6.1 --max-edges safety limit
+	TLSIdentityPairLimit    = 100_000             // bounded SNI destination/name pairs per scan
 	ResponderTermsSize      = 2000                // role-evidence responder terms cap
 	RoleSampleHostsSize     = 3                   // example client IPs kept per responder for evidence strings
 	TopNTemporal            = 50                  // §6.1 second-pass temporal for top-N nodes

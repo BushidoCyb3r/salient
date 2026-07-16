@@ -28,7 +28,7 @@ func Score(m *graph.Model) Result {
 	nodes := m.SortedNodes()
 	res := Result{NodeCount: len(nodes)}
 
-	pr := network.PageRank(g, config.PageRankDamping, config.PageRankTolerance)
+	pr := network.PageRankSparse(g, config.PageRankDamping, config.PageRankTolerance)
 
 	var bw map[int64]float64
 	if len(nodes) <= config.ExactBetweennessMax {

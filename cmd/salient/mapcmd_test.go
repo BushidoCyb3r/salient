@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/BushidoCyb3r/salient/internal/graph"
 	"github.com/BushidoCyb3r/salient/internal/snapshot"
@@ -52,6 +55,35 @@ func TestReportCommandPrintsHandlingReminder(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "Handling reminder") {
 		t.Fatalf("stderr missing handling reminder: %q", stderr.String())
+	}
+}
+
+func TestMapAndReportOutputsAreProtected(t *testing.T) {
+	snapshotPath := saveMapTestSnapshot(t)
+	for _, tc := range []struct {
+		name   string
+		cmd    *cobra.Command
+		format string
+	}{
+		{"map", newMapCmd(), "svg"},
+		{"report", newReportCmd(), "json"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			output := filepath.Join(t.TempDir(), tc.name+"."+tc.format)
+			tc.cmd.SetOut(&bytes.Buffer{})
+			tc.cmd.SetErr(&bytes.Buffer{})
+			tc.cmd.SetArgs([]string{"--snapshot", snapshotPath, "--format", tc.format, "--output", output})
+			if err := tc.cmd.Execute(); err != nil {
+				t.Fatal(err)
+			}
+			info, err := os.Stat(output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if info.Mode().Perm() != 0o600 {
+				t.Fatalf("output mode = %o, want 600", info.Mode().Perm())
+			}
+		})
 	}
 }
 

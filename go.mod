@@ -1,6 +1,6 @@
 module github.com/BushidoCyb3r/salient
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.19.6
@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	github.com/elastic/elastic-transport-go/v8 v8.9.0 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.11.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

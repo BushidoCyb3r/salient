@@ -21,6 +21,7 @@ func newMapCmd() *cobra.Command {
 		focus       string
 		groupPrefix int
 		minConns    int64
+		output      string
 	)
 	cmd := &cobra.Command{
 		Use:   "map --snapshot FILE",
@@ -54,24 +55,31 @@ See docs/MAPS.md for what these maps do and don't show.`,
 			for _, f := range mm.Findings {
 				fmt.Fprintf(cmd.ErrOrStderr(), "%sfinding:%s %s\n", ansiYellow, ansiReset, f)
 			}
-			w := cmd.OutOrStdout()
+			var render func(io.Writer) error
+			ext := format
 			switch format {
 			case "svg":
-				if err := report.SVGMap(w, mm); err != nil {
-					return err
-				}
+				render = func(w io.Writer) error { return report.SVGMap(w, mm) }
 			case "graphml":
-				if err := report.GraphMLMap(w, mm); err != nil {
-					return err
-				}
+				render = func(w io.Writer) error { return report.GraphMLMap(w, mm) }
 			case "html":
-				out := path + ".map.html"
-				if err := safefile.Write(out, func(w io.Writer) error { return report.HTMLMap(w, mm) }); err != nil {
-					return err
-				}
-				fmt.Fprintln(w, out)
+				ext = "html"
+				render = func(w io.Writer) error { return report.HTMLMap(w, mm) }
 			default:
 				return fmt.Errorf("unknown --format %q (html|svg|graphml)", format)
+			}
+			if output == "" {
+				output = path + ".map." + ext
+			}
+			if output == "-" {
+				if err := render(cmd.OutOrStdout()); err != nil {
+					return err
+				}
+			} else {
+				if err := safefile.Write(output, render); err != nil {
+					return err
+				}
+				fmt.Fprintln(cmd.OutOrStdout(), output)
 			}
 			fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this map describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
 			return nil
@@ -79,6 +87,7 @@ See docs/MAPS.md for what these maps do and don't show.`,
 	}
 	cmd.Flags().StringVar(&path, "snapshot", "", "snapshot .json.gz to render")
 	cmd.Flags().StringVar(&format, "format", "html", "html|svg|graphml")
+	cmd.Flags().StringVarP(&output, "output", "o", "", "protected output file; use - for stdout")
 	cmd.Flags().StringVar(&focus, "focus", "", "restrict the map to one CIDR, or 'private'/'public' address space")
 	cmd.Flags().IntVar(&groupPrefix, "group-prefix", config.GroupPrefixV4, "subnet grouping prefix")
 	cmd.Flags().Int64Var(&minConns, "min-conns", config.MapMinConns, "hide bundled edges below this connection count")

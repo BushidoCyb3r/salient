@@ -51,8 +51,10 @@ compiles with the `-tags webkit2_41` tag automatically (it probes
 
 ## Known gaps
 
-- Builds are unsigned — expect a Gatekeeper warning on macOS and a
-  SmartScreen warning on Windows on first launch.
+- Release assets include `SHA256SUMS` and repository-hosted build provenance.
+  Native platform signing is intentionally out of scope because it requires
+  paid Apple and Microsoft signing credentials. Expect a Gatekeeper warning on
+  macOS and a SmartScreen warning on Windows; verify checksums instead.
 - No cross-compilation: build on (or via CI for) each target OS.
 - No sensor-coverage toggle yet (the CLI HTML map's `l-cov` layer) —
   dropped from the initial port.

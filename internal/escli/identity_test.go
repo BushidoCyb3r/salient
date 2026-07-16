@@ -40,7 +40,7 @@ func TestFetchTLSFingerprintsMatchesServerNameToCerts(t *testing.T) {
 		t.Fatal(err)
 	}
 	fm := DefaultFieldMap()
-	got, err := cli.FetchTLSFingerprints(context.Background(), fm, time.Hour)
+	got, err := cli.FetchTLSFingerprints(context.Background(), fm, time.Hour, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,5 +92,29 @@ func TestFetchSSHHostKeysRespectsFieldMapOverrides(t *testing.T) {
 		if got["10.0.0.20"][i] != want[i] {
 			t.Fatalf("SSH host keys = %#v, want %#v", got["10.0.0.20"], want)
 		}
+	}
+}
+
+func TestIdentityQueriesAreScopedAndSourceFiltered(t *testing.T) {
+	fm := DefaultFieldMap()
+	tls, err := TLSServerNamesQuery(fm, time.Hour, []string{"10.20.0.0/16"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"10.20.0.0/16", fm.SourceIP, fm.DestinationIP} {
+		if !strings.Contains(tls, want) {
+			t.Fatalf("TLS query missing %q: %s", want, tls)
+		}
+	}
+	x509, err := X509DocsQuery(fm, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ssh, err := SSHDocsQuery(fm, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(x509, `"_source"`) || !strings.Contains(ssh, `"_source"`) {
+		t.Fatalf("identity document queries must source-filter: x509=%s ssh=%s", x509, ssh)
 	}
 }

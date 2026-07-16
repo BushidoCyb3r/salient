@@ -61,14 +61,18 @@ func source(name, field string) map[string]any {
 // scopeFilter builds an OR of CIDR filters over source or destination IP.
 // Empty scope means no restriction.
 func scopeFilter(fm FieldMap, scope []string) map[string]any {
+	return scopeFilterFields(scope, fm.SourceIP, fm.DestinationIP)
+}
+
+func scopeFilterFields(scope []string, sourceField, destinationField string) map[string]any {
 	if len(scope) == 0 {
 		return nil
 	}
 	var should []any
 	for _, cidr := range scope {
 		should = append(should,
-			map[string]any{"term": map[string]any{fm.SourceIP: map[string]any{"value": cidr}}},
-			map[string]any{"term": map[string]any{fm.DestinationIP: map[string]any{"value": cidr}}},
+			map[string]any{"term": map[string]any{sourceField: map[string]any{"value": cidr}}},
+			map[string]any{"term": map[string]any{destinationField: map[string]any{"value": cidr}}},
 		)
 	}
 	// ES `term` on an ip field with a CIDR value matches the range.

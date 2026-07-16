@@ -223,6 +223,16 @@ func TestQueryBuildersProduceValidJSON(t *testing.T) {
 	}
 }
 
+func TestWritePrivilegeQueryIncludesCreateDoc(t *testing.T) {
+	body, err := HasWritePrivilegesQuery("logs-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(body, `"create_doc"`) {
+		t.Fatalf("write privilege query omitted create_doc: %s", body)
+	}
+}
+
 func TestMACCoverageQueryScopesToConnDataset(t *testing.T) {
 	body, err := MACCoverageQuery(DefaultFieldMap(), 24*time.Hour)
 	if err != nil {
@@ -230,5 +240,13 @@ func TestMACCoverageQueryScopesToConnDataset(t *testing.T) {
 	}
 	if !strings.Contains(body, `"zeek.conn"`) || !strings.Contains(body, `"conn"`) {
 		t.Errorf("MAC probe not scoped to conn dataset candidates: %s", body)
+	}
+}
+
+func TestDecodeJSONWithLimit(t *testing.T) {
+	var dst map[string]any
+	err := decodeJSONWithLimit(strings.NewReader(`{"value":"too large"}`), &dst, 8)
+	if err == nil || !strings.Contains(err.Error(), "exceeds") {
+		t.Fatalf("want response limit error, got %v", err)
 	}
 }

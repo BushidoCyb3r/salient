@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-16
+
+Security-hardening release addressing the 2026-07-15 repository audit
+(2 High, 9 Medium, 8 Low findings). No reachable query injection, XSS, command
+injection, or Elasticsearch write path existed; these harden availability,
+supply-chain, and local-artifact safety.
+
+### Added
+- `map` and `report` accept `--output FILE`, writing through `safefile` with
+  protected `0600`/`0700` permissions. Stdout now requires explicit
+  `--output -`, so redirected exports no longer inherit the shell umask.
+- Elasticsearch responses decode through a 64 MiB limited reader with an
+  end-to-end request deadline; snapshots are bounded at 128 MiB compressed /
+  512 MiB decompressed, guarding against decompression/JSON memory bombs.
+- Release job publishes `SHA256SUMS` for every asset plus build provenance
+  attestation.
+
+### Changed
+- Terrain scoring uses `network.PageRankSparse`; large sparse grids no longer
+  allocate a dense N×N matrix (~5 GB at 25k nodes previously).
+- TLS identity enrichment is scoped to graph destinations, capped at 100,000
+  SNI pairs, source-filtered, and indexed by SAN/CN instead of an
+  every-name × every-certificate scan.
+- Snapshot listings derive from immutable snapshot files; the shared
+  `index.json` read-modify-write path (a cross-process lost-update risk) is
+  gone. Snapshot names use nanosecond + random stems.
+- `safefile` writes through `os.Root` directory-relative operations, closing a
+  symlink-swap TOCTOU, and syncs file and directory around rename.
+- Read-only privilege probe includes `create_doc`; the GUI now warns on
+  privilege-check errors and indeterminate results, matching the CLI.
+- DHCP role-evidence scope filter is parameterized with responder/client
+  fields so DHCP authorities are no longer silently dropped.
+- `make integration` requires pre-exported `SALIENT_ES_URL` /
+  `SALIENT_API_KEY` and no longer interpolates or echoes the key.
+- Dependencies: Go 1.26.5, Wails 2.13.0, Vite 8.1.4, elastic-transport 8.11.0.
+- CI pins all actions to commit SHAs, the Fedora container by digest, and Wails
+  to an exact version.
+
+### Fixed
+- `scan` rejects negative `--max-edges` instead of panicking on a negative
+  slice bound.
+- Cancellation during enrichment is now fatal: a canceled scan returns
+  `context.Canceled` and writes no snapshot, report, or map instead of
+  announcing an incomplete run as complete.
+
 ## [0.3.3] - 2026-07-12
 
 ### Added

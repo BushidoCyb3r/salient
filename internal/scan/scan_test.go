@@ -2,10 +2,13 @@ package scan_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -96,6 +99,10 @@ func TestRunProducesSnapshotAndOrderedStages(t *testing.T) {
 	if res.SnapshotPath == "" || res.ReportPath == "" || res.MapPath == "" {
 		t.Fatalf("missing artifact paths: %+v", res)
 	}
+	stem := strings.TrimSuffix(filepath.Base(res.SnapshotPath), ".json.gz")
+	if filepath.Base(res.ReportPath) != stem+".html" || filepath.Base(res.MapPath) != stem+".html" {
+		t.Fatalf("scan artifacts do not share identity: %+v", res)
+	}
 	// The save/report/map stages must fire in order at the end.
 	want := []string{"aggregating-edges", "scoring", "saving", "report", "map"}
 	if !isSubsequence(want, stages) {
@@ -177,6 +184,50 @@ func TestRunNoEdgesIsError(t *testing.T) {
 		scan.Options{Window: time.Hour, TZ: "UTC"}, t.TempDir(), nil)
 	if err == nil || !strings.Contains(err.Error(), "no edges observed") {
 		t.Fatalf("want no-edges error, got %v", err)
+	}
+}
+
+func TestRunRejectsNegativeMaxEdges(t *testing.T) {
+	_, err := scan.Run(context.Background(), nil, escli.FieldMap{}, escli.ClusterInfo{},
+		scan.Options{MaxEdges: -1}, t.TempDir(), nil)
+	if err == nil || !strings.Contains(err.Error(), "max edges") {
+		t.Fatalf("want max-edges validation error, got %v", err)
+	}
+}
+
+func TestRunCancellationDuringEnrichmentWritesNoArtifacts(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Elastic-Product", "Elasticsearch")
+		w.Header().Set("Content-Type", "application/json")
+		body, _ := io.ReadAll(r.Body)
+		switch {
+		case strings.Contains(string(body), `"edges"`):
+			io.WriteString(w, `{"hits":{"total":{"value":1}},"aggregations":{"edges":{"buckets":[{"key":{"src":"10.0.0.1","dst":"10.0.0.2","port":443},"doc_count":1,"bytes_in":{"value":1},"states":{"buckets":[{"key":"SF","doc_count":1}]}}]}}}`)
+		case strings.Contains(string(body), `"gw_macs"`):
+			cancel()
+			io.WriteString(w, `{"hits":{"total":{"value":0}},"aggregations":{}}`)
+		default:
+			io.WriteString(w, `{"hits":{"total":{"value":0}},"aggregations":{}}`)
+		}
+	}))
+	defer srv.Close()
+	cli, err := escli.New(escli.Config{ESURL: srv.URL, Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fm := escli.DefaultFieldMap()
+	dataDir := t.TempDir()
+	_, err = scan.Run(ctx, cli, fm, escli.ClusterInfo{}, scan.Options{Window: time.Hour, TZ: "UTC"}, dataDir, nil)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("want context cancellation, got %v", err)
+	}
+	entries, err := os.ReadDir(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("canceled scan wrote artifacts: %v", entries)
 	}
 }
 

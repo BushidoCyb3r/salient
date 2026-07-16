@@ -32,10 +32,19 @@ func Build(edges []Edge) *Model {
 		g:     simple.NewWeightedDirectedGraph(0, 0),
 		ids:   map[string]int64{},
 	}
+	sensors := make(map[string]map[string]struct{})
 	for i := range edges {
 		e := &edges[i]
-		src := m.node(e.Src, e.FirstSeen, e.LastSeen, e.Sensors)
-		dst := m.node(e.Dst, e.FirstSeen, e.LastSeen, e.Sensors)
+		src := m.node(e.Src, e.FirstSeen, e.LastSeen)
+		dst := m.node(e.Dst, e.FirstSeen, e.LastSeen)
+		for _, ip := range []string{e.Src, e.Dst} {
+			if sensors[ip] == nil {
+				sensors[ip] = make(map[string]struct{})
+			}
+			for _, sensor := range e.Sensors {
+				sensors[ip][sensor] = struct{}{}
+			}
+		}
 		if !e.Confirmed() {
 			continue // observed attempt only — no centrality weight
 		}
@@ -54,10 +63,16 @@ func Build(edges []Edge) *Model {
 			m.g.SetWeightedEdge(m.g.NewWeightedEdge(simple.Node(si), simple.Node(di), w))
 		}
 	}
+	for ip, set := range sensors {
+		for sensor := range set {
+			m.Nodes[ip].Sensors = append(m.Nodes[ip].Sensors, sensor)
+		}
+		sort.Strings(m.Nodes[ip].Sensors)
+	}
 	return m
 }
 
-func (m *Model) node(ip string, first, last time.Time, sensors []string) *Node {
+func (m *Model) node(ip string, first, last time.Time) *Node {
 	n, ok := m.Nodes[ip]
 	if !ok {
 		id := int64(len(m.ids))
@@ -75,7 +90,6 @@ func (m *Model) node(ip string, first, last time.Time, sensors []string) *Node {
 	if last.After(n.LastSeen) {
 		n.LastSeen = last
 	}
-	n.Sensors = mergeStrings(n.Sensors, sensors)
 	return n
 }
 
@@ -130,22 +144,4 @@ func Subnet(ip string) string {
 		return ip
 	}
 	return p.String()
-}
-
-func mergeStrings(a, b []string) []string {
-	if len(b) == 0 {
-		return a
-	}
-	seen := map[string]bool{}
-	for _, s := range a {
-		seen[s] = true
-	}
-	for _, s := range b {
-		if !seen[s] {
-			a = append(a, s)
-			seen[s] = true
-		}
-	}
-	sort.Strings(a)
-	return a
 }

@@ -13,10 +13,10 @@ import (
 )
 
 func newReportCmd() *cobra.Command {
-	var format string
+	var format, output string
 	cmd := &cobra.Command{
 		Use:   "report --snapshot FILE",
-		Short: "Re-render a stored snapshot as html, json, or graphml (to stdout for json/graphml)",
+		Short: "Re-render a stored snapshot as html, json, or graphml",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("snapshot")
@@ -27,24 +27,31 @@ func newReportCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			w := cmd.OutOrStdout()
+			var render func(io.Writer) error
+			ext := format
 			switch format {
 			case "json":
-				if err := report.JSON(w, snap); err != nil {
-					return err
-				}
+				render = func(w io.Writer) error { return report.JSON(w, snap) }
 			case "graphml":
-				if err := report.GraphML(w, snap); err != nil {
-					return err
-				}
+				render = func(w io.Writer) error { return report.GraphML(w, snap) }
 			case "html":
-				out := path + ".html"
-				if err := safefile.Write(out, func(w io.Writer) error { return report.HTML(w, snap) }); err != nil {
-					return err
-				}
-				fmt.Fprintln(w, out)
+				ext = "html"
+				render = func(w io.Writer) error { return report.HTML(w, snap) }
 			default:
 				return fmt.Errorf("unknown --format %q (html|json|graphml)", format)
+			}
+			if output == "" {
+				output = path + "." + ext
+			}
+			if output == "-" {
+				if err := render(cmd.OutOrStdout()); err != nil {
+					return err
+				}
+			} else {
+				if err := safefile.Write(output, render); err != nil {
+					return err
+				}
+				fmt.Fprintln(cmd.OutOrStdout(), output)
 			}
 			fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this report describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
 			return nil
@@ -52,6 +59,7 @@ func newReportCmd() *cobra.Command {
 	}
 	cmd.Flags().String("snapshot", "", "snapshot .json.gz to render")
 	cmd.Flags().StringVar(&format, "format", "html", "html|json|graphml")
+	cmd.Flags().StringVarP(&output, "output", "o", "", "protected output file; use - for stdout")
 	return cmd
 }
 

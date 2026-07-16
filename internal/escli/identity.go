@@ -18,7 +18,7 @@ type x509Cert struct {
 	SANs        []string
 }
 
-func TLSServerNamesQuery(fm FieldMap, window time.Duration, afterKey map[string]any) (string, error) {
+func TLSServerNamesQuery(fm FieldMap, window time.Duration, scope []string, afterKey map[string]any) (string, error) {
 	composite := map[string]any{
 		"size": config.CompositePageSize,
 		"sources": []any{
@@ -29,16 +29,20 @@ func TLSServerNamesQuery(fm FieldMap, window time.Duration, afterKey map[string]
 	if afterKey != nil {
 		composite["after"] = afterKey
 	}
+	filters := []any{
+		rangeFilter(fm.Timestamp, window),
+		map[string]any{"terms": map[string]any{fm.DatasetField: fm.Datasets.SSL}},
+		map[string]any{"exists": map[string]any{"field": fm.DestinationIP}},
+		map[string]any{"exists": map[string]any{"field": fm.SSLServerName}},
+	}
+	if sf := scopeFilter(fm, scope); sf != nil {
+		filters = append(filters, sf)
+	}
 	q := map[string]any{
 		"size": 0,
 		"query": map[string]any{
 			"bool": map[string]any{
-				"filter": []any{
-					rangeFilter(fm.Timestamp, window),
-					map[string]any{"terms": map[string]any{fm.DatasetField: fm.Datasets.SSL}},
-					map[string]any{"exists": map[string]any{"field": fm.DestinationIP}},
-					map[string]any{"exists": map[string]any{"field": fm.SSLServerName}},
-				},
+				"filter": filters,
 			},
 		},
 		"aggs": map[string]any{
@@ -48,7 +52,7 @@ func TLSServerNamesQuery(fm FieldMap, window time.Duration, afterKey map[string]
 	return marshal(q)
 }
 
-func (c *Client) FetchTLSServerNames(ctx context.Context, fm FieldMap, window time.Duration) (map[string][]string, error) {
+func (c *Client) FetchTLSServerNames(ctx context.Context, fm FieldMap, window time.Duration, scope []string, allowed map[string]bool) (map[string][]string, error) {
 	if len(fm.Datasets.SSL) == 0 || fm.SSLServerName == "" {
 		return map[string][]string{}, nil
 	}
@@ -64,8 +68,9 @@ func (c *Client) FetchTLSServerNames(ctx context.Context, fm FieldMap, window ti
 	out := map[string][]string{}
 	seen := map[string]map[string]bool{}
 	var after map[string]any
+	pairs := 0
 	for {
-		body, err := TLSServerNamesQuery(fm, window, after)
+		body, err := TLSServerNamesQuery(fm, window, scope, after)
 		if err != nil {
 			return nil, err
 		}
@@ -85,8 +90,15 @@ func (c *Client) FetchTLSServerNames(ctx context.Context, fm FieldMap, window ti
 		if err := json.Unmarshal(raw, &page); err != nil {
 			return nil, fmt.Errorf("decoding TLS server-name pairs: %w", err)
 		}
+		pairs += len(page.Buckets)
+		if pairs > config.TLSIdentityPairLimit {
+			return nil, fmt.Errorf("TLS identity pairs exceed limit %d", config.TLSIdentityPairLimit)
+		}
 		for _, b := range page.Buckets {
 			if b.Key.Dst == "" || b.Key.Name == "" {
+				continue
+			}
+			if allowed != nil && !allowed[b.Key.Dst] {
 				continue
 			}
 			if seen[b.Key.Dst] == nil {
@@ -110,7 +122,8 @@ func (c *Client) FetchTLSServerNames(ctx context.Context, fm FieldMap, window ti
 
 func X509DocsQuery(fm FieldMap, window time.Duration) (string, error) {
 	q := map[string]any{
-		"size": 5000,
+		"size":    5000,
+		"_source": []string{fm.MessageField, "x509.san_dns", "x509.certificate.subject"},
 		"query": map[string]any{
 			"bool": map[string]any{
 				"filter": []any{
@@ -171,7 +184,8 @@ func (c *Client) FetchX509Certs(ctx context.Context, fm FieldMap, window time.Du
 
 func SSHDocsQuery(fm FieldMap, window time.Duration) (string, error) {
 	q := map[string]any{
-		"size": 5000,
+		"size":    5000,
+		"_source": []string{fm.DestinationIP, fm.SSHHostKey},
 		"query": map[string]any{
 			"bool": map[string]any{
 				"filter": []any{
@@ -227,8 +241,8 @@ func (c *Client) FetchSSHHostKeys(ctx context.Context, fm FieldMap, window time.
 // FetchTLSFingerprints correlates observed TLS server names to x509 certs by
 // SAN/CN match. ponytail: best-effort SNI→cert matching, not per-connection
 // uid correlation; add stricter joins only if this heuristic proves too weak.
-func (c *Client) FetchTLSFingerprints(ctx context.Context, fm FieldMap, window time.Duration) (map[string][]string, error) {
-	namesByIP, err := c.FetchTLSServerNames(ctx, fm, window)
+func (c *Client) FetchTLSFingerprints(ctx context.Context, fm FieldMap, window time.Duration, scope []string, allowed map[string]bool) (map[string][]string, error) {
+	namesByIP, err := c.FetchTLSServerNames(ctx, fm, window, scope, allowed)
 	if err != nil {
 		return nil, err
 	}
@@ -238,18 +252,32 @@ func (c *Client) FetchTLSFingerprints(ctx context.Context, fm FieldMap, window t
 	}
 	out := map[string][]string{}
 	seen := map[string]map[string]bool{}
+	exact := map[string][]string{}
+	var wildcard []x509Cert
+	for _, cert := range certs {
+		for _, name := range cert.SANs {
+			if strings.Contains(name, "*") {
+				wildcard = append(wildcard, cert)
+				break
+			}
+			exact[name] = append(exact[name], cert.Fingerprint)
+		}
+	}
 	for ip, names := range namesByIP {
 		for _, name := range names {
-			for _, cert := range certs {
-				if !certMatchesName(cert, name) {
-					continue
+			matches := append([]string(nil), exact[strings.ToLower(strings.TrimSpace(name))]...)
+			for _, cert := range wildcard {
+				if certMatchesName(cert, name) {
+					matches = append(matches, cert.Fingerprint)
 				}
+			}
+			for _, fingerprint := range matches {
 				if seen[ip] == nil {
 					seen[ip] = map[string]bool{}
 				}
-				if !seen[ip][cert.Fingerprint] {
-					seen[ip][cert.Fingerprint] = true
-					out[ip] = append(out[ip], cert.Fingerprint)
+				if !seen[ip][fingerprint] {
+					seen[ip][fingerprint] = true
+					out[ip] = append(out[ip], fingerprint)
 				}
 			}
 		}

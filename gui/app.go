@@ -654,7 +654,11 @@ func (a *App) Connect(req ConnectRequest) (escli.ClusterInfo, error) {
 	if req.InsecureSkipVerify {
 		a.emit("connect:warning", "TLS certificate verification is DISABLED — the connection to the grid is open to interception. Use a CA cert instead.")
 	}
-	if priv, perr := cli.CheckWritePrivileges(ctx, fm.IndexPattern); perr == nil && priv.CanWrite {
+	if priv, perr := cli.CheckWritePrivileges(ctx, fm.IndexPattern); perr != nil {
+		a.emit("connect:warning", "could not verify that this API key is read-only: "+perr.Error())
+	} else if priv.Indeterminate {
+		a.emit("connect:warning", "could not verify that this API key is read-only: "+priv.Detail)
+	} else if priv.CanWrite {
 		a.emit("connect:warning", "this API key can WRITE to "+fm.IndexPattern+" ("+priv.Detail+"). Salient never writes, but the key violates least privilege — create a read-only key.")
 	}
 	return info, nil

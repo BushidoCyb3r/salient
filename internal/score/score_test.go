@@ -1,11 +1,15 @@
 package score
 
 import (
+	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/BushidoCyb3r/salient/internal/config"
 	"github.com/BushidoCyb3r/salient/internal/graph"
+	"gonum.org/v1/gonum/graph/network"
 )
 
 func TestScoreAttachesTerrainEvidence(t *testing.T) {
@@ -94,6 +98,64 @@ func TestPortOnlyEdgesDoNotScore(t *testing.T) {
 	if m.Nodes["10.0.0.2"].Scores.Composite <= m.Nodes["10.0.0.4"].Scores.Composite {
 		t.Error("confirmed responder must outscore scanned responder")
 	}
+}
+
+// TestScoreLargeSparseGraphStaysSparse guards the switch to
+// network.PageRankSparse (score.go). On a large sparse graph the dense
+// network.PageRank allocates an N×N matrix (~N²×8 bytes ≈ 128 MiB at 4000
+// nodes), which can OOM a small operator workstation; the sparse solver
+// allocates O(edges). This isolates each solver on the exact directed graph
+// Score ranks and asserts the sparse path — the one score.go must use — stays
+// far below the dense allocation. Score() itself can't be measured directly:
+// its sampled betweenness pass allocates hundreds of MiB and drowns the signal.
+func TestScoreLargeSparseGraphStaysSparse(t *testing.T) {
+	const n = 4000
+	edges := make([]graph.Edge, 0, n)
+	// Chain topology: n nodes, n-1 confirmed edges — maximally sparse.
+	for i := 0; i < n-1; i++ {
+		edges = append(edges, graph.Edge{
+			Src: sparseIP(i), Dst: sparseIP(i + 1), Port: 88, ConnCount: 10,
+			Evidence: graph.EvidenceResponderConfirmed,
+		})
+	}
+	m := graph.Build(edges)
+	g := m.Directed()
+
+	alloc := func(f func()) uint64 {
+		var before, after runtime.MemStats
+		runtime.GC()
+		runtime.ReadMemStats(&before)
+		f()
+		runtime.ReadMemStats(&after)
+		return after.TotalAlloc - before.TotalAlloc
+	}
+
+	var sparsePR map[int64]float64
+	sparse := alloc(func() {
+		sparsePR = network.PageRankSparse(g, config.PageRankDamping, config.PageRankTolerance)
+	})
+	dense := alloc(func() {
+		_ = network.PageRank(g, config.PageRankDamping, config.PageRankTolerance)
+	})
+
+	// Sanity: the dense matrix really is ~N²×8 here, so the comparison is real.
+	const denseMatrix = uint64(n) * uint64(n) * 8
+	if dense < denseMatrix {
+		t.Fatalf("dense PageRank allocated %d bytes, expected ≥ N×N matrix %d — graph too small to be a meaningful guard", dense, denseMatrix)
+	}
+	// The sparse solver must stay an order of magnitude below dense.
+	if sparse*10 > dense {
+		t.Fatalf("PageRankSparse allocated %d bytes vs dense %d — no longer sub-quadratic; a revert to network.PageRank would OOM large grids", sparse, dense)
+	}
+	// And it must still produce a real ranking.
+	mid, _ := m.ID(sparseIP(n / 2))
+	if sparsePR[mid] <= 0 {
+		t.Error("mid-chain node has no PageRank — sparse solver produced no ranking")
+	}
+}
+
+func sparseIP(i int) string {
+	return fmt.Sprintf("10.0.%d.%d", i/256, i%256)
 }
 
 func clientIP(i int) string {

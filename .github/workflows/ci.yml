@@ -8,10 +8,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
       - run: gofmt -l . | tee /dev/stderr | wc -l | grep -qx 0
@@ -23,35 +23,35 @@ jobs:
   gui-build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-15, windows-2025]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
       - name: Install Linux webview dependency
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-24.04'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
       - name: Build GUI
         working-directory: gui
         run: |
-          wails build ${{ matrix.os == 'ubuntu-latest' && '-tags webkit2_41' || matrix.os == 'macos-latest' && '-platform darwin/universal' || '' }}
+          wails build ${{ matrix.os == 'ubuntu-24.04' && '-tags webkit2_41' || matrix.os == 'macos-15' && '-platform darwin/universal' || '' }}
       # after the build: frontend/dist is gitignored and go:embed needs it,
       # so the module only compiles once wails build has generated it
       - name: Test GUI module
         working-directory: gui
         run: go test ./...
       - name: Archive macOS app
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-15'
         working-directory: gui/build/bin
         run: ditto -c -k --sequesterRsrc --keepParent Salient.app Salient-macOS.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: salient-gui-${{ matrix.os }}
           path: |
@@ -65,16 +65,16 @@ jobs:
   # RHEL-family runner, so run Fedora in a container. (Rocky/RHEL 9 only ships
   # the older webkit2gtk-4.0 API; Fedora exercises the 4.1 path we actually ship.)
   gui-build-fedora:
-    runs-on: ubuntu-latest
-    container: fedora:latest
+    runs-on: ubuntu-24.04
+    container: fedora@sha256:52cfb35e60823b691af7541b576c0fa49195628044b2c1a15b0ae775ec01048e # Fedora 43 amd64
     steps:
       - name: Install base tools and webview build deps
         run: dnf -y install gcc make git tar gzip which pkgconf-pkg-config gtk3-devel webkit2gtk4.1-devel
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
       # No separate wails install: `make gui` self-bootstraps the pinned
@@ -85,27 +85,27 @@ jobs:
       - name: Test GUI module
         working-directory: gui
         run: go test ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: salient-gui-fedora
           path: gui/build/bin/*
 
   package-linux:
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
       - name: Install Linux webview dependency
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev
       - name: Build deb + rpm packages
         run: make package-linux VERSION=${GITHUB_REF_NAME#v}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: salient-gui-linux-packages
           path: dist/*
@@ -113,12 +113,14 @@ jobs:
   release:
     needs: [test, gui-build, package-linux]
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
       - name: Prepare release assets
@@ -126,8 +128,13 @@ jobs:
           set -euo pipefail
           mkdir -p release-assets
           cp artifacts/salient-gui-linux-packages/*.deb artifacts/salient-gui-linux-packages/*.rpm release-assets/
-          cp artifacts/salient-gui-macos-latest/Salient-macOS.zip release-assets/
-          cp artifacts/salient-gui-windows-latest/salient.exe release-assets/Salient-Windows.exe
+          cp artifacts/salient-gui-macos-15/Salient-macOS.zip release-assets/
+          cp artifacts/salient-gui-windows-2025/salient.exe release-assets/Salient-Windows.exe
+          (cd release-assets && sha256sum * > SHA256SUMS)
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: release-assets/*
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

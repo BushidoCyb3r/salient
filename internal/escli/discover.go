@@ -84,7 +84,7 @@ func HasWritePrivilegesQuery(pattern string) (string, error) {
 		"index": []any{
 			map[string]any{
 				"names":      []string{pattern},
-				"privileges": []string{"write", "index", "create", "create_index", "delete", "delete_index"},
+				"privileges": []string{"write", "index", "create", "create_doc", "create_index", "delete", "delete_index"},
 			},
 		},
 	}

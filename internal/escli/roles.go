@@ -22,7 +22,7 @@ func ResponderCardinalityQuery(fm FieldMap, datasets []string, window time.Durat
 		rangeFilter(fm.Timestamp, window),
 		map[string]any{"terms": map[string]any{fm.DatasetField: datasets}},
 	}
-	if sf := scopeFilter(fm, scope); sf != nil {
+	if sf := scopeFilterFields(scope, clientField, responderField); sf != nil {
 		filters = append(filters, sf)
 	}
 	q := map[string]any{

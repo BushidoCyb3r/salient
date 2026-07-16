@@ -1,6 +1,6 @@
 # Key-terrain criticality maps
 
-`salient map --snapshot FILE [--format html|svg|graphml]` renders a
+`salient map --snapshot FILE [--format html|svg|graphml] [--output FILE]` renders a
 subnet-grouped, tiered dependency map from a stored snapshot. Maps are a pure
 function of the snapshot (`internal/mapview`) — no ES access, fully offline,
 re-renderable anytime.
@@ -177,7 +177,9 @@ with a warning above 120 elements.
 
 ## Importing GraphML into draw.io or yEd (offline)
 
-1. Generate the file: `salient map --snapshot FILE --format graphml > map.graphml`
+1. Generate the file: `salient map --snapshot FILE --format graphml --output map.graphml`.
+   Output files are created with mode 0600; pass `--output -` only for an
+   explicit stdout pipeline.
 2. **draw.io** (desktop, offline): File → Import from → Device → select the
    `.graphml` file. draw.io reads the nested `<graph>` elements as swimlane
    groups; nodes land inside their subnet's container. Re-layout with

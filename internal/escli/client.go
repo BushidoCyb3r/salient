@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BushidoCyb3r/salient/internal/config"
 	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 )
 
@@ -30,7 +31,8 @@ type Config struct {
 // Client wraps the low-level go-elasticsearch client. Salient only ever
 // issues reads: GET/POST search, field_caps, resolve, and privilege checks.
 type Client struct {
-	es *elasticsearch.Client
+	es      *elasticsearch.Client
+	timeout time.Duration
 }
 
 // ErrZeroBuckets is the wrong-fieldmap signature: the index holds documents
@@ -84,7 +86,11 @@ func New(cfg Config) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("building ES client: %w", err)
 	}
-	return &Client{es: es}, nil
+	return &Client{es: es, timeout: cfg.Timeout}, nil
+}
+
+func (c *Client) requestContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, c.timeout)
 }
 
 // checkScheme rejects plaintext HTTP URLs except against loopback, so the
@@ -115,6 +121,8 @@ type ClusterInfo struct {
 // Info authenticates and returns cluster identity.
 func (c *Client) Info(ctx context.Context) (ClusterInfo, error) {
 	var info ClusterInfo
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	res, err := c.es.Info(c.es.Info.WithContext(ctx))
 	if err != nil {
 		return info, fmt.Errorf("connecting to Elasticsearch: %w", err)
@@ -123,7 +131,7 @@ func (c *Client) Info(ctx context.Context) (ClusterInfo, error) {
 	if res.IsError() {
 		return info, apiError("info", res.StatusCode, res.Body)
 	}
-	if err := json.NewDecoder(res.Body).Decode(&info); err != nil {
+	if err := decodeJSONLimited(res.Body, &info); err != nil {
 		return info, fmt.Errorf("decoding cluster info: %w", err)
 	}
 	return info, nil
@@ -138,6 +146,8 @@ type IndexInfo struct {
 // ResolveIndices expands the index pattern into concrete indices and data
 // streams via GET _resolve/index.
 func (c *Client) ResolveIndices(ctx context.Context, pattern string) ([]IndexInfo, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	res, err := c.es.Indices.ResolveIndex(
 		[]string{pattern},
 		c.es.Indices.ResolveIndex.WithContext(ctx),
@@ -158,7 +168,7 @@ func (c *Client) ResolveIndices(ctx context.Context, pattern string) ([]IndexInf
 			Name string `json:"name"`
 		} `json:"data_streams"`
 	}
-	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+	if err := decodeJSONLimited(res.Body, &body); err != nil {
 		return nil, fmt.Errorf("decoding resolve response: %w", err)
 	}
 	out := make([]IndexInfo, 0, len(body.Indices)+len(body.DataStreams))
@@ -174,6 +184,8 @@ func (c *Client) ResolveIndices(ctx context.Context, pattern string) ([]IndexInf
 // search runs a request body against the pattern and returns the raw
 // decoded response. All Salient searches are size:0 aggregations.
 func (c *Client) search(ctx context.Context, pattern, body string) (map[string]json.RawMessage, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	res, err := c.es.Search(
 		c.es.Search.WithContext(ctx),
 		c.es.Search.WithIndex(pattern),
@@ -188,7 +200,7 @@ func (c *Client) search(ctx context.Context, pattern, body string) (map[string]j
 		return nil, apiError("search", res.StatusCode, res.Body)
 	}
 	var decoded map[string]json.RawMessage
-	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
+	if err := decodeJSONLimited(res.Body, &decoded); err != nil {
 		return nil, fmt.Errorf("decoding search response: %w", err)
 	}
 	return decoded, nil
@@ -198,6 +210,8 @@ func (c *Client) search(ctx context.Context, pattern, body string) (map[string]j
 // ponytail: single page by design; add search_after only if a real grid
 // exceeds this cap for the raw-doc features that use it.
 func (c *Client) searchSources(ctx context.Context, pattern, body string) ([]json.RawMessage, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	res, err := c.es.Search(
 		c.es.Search.WithContext(ctx),
 		c.es.Search.WithIndex(pattern),
@@ -218,7 +232,7 @@ func (c *Client) searchSources(ctx context.Context, pattern, body string) ([]jso
 			} `json:"hits"`
 		} `json:"hits"`
 	}
-	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
+	if err := decodeJSONLimited(res.Body, &decoded); err != nil {
 		return nil, fmt.Errorf("decoding search response: %w", err)
 	}
 	out := make([]json.RawMessage, 0, len(decoded.Hits.Hits))
@@ -233,6 +247,8 @@ func (c *Client) searchSources(ctx context.Context, pattern, body string) ([]jso
 // FieldPresence reports, via _field_caps, whether each requested field is
 // mapped anywhere under the pattern.
 func (c *Client) FieldPresence(ctx context.Context, pattern string, fields []string) (map[string]bool, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	res, err := c.es.FieldCaps(
 		c.es.FieldCaps.WithContext(ctx),
 		c.es.FieldCaps.WithIndex(pattern),
@@ -248,7 +264,7 @@ func (c *Client) FieldPresence(ctx context.Context, pattern string, fields []str
 	var body struct {
 		Fields map[string]json.RawMessage `json:"fields"`
 	}
-	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+	if err := decodeJSONLimited(res.Body, &body); err != nil {
 		return nil, fmt.Errorf("decoding field_caps response: %w", err)
 	}
 	out := make(map[string]bool, len(fields))
@@ -271,6 +287,8 @@ type WritePrivilegeCheck struct {
 // CheckWritePrivileges verifies the API key is genuinely read-only against
 // the index pattern (SALIENT_PLAN.md §14).
 func (c *Client) CheckWritePrivileges(ctx context.Context, pattern string) (WritePrivilegeCheck, error) {
+	ctx, cancel := c.requestContext(ctx)
+	defer cancel()
 	body, err := HasWritePrivilegesQuery(pattern)
 	if err != nil {
 		return WritePrivilegeCheck{}, err
@@ -296,7 +314,7 @@ func (c *Client) CheckWritePrivileges(ctx context.Context, pattern string) (Writ
 		HasAllRequested bool                       `json:"has_all_requested"`
 		Index           map[string]map[string]bool `json:"index"`
 	}
-	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
+	if err := decodeJSONLimited(res.Body, &decoded); err != nil {
 		return WritePrivilegeCheck{}, fmt.Errorf("decoding privilege response: %w", err)
 	}
 	check := WritePrivilegeCheck{}
@@ -313,6 +331,21 @@ func (c *Client) CheckWritePrivileges(ctx context.Context, pattern string) (Writ
 		check.Detail = "granted write-class privileges: " + strings.Join(granted, ", ")
 	}
 	return check, nil
+}
+
+func decodeJSONLimited(body io.Reader, dst any) error {
+	return decodeJSONWithLimit(body, dst, config.ESMaxResponseBytes)
+}
+
+func decodeJSONWithLimit(body io.Reader, dst any, limit int64) error {
+	raw, err := io.ReadAll(io.LimitReader(body, limit+1))
+	if err != nil {
+		return err
+	}
+	if int64(len(raw)) > limit {
+		return fmt.Errorf("response exceeds %d bytes", limit)
+	}
+	return json.Unmarshal(raw, dst)
 }
 
 func apiError(op string, status int, body io.Reader) error {

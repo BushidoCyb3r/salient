@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/BushidoCyb3r/salient/internal/config"
@@ -64,6 +65,9 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	if opts.MaxEdges == 0 {
 		opts.MaxEdges = config.DefaultMaxEdges
 	}
+	if opts.MaxEdges < 0 {
+		return Result{}, fmt.Errorf("max edges must be greater than zero")
+	}
 
 	emit("connecting", fmt.Sprintf("scanning %q, window %s, scope %v", info.ClusterName, opts.Window, scopeOrAll(opts.Scope)), false)
 
@@ -104,6 +108,9 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	// Per-node responder MAC (gateway MACs excluded) — powers OUI vendor
 	// identification. Best-effort: no MAC fields just means no vendors.
 	if macs, err := cli.FetchNodeMACs(ctx, fm, opts.Window); err != nil {
+		if ctx.Err() != nil {
+			return Result{}, ctx.Err()
+		}
 		emit("node-mac", fmt.Sprintf("per-node MAC query failed, nodes will have no vendor: %v", err), true)
 	} else {
 		for ip, mac := range macs {
@@ -117,6 +124,9 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	// not a guess. Best-effort — no DHCP dataset just means no hostnames
 	// from this source.
 	if leases, err := cli.FetchDHCPLeases(ctx, fm, opts.Window); err != nil {
+		if ctx.Err() != nil {
+			return Result{}, ctx.Err()
+		}
 		emit("dhcp-leases", fmt.Sprintf("DHCP lease query failed, nodes will have no lease-derived hostname: %v", err), true)
 	} else {
 		for ip, lease := range leases {
@@ -132,7 +142,14 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 			}
 		}
 	}
-	if fps, err := cli.FetchTLSFingerprints(ctx, fm, opts.Window); err != nil {
+	allowedNodes := make(map[string]bool, len(m.Nodes))
+	for ip := range m.Nodes {
+		allowedNodes[ip] = true
+	}
+	if fps, err := cli.FetchTLSFingerprints(ctx, fm, opts.Window, opts.Scope, allowedNodes); err != nil {
+		if ctx.Err() != nil {
+			return Result{}, ctx.Err()
+		}
 		emit("tls-identity", fmt.Sprintf("TLS identity query failed, nodes will have no certificate continuity evidence: %v", err), true)
 	} else {
 		for ip, vals := range fps {
@@ -142,6 +159,9 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 		}
 	}
 	if keys, err := cli.FetchSSHHostKeys(ctx, fm, opts.Window); err != nil {
+		if ctx.Err() != nil {
+			return Result{}, ctx.Err()
+		}
 		emit("ssh-identity", fmt.Sprintf("SSH identity query failed, nodes will have no host-key continuity evidence: %v", err), true)
 	} else {
 		for ip, vals := range keys {
@@ -151,6 +171,9 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 		}
 	}
 
+	if err := ctx.Err(); err != nil {
+		return Result{}, err
+	}
 	res := score.Score(m)
 	scored := fmt.Sprintf("%d nodes scored", res.NodeCount)
 	if res.BetweennessSampled {
@@ -167,11 +190,16 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	if err != nil {
 		return Result{}, fmt.Errorf("bad timezone %q: %w", tz, err)
 	}
-	attachTemporal(ctx, cli, fm, opts.Window, loc, m)
+	if err := attachTemporal(ctx, cli, fm, opts.Window, loc, m); err != nil {
+		return Result{}, err
+	}
 	// Inference runs after temporal so DB-role evidence can cite activity class.
 	m.InferRoles(ev)
 
-	sensors, _ := cli.Sensors(ctx, fm, opts.Window, config.SensorTermsSize)
+	sensors, err := cli.Sensors(ctx, fm, opts.Window, config.SensorTermsSize)
+	if err != nil && ctx.Err() != nil {
+		return Result{}, ctx.Err()
+	}
 	var sensorNames []string
 	for _, s := range sensors {
 		sensorNames = append(sensorNames, s.Dataset)
@@ -180,7 +208,13 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 	// Primary gateway evidence: MAC convergence, if the grid has L2 fields.
 	l2gw, err := cli.FetchGatewayCandidates(ctx, fm, opts.Window)
 	if err != nil {
+		if ctx.Err() != nil {
+			return Result{}, ctx.Err()
+		}
 		emit("gateway-fallback", fmt.Sprintf("gateway candidate query failed, maps will use the inferred fallback: %v", err), true)
+	}
+	if err := ctx.Err(); err != nil {
+		return Result{}, err
 	}
 
 	snap := m.Snapshot(graph.SnapshotMeta{
@@ -199,14 +233,15 @@ func Run(ctx context.Context, cli *escli.Client, fm escli.FieldMap, info escli.C
 		return Result{}, err
 	}
 	emit("saving", "snapshot saved: "+path, false)
+	artifactStem := strings.TrimSuffix(filepath.Base(path), ".json.gz")
 
-	reportPath, err := writeReport(dataDir, snap)
+	reportPath, err := writeReport(dataDir, artifactStem, snap)
 	if err != nil {
 		return Result{}, err
 	}
 	emit("report", "report written: "+reportPath, false)
 
-	mapPath, err := writeBriefingMap(dataDir, snap)
+	mapPath, err := writeBriefingMap(dataDir, artifactStem, snap)
 	if err != nil {
 		return Result{}, err
 	}
@@ -231,7 +266,7 @@ func scopeOrAll(scope []string) any {
 // attachTemporal fetches temporal profiles for the top-N ranked responders
 // and attaches each to that node's inbound edges. Fetch failures degrade to
 // unclassified edges rather than failing the scan.
-func attachTemporal(ctx context.Context, cli *escli.Client, fm escli.FieldMap, window time.Duration, loc *time.Location, m *graph.Model) {
+func attachTemporal(ctx context.Context, cli *escli.Client, fm escli.FieldMap, window time.Duration, loc *time.Location, m *graph.Model) error {
 	type ranked struct {
 		ip   string
 		rank int
@@ -246,6 +281,9 @@ func attachTemporal(ctx context.Context, cli *escli.Client, fm escli.FieldMap, w
 	}
 	for _, r := range nodes {
 		p, err := cli.FetchTemporal(ctx, fm, window, r.ip, loc)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		if err != nil || p == nil {
 			continue
 		}
@@ -255,6 +293,7 @@ func attachTemporal(ctx context.Context, cli *escli.Client, fm escli.FieldMap, w
 			}
 		}
 	}
+	return nil
 }
 
 // zeroCoverage flags in-scope CIDRs with no observed nodes — the
@@ -276,9 +315,9 @@ func zeroCoverage(scope []string, m *graph.Model) []string {
 	return out
 }
 
-func writeReport(dataDir string, snap graph.Snapshot) (string, error) {
+func writeReport(dataDir, artifactStem string, snap graph.Snapshot) (string, error) {
 	dir := filepath.Join(dataDir, "reports")
-	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".html"
+	name := artifactStem + ".html"
 	path := filepath.Join(dir, name)
 	if err := safefile.Write(path, func(w io.Writer) error { return report.HTML(w, snap) }); err != nil {
 		return "", err
@@ -286,9 +325,9 @@ func writeReport(dataDir string, snap graph.Snapshot) (string, error) {
 	return path, nil
 }
 
-func writeBriefingMap(dataDir string, snap graph.Snapshot) (string, error) {
+func writeBriefingMap(dataDir, artifactStem string, snap graph.Snapshot) (string, error) {
 	dir := filepath.Join(dataDir, "maps")
-	name := snap.Meta.CreatedAt.UTC().Format("20060102T150405Z") + ".html"
+	name := artifactStem + ".html"
 	path := filepath.Join(dir, name)
 	mm := mapview.Build(snap, mapview.Options{})
 	if err := safefile.Write(path, func(w io.Writer) error { return report.HTMLMap(w, mm) }); err != nil {
