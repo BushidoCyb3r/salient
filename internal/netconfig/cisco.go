@@ -105,6 +105,14 @@ func ParseCiscoIOS(r io.Reader, source string) (DeclaredDevice, error) {
 						iface.Bindings = append(iface.Bindings, Binding{Ruleset: fields[2], Direction: dir})
 						recognized++
 					}
+				case len(fields) >= 4 && fields[0] == "switchport" && fields[1] == "access" && fields[2] == "vlan":
+					if v, err := strconv.Atoi(fields[3]); err == nil {
+						iface.VLAN = v
+						recognized++
+					}
+				case len(fields) >= 3 && fields[0] == "switchport" && fields[1] == "mode" && fields[2] == "trunk":
+					iface.Trunk = true
+					recognized++
 				}
 			case secACL:
 				if fields[0] == "permit" || fields[0] == "deny" {

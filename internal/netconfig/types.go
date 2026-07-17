@@ -81,6 +81,7 @@ type Interface struct {
 	Name     string    `json:"name"`
 	Prefixes []string  `json:"prefixes"` // CIDRs (primary + secondaries)
 	VLAN     int       `json:"vlan,omitempty"`
+	Trunk    bool      `json:"trunk,omitempty"` // switchport mode trunk
 	Shutdown bool      `json:"shutdown,omitempty"`
 	Bindings []Binding `json:"bindings,omitempty"`
 	MAC      string    `json:"mac,omitempty"` // UniFi device inventory match

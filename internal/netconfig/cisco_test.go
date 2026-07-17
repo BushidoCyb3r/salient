@@ -74,6 +74,44 @@ func TestParseCiscoIOS_Interfaces(t *testing.T) {
 	}
 }
 
+func TestParseCiscoIOS_Switchport(t *testing.T) {
+	f, err := os.Open("../../testdata/netconfig/ios-switch.cfg")
+	if err != nil {
+		t.Fatalf("open fixture: %v", err)
+	}
+	defer f.Close()
+	dev, err := ParseCiscoIOS(f, "ios-switch.cfg")
+	if err != nil {
+		t.Fatalf("ParseCiscoIOS: %v", err)
+	}
+	byName := map[string]Interface{}
+	for _, i := range dev.Interfaces {
+		byName[i.Name] = i
+	}
+
+	access, ok := byName["GigabitEthernet0/1"]
+	if !ok {
+		t.Fatal("missing access port Gi0/1")
+	}
+	if access.VLAN != 40 {
+		t.Errorf("access port VLAN = %d, want 40", access.VLAN)
+	}
+	if access.Trunk {
+		t.Errorf("access port should not be a trunk: %+v", access)
+	}
+
+	trunk, ok := byName["GigabitEthernet0/24"]
+	if !ok {
+		t.Fatal("missing trunk port Gi0/24")
+	}
+	if !trunk.Trunk {
+		t.Errorf("trunk port Trunk = false, want true: %+v", trunk)
+	}
+	if trunk.VLAN != 0 {
+		t.Errorf("trunk port VLAN = %d, want 0", trunk.VLAN)
+	}
+}
+
 func TestParseCiscoIOS_RoutesPoolVLAN(t *testing.T) {
 	dev := loadFixture(t)
 

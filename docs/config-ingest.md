@@ -34,8 +34,9 @@ show running-config
 Copy the output to a `.txt` / `.cfg` / `.conf` file, one file per device.
 Salient autodetects IOS by its `hostname` / `interface` / `access-list` lines.
 
-Parsed: interfaces and their prefixes/VLANs/ACL bindings, DHCP pools, static
-routes, VLAN names, and extended/standard access-lists. NAT, VRF, IPv6, and
+Parsed: interfaces and their prefixes/VLANs/ACL bindings (including L2
+switchport access VLANs and trunk-mode flags), DHCP pools, static routes, VLAN
+names, and extended/standard access-lists. NAT, VRF, IPv6, and
 reachability simulation are out of scope (declared rules are matched against
 observed flows only).
 
