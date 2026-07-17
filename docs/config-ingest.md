@@ -49,6 +49,15 @@ zones, and firewall policies, then writes four protected JSON files. Import all
 four together; Salient folds them into one declared controller. A legacy
 session-cookie export remains available below for older Network versions.
 
+`unifi-export` is part of the **standalone CLI**, not the desktop console. The
+desktop console has no UniFi address or API-key fields and does not contact the
+controller. The complete workflow is:
+
+```text
+UniFi Network API -> salient unifi-export -> four local JSON files
+                  -> open a snapshot in the GUI -> Data -> Device Configs
+```
+
 Ubiquiti documents [local console access](https://help.ui.com/hc/en-us/articles/28457353760919-UniFi-Local-Management),
 [local administrator creation](https://help.ui.com/hc/en-us/articles/28692158912279-Adding-Admins-in-UniFi),
 and the [official Network API](https://help.ui.com/hc/en-us/articles/30076656117655-Getting-Started-with-the-Official-UniFi-API).
@@ -68,7 +77,13 @@ credential, or a browser cookie.
    and copy it when shown. Salient only calls documented GET endpoints even if
    the application does not offer a separate read-only permission toggle.
 4. On the workstation running the standalone CLI, read the key without echoing
-   it and export the four collections:
+   it and export the four collections. If you downloaded a release binary
+   instead of installing it as `salient`, substitute its path, such as
+   `./salient-cli-linux-amd64`, `./salient-cli-darwin-arm64`, or
+   `.\salient-cli-windows-amd64.exe`. A downloaded Linux/macOS binary may first
+   need `chmod +x <downloaded-cli>`.
+
+   Linux with Bash:
 
    ```bash
    read -rsp 'UniFi Network Integration API key: ' SALIENT_UNIFI_API_KEY
@@ -77,6 +92,29 @@ credential, or a browser cookie.
 
    salient unifi-export --controller https://192.168.1.1
    unset SALIENT_UNIFI_API_KEY
+   ```
+
+   macOS with the default Zsh:
+
+   ```zsh
+   read -s "SALIENT_UNIFI_API_KEY?UniFi Network Integration API key: "
+   printf '\n'
+   export SALIENT_UNIFI_API_KEY
+
+   salient unifi-export --controller https://192.168.1.1
+   unset SALIENT_UNIFI_API_KEY
+   ```
+
+   Windows PowerShell:
+
+   ```powershell
+   $secureKey = Read-Host 'UniFi Network Integration API key' -AsSecureString
+   $env:SALIENT_UNIFI_API_KEY = [System.Net.NetworkCredential]::new('', $secureKey).Password
+   try {
+       .\salient-cli-windows-amd64.exe unifi-export --controller https://192.168.1.1
+   } finally {
+       Remove-Item Env:SALIENT_UNIFI_API_KEY
+   }
    ```
 
    Replace `192.168.1.1` with the console's LAN address. Do not append an API
@@ -292,8 +330,10 @@ inventory associates controller devices with observed MACs.
 
 Open a snapshot, then in the **Data** tab → **Device Configs** →
 *Load device configs…*. Select one or more exported files (Cisco text and
-UniFi JSON can be mixed in one selection). The map stamps declared gateway
-identity onto the inferred gateways, and the task log lists the diff findings.
+UniFi JSON can be mixed in one selection). For an Integration API export,
+select all four `unifi-integration-*.json` files in the same file-picker
+operation. The map stamps declared gateway identity onto the inferred gateways,
+and the task log lists the diff findings.
 The ingest persists, so it reapplies automatically when you reload the
 snapshot, and feeds the Hunt view's declared-policy leads. Clear it with the
 `×` on the chip.

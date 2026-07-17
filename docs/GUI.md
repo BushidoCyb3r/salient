@@ -32,6 +32,15 @@ entry. The macOS and Windows builds are unsigned, so verify the file against the
 release's `SHA256SUMS` before accepting the platform warning. Assets labeled or
 named `salient-cli-*` are the separate command-line binary.
 
+## Importing UniFi configuration
+
+The desktop console does not store a UniFi address or API key and does not pull
+configuration from a controller. Run `unifi-export` with the standalone CLI,
+open a snapshot in the console, then select all four generated JSON files under
+**Data → Device Configs → Load device configs…**. The
+[config-ingestion guide](config-ingest.md#unifi) includes API-key creation,
+Linux/macOS/Windows commands, TLS options, and the generated filenames.
+
 ## Building
 
 Requires Go 1.26.5 or newer, Node.js/npm, and the platform packages below.

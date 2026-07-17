@@ -133,6 +133,12 @@ the `.deb`, `.rpm`, `Salient-macOS.zip`, and `Salient-Windows.exe` assets are
 the desktop console. Each release includes `SHA256SUMS` and build-provenance
 attestations.
 
+The desktop console does not accept a UniFi controller address or API key. Use
+the standalone CLI's `unifi-export` command to create four local JSON files,
+then open a snapshot in the desktop console and import all four through
+**Data → Device Configs → Load device configs…**. See the
+[complete UniFi CLI-to-GUI workflow](docs/config-ingest.md#unifi).
+
 The CLI is a static binary. On Linux or macOS, make the downloaded CLI executable
 before its first run:
 
@@ -396,7 +402,7 @@ salient report --snapshot SNAP.json.gz --format json --output report.json
 salient map --snapshot SNAP.json.gz --format graphml --output map.graphml
 salient diff --from OLD.json.gz --to NEW.json.gz --map
 salient reconcile --snapshot SNAP.json.gz --assets assets.csv --map
-export SALIENT_UNIFI_API_KEY='<Network Integration API key>'
+# Set SALIENT_UNIFI_API_KEY without echo/history as shown in docs/config-ingest.md.
 salient unifi-export --controller https://192.168.1.1
 salient declared --snapshot SNAP.json.gz \
   --configs router.cfg,salient-data/unifi-export/unifi-integration-networks.json,salient-data/unifi-export/unifi-integration-devices.json,salient-data/unifi-export/unifi-integration-firewall-zones.json,salient-data/unifi-export/unifi-integration-firewall-policies.json
