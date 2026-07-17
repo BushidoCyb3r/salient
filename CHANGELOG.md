@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-07-17
+
+UniFi declared-gateway visibility fix.
+
 ### Fixed
 - UniFi Integration API network gateway addresses now reach inventory
   reconciliation and remain visible as declared gateways even when a condensed
@@ -348,7 +352,10 @@ supply-chain, and local-artifact safety.
 - `refreshDevices` dropped the pin set from the in-memory registry, which could
   leave the pin/unpin menu label stale.
 
-[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/BushidoCyb3r/salient/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/BushidoCyb3r/salient/compare/v0.5.1...v0.6.0
+[0.5.1]: https://github.com/BushidoCyb3r/salient/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/BushidoCyb3r/salient/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/BushidoCyb3r/salient/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/BushidoCyb3r/salient/compare/v0.3.2...v0.3.3
