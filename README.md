@@ -383,19 +383,24 @@ salient view
 | `diff` | Compare two snapshots and optionally render a drift-highlighted map. |
 | `reconcile` | Compare a snapshot with an asset CSV and optionally render the findings. |
 | `declared` | Compare exported Cisco IOS/UniFi configs with observed inventory and policy. |
+| `unifi-export` | Export import-ready config JSON through the local Network Integration API. |
 | `mission` | Score dependency proximity to operator-selected mission systems. |
 | `stability` | Report terrain-rank stability across at least three stored snapshots. |
 | `analyze` | Explicitly send a capped snapshot summary to a configured model endpoint. |
 | `completion` | Generate shell-completion scripts. |
 
-Common offline operations:
+Common CLI operations:
 
 ~~~sh
 salient report --snapshot SNAP.json.gz --format json --output report.json
 salient map --snapshot SNAP.json.gz --format graphml --output map.graphml
 salient diff --from OLD.json.gz --to NEW.json.gz --map
 salient reconcile --snapshot SNAP.json.gz --assets assets.csv --map
-salient declared --snapshot SNAP.json.gz --configs router.cfg,unifi.json
+export SALIENT_UNIFI_API_KEY='<Network Integration API key>'
+salient unifi-export --controller https://192.168.1.1
+salient declared --snapshot SNAP.json.gz \
+  --configs router.cfg,salient-data/unifi-export/unifi-integration-networks.json,salient-data/unifi-export/unifi-integration-devices.json,salient-data/unifi-export/unifi-integration-firewall-zones.json,salient-data/unifi-export/unifi-integration-firewall-policies.json
+unset SALIENT_UNIFI_API_KEY
 salient mission --snapshot SNAP.json.gz --scope 10.0.1.10,10.0.1.11
 salient stability --data-dir salient-data --format json
 ~~~
@@ -429,6 +434,9 @@ for supported device-config exports.
   endpoints require HTTPS and an explicit network-data-egress acknowledgement.
 - Model API keys stay in memory. Tag sidecars record only endpoint host, model,
   timestamp, and validated suggestions.
+- `unifi-export` contacts only the operator-supplied local console, sends the
+  Network Integration key in memory, issues GET requests only, and writes
+  protected import files.
 - On POSIX systems, managed artifacts use 0600 files in 0700 directories.
   Windows exports inherit the destination directory's ACLs.
 

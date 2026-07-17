@@ -3,6 +3,7 @@ package netconfig
 import (
 	"net/netip"
 	"sort"
+	"strings"
 
 	"github.com/BushidoCyb3r/salient/internal/graph"
 )
@@ -135,6 +136,13 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 					apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
 						return !containsAny(nets, src) && containsAny(nets, dst)
 					}})
+				default:
+					if strings.HasPrefix(rs.Name, "ZONE:") {
+						nets := declared
+						apps = append(apps, application{rs.Name, rs, func(src, dst netip.Addr) bool {
+							return crossesDeclaredSubnet(nets, src, dst)
+						}})
+					}
 				}
 				// Other ruleset names (WAN_OUT, *_LOCAL, ...) are not
 				// observed-ingress policy; skip. ponytail: add named scopes if
@@ -275,6 +283,21 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 		return a.Rule.Line < b.Rule.Line
 	})
 	return res
+}
+
+// crossesDeclaredSubnet requires the flow to touch the declared controller and
+// excludes flows that remain inside one declared L2 subnet. Official UniFi zone
+// policies are otherwise scoped by each parsed rule's explicit endpoint CIDRs.
+func crossesDeclaredSubnet(nets []netip.Prefix, src, dst netip.Addr) bool {
+	if !containsAny(nets, src) && !containsAny(nets, dst) {
+		return false
+	}
+	for _, p := range nets {
+		if p.Contains(src) && p.Contains(dst) {
+			return false
+		}
+	}
+	return true
 }
 
 // traverses reports whether a flow crosses the gateway for one of nets: src is

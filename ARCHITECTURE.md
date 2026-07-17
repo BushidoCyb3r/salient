@@ -113,19 +113,21 @@ contradictions. The CSV parser is forgiving (header autodetection by keyword)
 and treated as a trust boundary (`fuzz_test.go`).
 
 **`internal/netconfig`** — declared-config ingestion. Parses Cisco IOS
-running-config text (`cisco.go`) and UniFi controller API JSON (`unifi.go`) into
-one normalized `DeclaredDevice` model (`types.go`) the diffs share; the diffs
-never see vendor specifics. `inventory.go` reconciles declared devices against
-the observed snapshot (device matches, gateway confirmation, silent subnets,
-undeclared CIDRs); `policy.go` evaluates observed edges against each device's
-bound rulesets. Two properties are worth internalizing:
+running-config text (`cisco.go`) and both legacy and official UniFi Network API
+JSON (`unifi.go`) into one normalized `DeclaredDevice` model (`types.go`) the
+diffs share; the diffs never see vendor specifics. `inventory.go` reconciles
+declared devices against the observed snapshot (device matches, gateway
+confirmation, silent subnets, undeclared CIDRs); `policy.go` evaluates observed
+edges against each device's bound rulesets. Two properties are worth
+internalizing:
 
   - **Secret whitelisting.** Both parsers extract only a whitelisted subset of
     fields. Secret-bearing directives — IOS enable secrets, SNMP communities,
     TACACS/RADIUS keys, usernames; UniFi `x_passphrase`, `x_authkey`, any `x_*`
-    field — are never in the whitelist and so can never enter the model. Raw
-    config text is never persisted; the uploaded file is read, diffed, and
-    discarded, and only the sanitized derived model is written.
+    field — are never in the whitelist and so can never enter the model. An
+    imported file is read, parsed, and discarded; only the sanitized derived
+    model is persisted. The optional official UniFi exporter writes protected
+    import files before this parsing boundary.
 
   - **Traversal-only policy scoping.** A ruleset judges a flow only when its
     source and destination sit on *opposite sides of the enforcement point*
@@ -171,8 +173,10 @@ callback. A canceled scan is fatal: it writes no snapshot, report, or map rather
 than announcing an incomplete run as complete.
 
 **`cmd/salient`** — the command-line interface (test-connection, discover, scan,
-list, view, report, map, diff, reconcile, declared, mission, stability, analyze,
-and shell completion).
+list, view, report, map, diff, reconcile, declared, unifi-export, mission,
+stability, analyze, and shell completion). `unifi-export` is the only controller
+client: it explicitly fetches import files from the operator-supplied local
+UniFi Network Integration API with GET requests only.
 
 **`gui/`** — the Wails desktop console, the primary interface. It is a
 **separate Go module** (`gui/go.mod`). Wails generates the backend bindings in
@@ -189,8 +193,9 @@ behavior for browser tests and the static demo harness.
 downstream artifact is a pure function of the snapshot, so anything can be
 reproduced offline without reconnecting to the grid.
 
-**Config ingest.** Uploaded files → `netconfig` parsers (secrets stripped, raw
-text never persisted) → sanitized `[]DeclaredDevice` written to
+**Config ingest.** Operator files, optionally retrieved first by the GET-only
+`unifi-export` helper → `netconfig` parsers (secrets stripped; source files not
+persisted by the importer) → sanitized `[]DeclaredDevice` written to
 `salient-data/declared.json` (devices only) → inventory and policy diffs
 **re-derived against each loaded snapshot** → map badges (declared gateways,
 undeclared-subnet markers) and Hunt Leads (`policy-denied`, priority 0). Because
@@ -205,11 +210,12 @@ against current observed terrain.
 - **TLS posture warnings.** Plaintext `http://` is refused except against
   loopback, and insecure-TLS is an explicit, surfaced operator choice.
 - **Secrets never enter the model.** `netconfig` whitelists fields; secret-
-  bearing directives are structurally excluded, and raw configs are never
-  written to disk.
-- **Keys stay in memory.** Elasticsearch and model API keys are never written to
-  disk; tag sidecars record only endpoint host, model, timestamp, and validated
-  suggestions.
+  bearing directives are structurally excluded. The official UniFi helper does
+  write protected source exports, but the importer persists only the sanitized
+  model.
+- **Keys stay in memory.** Elasticsearch, UniFi, and model API keys are never
+  written to disk; tag sidecars record only endpoint host, model, timestamp,
+  and validated suggestions.
 - **No external runtime.** Frontend JS is vendored (no CDN, no telemetry); the
   CLI is a static self-contained binary.
 - **Local artifacts are guarded** (`internal/safefile`): 0600/0700, symlink-safe

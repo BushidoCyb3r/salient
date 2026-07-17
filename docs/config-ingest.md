@@ -8,9 +8,10 @@ traffic (denied-but-observed) or never exercised (unused permits).
 
 ## Ground rules
 
-- **Upload only.** Salient never logs into your controllers or routers and
-  never pulls config live. You export the config yourself and hand Salient the
-  file(s).
+- **File-based import.** The GUI only reads files you select. The optional
+  `unifi-export` CLI helper can fetch those files from the official local UniFi
+  Network API with an Integration API key; it issues GET requests only. Cisco
+  and legacy UniFi exports remain operator-created files.
 - **Secrets are stripped at parse time.** Enable secrets, SNMP communities,
   TACACS/RADIUS keys, and pre-shared keys are discarded before anything is
   stored. Only the parsed topology and rules are kept.
@@ -42,24 +43,89 @@ observed flows only).
 
 ### UniFi
 
-Salient needs three JSON collections from UniFi: networks, firewall rules, and
-devices. Import all three files together; Salient folds them into one declared
-controller.
+The preferred route is the official local Network Integration API. Salient's
+`unifi-export` command retrieves detailed networks, adopted devices, firewall
+zones, and firewall policies, then writes four protected JSON files. Import all
+four together; Salient folds them into one declared controller. A legacy
+session-cookie export remains available below for older Network versions.
 
 Ubiquiti documents [local console access](https://help.ui.com/hc/en-us/articles/28457353760919-UniFi-Local-Management),
 [local administrator creation](https://help.ui.com/hc/en-us/articles/28692158912279-Adding-Admins-in-UniFi),
 and the [official Network API](https://help.ui.com/hc/en-us/articles/30076656117655-Getting-Started-with-the-Official-UniFi-API).
-The export endpoints below are the controller's legacy, version-sensitive API,
-so validate every response before importing it.
+#### Recommended: Network Integration API key
 
-> **The API key from Network → Integrations does not work with this importer.**
-> That key authenticates UniFi's official `/integration/v1` API, whose network
-> and firewall schemas differ from the legacy controller-export schemas that
-> Salient currently parses. For now, use a local controller session as described
-> below. Do not paste the session cookie into Salient; use it only to make the
-> three local exports.
+This is the API key created **inside the local UniFi Network application**. It
+is not a Site Manager API key from `unifi.ui.com`, a UI Account token, an SSH
+credential, or a browser cookie.
 
-#### UDM Pro and other UniFi OS consoles
+1. Browse directly to the UDM Pro or other UniFi console by its LAN address and
+   open the **Network** application. Do not use the Site Manager API-key page.
+2. In Network, open **Settings → Control Plane → Integrations**. On versions
+   that flatten the settings navigation, the page may simply be named
+   **Settings → Integrations**. The version-specific local API documentation is
+   linked from this same page.
+3. Create an API key, give it a recognizable name such as `salient-readonly`,
+   and copy it when shown. Salient only calls documented GET endpoints even if
+   the application does not offer a separate read-only permission toggle.
+4. On the workstation running the standalone CLI, read the key without echoing
+   it and export the four collections:
+
+   ```bash
+   read -rsp 'UniFi Network Integration API key: ' SALIENT_UNIFI_API_KEY
+   printf '\n'
+   export SALIENT_UNIFI_API_KEY
+
+   salient unifi-export --controller https://192.168.1.1
+   unset SALIENT_UNIFI_API_KEY
+   ```
+
+   Replace `192.168.1.1` with the console's LAN address. Do not append an API
+   path: Salient adds `/proxy/network/integration/v1` itself. You may also pass
+   a full URL ending in that path.
+
+5. If the console uses a certificate signed by a private CA, verify it with:
+
+   ```bash
+   salient unifi-export --controller https://192.168.1.1 \
+     --unifi-ca-cert /path/to/console-ca.pem
+   ```
+
+   For a self-signed console certificate, `--unifi-insecure-skip-verify` is an
+   explicit fallback and prints a red interception warning. Plain HTTP is
+   refused except on loopback because it would expose the key.
+
+6. A single-site console is selected automatically. If the console has several
+   sites, the command stops and lists them; rerun with the displayed site ID,
+   internal reference, or name:
+
+   ```bash
+   salient unifi-export --controller https://192.168.1.1 --site default
+   ```
+
+The default output directory is `salient-data/unifi-export/`. It contains:
+
+- `unifi-integration-networks.json`
+- `unifi-integration-devices.json`
+- `unifi-integration-firewall-zones.json`
+- `unifi-integration-firewall-policies.json`
+
+Files are written atomically with `0600` permissions under a `0700` directory
+on POSIX systems. The key stays in memory and is never written into an export.
+The exporter follows pagination, requests details for every network so subnet
+and DHCP information are present, refuses redirects, and uses GET only.
+
+Import all four files in the GUI, or pass all four to `salient declared`.
+Official firewall rules are evaluated only when their zone, address, port, and
+protocol semantics can be represented exactly. Scheduled, negated, IPv6-only,
+traffic-list-backed, and otherwise unresolved rules are retained with caveats
+and excluded from verdicts instead of being widened or guessed.
+
+#### Legacy session fallback: UDM Pro and other UniFi OS consoles
+
+Use this only when the Network version does not expose the official Integration
+API endpoints needed above. These legacy endpoints are version-sensitive, so
+validate every response before importing it. Do not paste the session cookie
+into Salient; use it only to make the three local exports.
 
 These steps run on a trusted workstation with Bash, `curl`, and `jq`. Connect
 directly to the console's LAN address, such as `https://192.168.1.1`; do not use
@@ -195,9 +261,16 @@ Validate and remove the cookie jar exactly as for UniFi OS.
 
 #### Troubleshooting and coverage
 
-- `401` or `403`: the session is absent, expired, or lacks Network access.
-  Authenticate directly to the local console again; a Network Integration API
-  key is not interchangeable with the session cookie.
+- Official exporter `401` or `403`: confirm that the value came from the local
+  **Network → Integrations** page, not the Site Manager API page, and regenerate
+  it if necessary. A Network Integration API key is sent as `X-API-Key` and is
+  not interchangeable with a session cookie.
+- Legacy export `401` or `403`: the session is absent, expired, or lacks Network
+  access. Authenticate directly to the local console again.
+- Official exporter `404`: confirm the console URL and inspect the local API
+  documentation linked from Network → Integrations. If the installed Network
+  version lacks the listed network/firewall endpoints, use the legacy fallback
+  and record the Network version with the files.
 - A saved file starts with HTML: the request reached a login page, often
   because it used `unifi.ui.com` or an expired session. Use the local console
   address and repeat the `jq` validation.
@@ -208,9 +281,10 @@ Validate and remove the cookie jar exactly as for UniFi OS.
   policy-complete. That controller's firewall schema is not represented by the
   legacy collection Salient currently understands.
 
-Salient autodetects the exported JSON wrapper (`{"meta": ..., "data": [...]}`)
-or a bare array. Networks provide VLANs and subnets, `firewallrule` provides
-rules, and `stat/device` associates controller devices with observed MACs.
+Salient autodetects the legacy JSON wrapper (`{"meta": ..., "data": [...]}`)
+or the official export's bare arrays. Networks provide VLANs and subnets,
+firewall policies provide rules, zones resolve their network scope, and device
+inventory associates controller devices with observed MACs.
 
 ## Using it
 
@@ -227,7 +301,7 @@ snapshot, and feeds the Hunt view's declared-policy leads. Clear it with the
 ### CLI
 
 ```
-salient declared --snapshot SNAP.json.gz --configs ios-router.cfg,unifi-networkconf.json,unifi-firewallrule.json,unifi-device.json
+salient declared --snapshot SNAP.json.gz --configs ios-router.cfg,unifi-integration-networks.json,unifi-integration-devices.json,unifi-integration-firewall-zones.json,unifi-integration-firewall-policies.json
 ```
 
 Prints `{ "inventory": …, "policy": … }` JSON on stdout: `inventory` is the

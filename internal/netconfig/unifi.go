@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/netip"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 	dev := DeclaredDevice{Source: source, Vendor: "unifi", Hostname: source}
 
 	recognized, disabled, caveated, unknownAction, unknownItems := 0, 0, 0, 0, 0
+	additionalSubnets := 0
 
 	rulesetIdx := func(name string) int {
 		for i := range dev.Rulesets {
@@ -48,13 +50,25 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 	// Pass 1: networks first, so rules in any file (or ordered before their
 	// networkconf) can resolve src/dst_networkconf_id references.
 	netByID := map[string]string{}
+	zoneByID := map[string]uniFiZone{}
 	for _, item := range items {
-		if has(item, "purpose") && has(item, "ip_subnet") {
+		switch {
+		case has(item, "purpose") && has(item, "ip_subnet"):
 			recognized++
 			addNetwork(&dev, item)
 			if id := ustr(item, "_id"); id != "" {
 				netByID[id] = ustr(item, "ip_subnet")
 			}
+		case isUniFiIntegrationNetwork(item):
+			recognized++
+			subnet, extras := addUniFiIntegrationNetwork(&dev, item)
+			additionalSubnets += extras
+			if id := ustr(item, "id"); id != "" && subnet != "" {
+				netByID[id] = subnet
+			}
+		case isUniFiIntegrationZone(item):
+			recognized++
+			zoneByID[ustr(item, "id")] = uniFiZone{Name: ustr(item, "name"), NetworkIDs: ustrings(item, "networkIds")}
 		}
 	}
 
@@ -62,6 +76,8 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 	for _, item := range items {
 		switch {
 		case has(item, "purpose") && has(item, "ip_subnet"):
+			// handled in pass 1
+		case isUniFiIntegrationNetwork(item), isUniFiIntegrationZone(item):
 			// handled in pass 1
 		case has(item, "ruleset") && has(item, "action"):
 			recognized++
@@ -77,6 +93,20 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 		case has(item, "mac") && has(item, "type"):
 			recognized++
 			addDevice(&dev, item)
+		case isUniFiIntegrationPolicy(item):
+			recognized++
+			added, cav := addUniFiIntegrationPolicy(&dev, item, rulesetIdx, netByID, zoneByID)
+			switch added {
+			case statusBadAction:
+				unknownAction++
+			case statusDisabled:
+				disabled++
+			default:
+				caveated += cav
+			}
+		case isUniFiIntegrationDevice(item):
+			recognized++
+			addUniFiIntegrationDevice(&dev, item)
 		default:
 			unknownItems++
 		}
@@ -97,6 +127,9 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 	}
 	if unknownItems > 0 {
 		dev.Warnings = append(dev.Warnings, fmt.Sprintf("%d JSON item(s) not recognized as UniFi network/rule/device; skipped", unknownItems))
+	}
+	if additionalSubnets > 0 {
+		dev.Warnings = append(dev.Warnings, fmt.Sprintf("%d additional UniFi network subnet(s) are not represented by the single-subnet VLAN model", additionalSubnets))
 	}
 	return dev, nil
 }
@@ -144,6 +177,318 @@ func addDevice(dev *DeclaredDevice, m map[string]any) {
 		iface.Prefixes = []string{unifiAddr(ip)}
 	}
 	dev.Interfaces = append(dev.Interfaces, iface)
+}
+
+type uniFiZone struct {
+	Name       string
+	NetworkIDs []string
+}
+
+func isUniFiIntegrationNetwork(m map[string]any) bool {
+	return has(m, "id") && has(m, "vlanId") && has(m, "management")
+}
+
+func isUniFiIntegrationDevice(m map[string]any) bool {
+	return has(m, "id") && has(m, "macAddress") && has(m, "model")
+}
+
+func isUniFiIntegrationZone(m map[string]any) bool {
+	return has(m, "id") && has(m, "networkIds") && !has(m, "vlanId")
+}
+
+func isUniFiIntegrationPolicy(m map[string]any) bool {
+	return has(m, "id") && umap(m, "action") != nil && umap(m, "source") != nil && umap(m, "destination") != nil
+}
+
+// addUniFiIntegrationNetwork maps the official Network Integration API's
+// detailed-network schema. It returns the primary subnet and the count of
+// additional subnets the current one-subnet VLAN model cannot represent.
+func addUniFiIntegrationNetwork(dev *DeclaredDevice, m map[string]any) (string, int) {
+	ipv4 := umap(m, "ipv4Configuration")
+	subnet := ""
+	if host := strings.TrimSpace(ustr(ipv4, "hostIpAddress")); host != "" {
+		candidate := fmt.Sprintf("%s/%d", host, unum(ipv4, "prefixLength"))
+		if _, err := netip.ParsePrefix(candidate); err == nil {
+			subnet = candidate
+		}
+	}
+	dev.VLANs = append(dev.VLANs, VLAN{
+		ID:      unum(m, "vlanId"),
+		Name:    ustr(m, "name"),
+		Subnet:  subnet,
+		Purpose: strings.ToLower(ustr(m, "management")),
+	})
+
+	dhcp := umap(ipv4, "dhcpConfiguration")
+	if subnet != "" && strings.EqualFold(ustr(dhcp, "mode"), "SERVER") {
+		router := ustr(dhcp, "gatewayIpAddressOverride")
+		if router == "" {
+			router = ustr(ipv4, "hostIpAddress")
+		}
+		dev.DHCPPools = append(dev.DHCPPools, Pool{
+			Network: subnet,
+			Router:  router,
+			DNS:     ustrings(dhcp, "dnsServerIpAddressesOverride"),
+		})
+	}
+	return subnet, len(ustrings(ipv4, "additionalHostIpSubnets"))
+}
+
+func addUniFiIntegrationDevice(dev *DeclaredDevice, m map[string]any) {
+	name := ustr(m, "name")
+	if name == "" {
+		name = ustr(m, "macAddress")
+	}
+	iface := Interface{Name: name, MAC: ustr(m, "macAddress")}
+	if ip := ustr(m, "ipAddress"); ip != "" {
+		iface.Prefixes = []string{unifiAddr(ip)}
+	}
+	dev.Interfaces = append(dev.Interfaces, iface)
+}
+
+type uniFiEndpoint struct {
+	CIDRs  []string
+	Ports  []PortRange
+	Caveat string
+}
+
+func addUniFiIntegrationPolicy(dev *DeclaredDevice, m map[string]any, rulesetIdx func(string) int, netByID map[string]string, zoneByID map[string]uniFiZone) (int, int) {
+	var action Action
+	switch strings.ToUpper(ustr(umap(m, "action"), "type")) {
+	case "ALLOW":
+		action = Permit
+	case "BLOCK", "REJECT":
+		action = Deny
+	default:
+		return statusBadAction, 0
+	}
+	if !ubool(m, "enabled") {
+		return statusDisabled, 0
+	}
+
+	srcMap, dstMap := umap(m, "source"), umap(m, "destination")
+	src := uniFiIntegrationEndpoint(srcMap, zoneByID[ustr(srcMap, "zoneId")], netByID)
+	dst := uniFiIntegrationEndpoint(dstMap, zoneByID[ustr(dstMap, "zoneId")], netByID)
+	protos, protoCaveat := uniFiIntegrationProtocols(umap(m, "ipProtocolScope"))
+	caveat := firstNonEmpty(src.Caveat, dst.Caveat, protoCaveat)
+	if len(src.Ports) > 1 || (len(src.Ports) == 1 && !src.Ports[0].Any()) {
+		caveat = firstNonEmpty(caveat, "source-port match unavailable from flow data")
+	}
+	if nonEmptyList(m, "connectionStateFilter") {
+		caveat = firstNonEmpty(caveat, "connection-state match unavailable from aggregated flow data")
+	}
+	if ustr(m, "ipsecFilter") != "" {
+		caveat = firstNonEmpty(caveat, "IPsec match unavailable from flow data")
+	}
+	if schedule := umap(m, "schedule"); schedule != nil {
+		caveat = firstNonEmpty(caveat, "scheduled policy cannot be evaluated over an aggregated scan window")
+	}
+
+	if len(src.CIDRs) == 0 {
+		src.CIDRs = []string{anyCIDR}
+	}
+	if len(dst.CIDRs) == 0 {
+		dst.CIDRs = []string{anyCIDR}
+	}
+	if len(src.Ports) == 0 {
+		src.Ports = []PortRange{{}}
+	}
+	if len(dst.Ports) == 0 {
+		dst.Ports = []PortRange{{}}
+	}
+	if len(protos) == 0 {
+		protos = []string{"ip"}
+	}
+
+	srcZone, dstZone := zoneByID[ustr(srcMap, "zoneId")], zoneByID[ustr(dstMap, "zoneId")]
+	ruleset := fmt.Sprintf("ZONE:%s -> %s", uniFiZoneLabel(srcZone, ustr(srcMap, "zoneId")), uniFiZoneLabel(dstZone, ustr(dstMap, "zoneId")))
+	idx := rulesetIdx(ruleset)
+	added := 0
+	for _, srcCIDR := range src.CIDRs {
+		for _, dstCIDR := range dst.CIDRs {
+			for _, srcPort := range src.Ports {
+				for _, dstPort := range dst.Ports {
+					for _, proto := range protos {
+						dev.Rulesets[idx].Rules = append(dev.Rulesets[idx].Rules, Rule{
+							Action: action, Proto: proto, Src: srcCIDR, Dst: dstCIDR,
+							SrcPorts: srcPort, DstPorts: dstPort, Line: unum(m, "index"),
+							Raw:    fmt.Sprintf("unifi policy %q: %s %s->%s", ustr(m, "name"), strings.ToLower(ustr(umap(m, "action"), "type")), srcCIDR, dstCIDR),
+							Caveat: caveat,
+						})
+						added++
+					}
+				}
+			}
+		}
+	}
+	if caveat != "" {
+		return added, added
+	}
+	return added, 0
+}
+
+func uniFiIntegrationEndpoint(endpoint map[string]any, zone uniFiZone, netByID map[string]string) uniFiEndpoint {
+	result := uniFiEndpoint{}
+	filter := umap(endpoint, "trafficFilter")
+	filterType := strings.ToUpper(ustr(filter, "type"))
+	if filter == nil || filterType == "PORT" {
+		result.CIDRs, result.Caveat = uniFiNetworkCIDRs(zone.NetworkIDs, netByID, "firewall zone")
+		if len(result.CIDRs) == 0 && result.Caveat == "" {
+			result.Caveat = "firewall zone has no resolvable IPv4 networks"
+		}
+	}
+
+	switch filterType {
+	case "":
+		return result
+	case "NETWORK":
+		networkFilter := umap(filter, "networkFilter")
+		if ubool(networkFilter, "matchOpposite") {
+			result.Caveat = "negated network filter unsupported"
+		}
+		var resolveCaveat string
+		result.CIDRs, resolveCaveat = uniFiNetworkCIDRs(ustrings(networkFilter, "networkIds"), netByID, "network filter")
+		result.Caveat = firstNonEmpty(result.Caveat, resolveCaveat)
+		if len(result.CIDRs) == 0 {
+			result.Caveat = firstNonEmpty(result.Caveat, "network filter unresolved")
+		}
+	case "IP_ADDRESS":
+		ipFilter := umap(filter, "ipAddressFilter")
+		if !strings.EqualFold(ustr(ipFilter, "type"), "IP_ADDRESSES") {
+			result.Caveat = "traffic matching list unresolved"
+		} else if ubool(ipFilter, "matchOpposite") {
+			result.Caveat = "negated IP filter unsupported"
+		} else {
+			for _, item := range umaps(ipFilter, "items") {
+				switch strings.ToUpper(ustr(item, "type")) {
+				case "IP_ADDRESS":
+					value := unifiAddr(ustr(item, "value"))
+					if _, err := netip.ParsePrefix(value); err == nil {
+						result.CIDRs = append(result.CIDRs, value)
+					} else {
+						result.Caveat = firstNonEmpty(result.Caveat, "invalid IP filter")
+					}
+				case "SUBNET":
+					value := ustr(item, "value")
+					if _, err := netip.ParsePrefix(value); err == nil {
+						result.CIDRs = append(result.CIDRs, value)
+					} else {
+						result.Caveat = firstNonEmpty(result.Caveat, "invalid subnet filter")
+					}
+				default:
+					result.Caveat = firstNonEmpty(result.Caveat, "IP range filter unsupported")
+				}
+			}
+			if len(result.CIDRs) == 0 {
+				result.Caveat = firstNonEmpty(result.Caveat, "IP filter contains no usable addresses")
+			}
+		}
+	case "PORT":
+		// Zone supplies the endpoint address; the filter supplies only ports.
+	default:
+		result.Caveat = "unsupported firewall traffic filter"
+	}
+
+	if portFilter := umap(filter, "portFilter"); portFilter != nil {
+		result.Ports, result.Caveat = uniFiIntegrationPorts(portFilter, result.Caveat)
+	}
+	return result
+}
+
+func uniFiIntegrationPorts(filter map[string]any, caveat string) ([]PortRange, string) {
+	if !strings.EqualFold(ustr(filter, "type"), "PORTS") {
+		return nil, firstNonEmpty(caveat, "port traffic matching list unresolved")
+	}
+	if ubool(filter, "matchOpposite") {
+		return nil, firstNonEmpty(caveat, "negated port filter unsupported")
+	}
+	var ports []PortRange
+	for _, item := range umaps(filter, "items") {
+		switch strings.ToUpper(ustr(item, "type")) {
+		case "PORT_NUMBER":
+			p := unum(item, "value")
+			if p > 0 && p <= 65535 {
+				ports = append(ports, PortRange{uint16(p), uint16(p)})
+			}
+		case "PORT_NUMBER_RANGE":
+			lo, hi := unum(item, "start"), unum(item, "stop")
+			if lo > 0 && lo <= hi && hi <= 65535 {
+				ports = append(ports, PortRange{uint16(lo), uint16(hi)})
+			}
+		default:
+			caveat = firstNonEmpty(caveat, "unsupported port filter")
+		}
+	}
+	if len(ports) == 0 {
+		caveat = firstNonEmpty(caveat, "port filter contains no usable ports")
+	}
+	return ports, caveat
+}
+
+func uniFiIntegrationProtocols(scope map[string]any) ([]string, string) {
+	version := strings.ToUpper(ustr(scope, "ipVersion"))
+	if version == "IPV6" {
+		return []string{"ip"}, "IPv6-only policy unsupported"
+	}
+	filter := umap(scope, "protocolFilter")
+	if filter == nil {
+		return []string{"ip"}, ""
+	}
+	if ubool(filter, "matchOpposite") {
+		return []string{"ip"}, "negated protocol filter unsupported"
+	}
+	var name string
+	switch strings.ToUpper(ustr(filter, "type")) {
+	case "NAMED_PROTOCOL":
+		name = strings.ToLower(ustr(umap(filter, "protocol"), "name"))
+	case "PRESET":
+		name = strings.ToLower(ustr(umap(filter, "preset"), "name"))
+	default:
+		return []string{"ip"}, "unsupported protocol filter"
+	}
+	switch name {
+	case "", "ip", "any", "all":
+		return []string{"ip"}, ""
+	case "tcp":
+		return []string{"tcp"}, ""
+	case "udp":
+		return []string{"udp"}, ""
+	case "tcp_udp":
+		return []string{"tcp", "udp"}, ""
+	case "icmp", "icmpv6":
+		return []string{"icmp"}, ""
+	default:
+		return []string{"ip"}, "unsupported protocol"
+	}
+}
+
+func uniFiNetworkCIDRs(ids []string, netByID map[string]string, label string) ([]string, string) {
+	var cidrs []string
+	for _, id := range ids {
+		if cidr := netByID[id]; cidr != "" {
+			cidrs = append(cidrs, cidr)
+		}
+	}
+	if len(cidrs) != len(ids) {
+		return cidrs, label + " includes an unresolved network"
+	}
+	return cidrs, ""
+}
+
+func uniFiZoneLabel(zone uniFiZone, fallback string) string {
+	if zone.Name != "" {
+		return zone.Name
+	}
+	return fallback
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 const (
@@ -372,6 +717,42 @@ func ubool(m map[string]any, k string) bool {
 func unum(m map[string]any, k string) int {
 	f, _ := m[k].(float64)
 	return int(f)
+}
+
+func umap(m map[string]any, k string) map[string]any {
+	if m == nil {
+		return nil
+	}
+	v, _ := m[k].(map[string]any)
+	return v
+}
+
+func umaps(m map[string]any, k string) []map[string]any {
+	if m == nil {
+		return nil
+	}
+	raw, _ := m[k].([]any)
+	out := make([]map[string]any, 0, len(raw))
+	for _, item := range raw {
+		if value, ok := item.(map[string]any); ok {
+			out = append(out, value)
+		}
+	}
+	return out
+}
+
+func ustrings(m map[string]any, k string) []string {
+	if m == nil {
+		return nil
+	}
+	raw, _ := m[k].([]any)
+	out := make([]string, 0, len(raw))
+	for _, item := range raw {
+		if value, ok := item.(string); ok {
+			out = append(out, value)
+		}
+	}
+	return out
 }
 
 func nonEmptyList(m map[string]any, k string) bool {

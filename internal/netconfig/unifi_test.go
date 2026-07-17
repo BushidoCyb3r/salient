@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/BushidoCyb3r/salient/internal/graph"
 )
 
 func loadUniFi(t *testing.T) DeclaredDevice {
@@ -178,6 +180,72 @@ func TestParseUniFi_NoSecretsLeak(t *testing.T) {
 		if strings.Contains(dump, bad) {
 			t.Errorf("output leaked secret material %q:\n%s", bad, dump)
 		}
+	}
+}
+
+func TestParseUniFi_IntegrationAPI(t *testing.T) {
+	files := map[string][]byte{
+		"networks.json": []byte(`[
+  {"id":"net-users","name":"Users","enabled":true,"vlanId":10,"management":"GATEWAY","ipv4Configuration":{"hostIpAddress":"10.10.0.1","prefixLength":24,"autoScaleEnabled":false,"dhcpConfiguration":{"mode":"SERVER","gatewayIpAddressOverride":"10.10.0.1","dnsServerIpAddressesOverride":["10.10.0.53"]}}},
+  {"id":"net-servers","name":"Servers","enabled":true,"vlanId":20,"management":"GATEWAY","ipv4Configuration":{"hostIpAddress":"10.20.0.1","prefixLength":24,"autoScaleEnabled":false}}
+]`),
+		"devices.json": []byte(`[
+  {"id":"dev-gw","macAddress":"aa:bb:cc:dd:ee:ff","ipAddress":"10.10.0.1","name":"UDM Pro","model":"UDMPRO"}
+]`),
+		"zones.json": []byte(`[
+  {"id":"zone-users","name":"Users","networkIds":["net-users"]},
+  {"id":"zone-servers","name":"Servers","networkIds":["net-servers"]}
+]`),
+		"policies.json": []byte(`[
+  {"id":"policy-1","enabled":true,"name":"Block user HTTPS to servers","index":5,"action":{"type":"BLOCK"},"source":{"zoneId":"zone-users","trafficFilter":{"type":"NETWORK","networkFilter":{"matchOpposite":false,"networkIds":["net-users"]}}},"destination":{"zoneId":"zone-servers","trafficFilter":{"type":"IP_ADDRESS","ipAddressFilter":{"type":"IP_ADDRESSES","matchOpposite":false,"items":[{"type":"SUBNET","value":"10.20.0.0/24"}]},"portFilter":{"type":"PORTS","matchOpposite":false,"items":[{"type":"PORT_NUMBER","value":443}]}}},"ipProtocolScope":{"ipVersion":"IPV4","protocolFilter":{"type":"NAMED_PROTOCOL","matchOpposite":false,"protocol":{"name":"tcp"}}},"loggingEnabled":true},
+  {"id":"policy-2","enabled":true,"name":"Scheduled rule","index":6,"action":{"type":"ALLOW"},"source":{"zoneId":"zone-users"},"destination":{"zoneId":"zone-servers"},"ipProtocolScope":{"ipVersion":"IPV4"},"schedule":{"mode":"EVERY_WEEK"},"loggingEnabled":false}
+]`),
+	}
+
+	dev, err := ParseUniFi(files, "integration-api")
+	if err != nil {
+		t.Fatalf("ParseUniFi: %v", err)
+	}
+	if len(dev.VLANs) != 2 || dev.VLANs[0].Subnet != "10.10.0.1/24" || dev.VLANs[1].Subnet != "10.20.0.1/24" {
+		t.Fatalf("integration VLANs = %+v", dev.VLANs)
+	}
+	if len(dev.DHCPPools) != 1 || dev.DHCPPools[0].DNS[0] != "10.10.0.53" {
+		t.Fatalf("integration DHCP pools = %+v", dev.DHCPPools)
+	}
+	if len(dev.Interfaces) != 1 || dev.Interfaces[0].MAC != "aa:bb:cc:dd:ee:ff" {
+		t.Fatalf("integration devices = %+v", dev.Interfaces)
+	}
+
+	rs := ruleset(t, dev, "ZONE:Users -> Servers")
+	if len(rs.Rules) != 2 {
+		t.Fatalf("integration policy rules = %+v", rs.Rules)
+	}
+	block := rs.Rules[0]
+	if block.Action != Deny || block.Proto != "tcp" || block.Src != "10.10.0.1/24" || block.Dst != "10.20.0.0/24" || block.DstPorts != (PortRange{443, 443}) || block.Caveat != "" {
+		t.Errorf("exact integration policy = %+v", block)
+	}
+	if got := rs.Rules[1].Caveat; got != "scheduled policy cannot be evaluated over an aggregated scan window" {
+		t.Errorf("scheduled policy caveat = %q", got)
+	}
+	policy := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{{
+		Src: "10.10.0.10", Dst: "10.20.0.20", Port: 443, Proto: "tcp",
+	}}}, []DeclaredDevice{dev})
+	if len(policy.Violations) != 1 || policy.Violations[0].Rule.Raw != block.Raw {
+		t.Errorf("integration policy verdict = %+v", policy.Violations)
+	}
+	scopeDev := dev
+	scopeDev.Rulesets = []Ruleset{{Name: "ZONE:test", Default: Permit, Rules: []Rule{{
+		Action: Deny, Proto: "tcp", Src: anyCIDR, Dst: anyCIDR,
+	}}}}
+	scoped := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{
+		{Src: "198.51.100.10", Dst: "203.0.113.20", Port: 443, Proto: "tcp"},
+		{Src: "10.10.0.10", Dst: "203.0.113.20", Port: 443, Proto: "tcp"},
+	}}, []DeclaredDevice{scopeDev})
+	if len(scoped.Violations) != 1 || scoped.Violations[0].Edge.Src != "10.10.0.10" {
+		t.Errorf("integration policy scope = %+v", scoped.Violations)
+	}
+	if all := strings.Join(dev.Warnings, "\n"); !strings.Contains(all, "caveat") {
+		t.Errorf("integration warnings missing caveat count: %v", dev.Warnings)
 	}
 }
 

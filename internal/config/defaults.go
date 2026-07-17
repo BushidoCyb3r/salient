@@ -13,6 +13,7 @@ const (
 	EnvESURL        = "SALIENT_ES_URL"
 	EnvAPIKey       = "SALIENT_API_KEY"
 	EnvAssistAPIKey = "SALIENT_AI_API_KEY"
+	EnvUniFiAPIKey  = "SALIENT_UNIFI_API_KEY"
 )
 
 // Elasticsearch client defaults.

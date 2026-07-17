@@ -1,9 +1,12 @@
 # Deployment: read-only access to the SO grid
 
-Salient runs on an analyst workstation and needs exactly one thing: HTTPS reach to
-the manager's Elasticsearch API (:9200) with a read-only API key. Salient makes
-no changes to Security Onion; an administrator may need to allow the workstation
-through the grid firewall as described below.
+For its core scan workflow, Salient runs on an analyst workstation and needs
+HTTPS reach to the manager's Elasticsearch API (:9200) with a read-only API
+key. Salient makes no changes to Security Onion; an administrator may need to
+allow the workstation through the grid firewall as described below. The
+optional `unifi-export` command separately needs local HTTPS reach to the UniFi
+console and a Network Integration API key; see
+[config ingestion](config-ingest.md).
 
 ## 1. Allow your workstation through the SO firewall
 

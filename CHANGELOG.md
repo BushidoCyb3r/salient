@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `salient unifi-export` uses the local UniFi Network Integration API key to
+  retrieve detailed networks, adopted devices, firewall zones, and firewall
+  policies through GET-only requests and protected local files.
+- Declared-config ingestion understands the official Network API schemas and
+  evaluates only exactly representable zone policies; unsupported semantics
+  remain visible as non-evaluable caveats.
+
 ## [0.5.1] - 2026-07-17
 
 Native GUI packaging hotfix.
