@@ -370,7 +370,7 @@ func (a *App) LoadHuntLeads(path, basePath, assetsPath string) ([]hunt.Lead, err
 		if err != nil {
 			return nil, fmt.Errorf("asset CSV: %w", err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		assets, _, err := reconcile.ParseCSV(f)
 		if err != nil {
 			return nil, fmt.Errorf("asset CSV: %w", err)
@@ -417,7 +417,7 @@ func (a *App) LoadReconcileModel(snapshotPath, assetsPath string) (*mapview.Mode
 	if err != nil {
 		return nil, fmt.Errorf("asset CSV: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return a.reconcileFrom(snapshotPath, f)
 }
 

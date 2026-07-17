@@ -71,7 +71,7 @@ func Load(path string) (graph.Snapshot, error) {
 	if err != nil {
 		return snap, fmt.Errorf("opening snapshot: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if info, statErr := f.Stat(); statErr != nil {
 		return snap, fmt.Errorf("stating snapshot: %w", statErr)
 	} else if info.Size() > config.SnapshotMaxCompressedBytes {

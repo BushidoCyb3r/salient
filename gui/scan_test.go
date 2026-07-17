@@ -21,7 +21,7 @@ func mockGrid(t *testing.T) string {
 		w.Header().Set("X-Elastic-Product", "Elasticsearch")
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/" {
-			io.WriteString(w, `{"cluster_name":"fake-grid","version":{"number":"8.14.0"}}`)
+			_, _ = io.WriteString(w, `{"cluster_name":"fake-grid","version":{"number":"8.14.0"}}`)
 			return
 		}
 		body, _ := io.ReadAll(r.Body)

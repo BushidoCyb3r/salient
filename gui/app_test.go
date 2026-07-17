@@ -82,7 +82,7 @@ func TestSuggestTagsPersistsSafeSidecarAndLoadModelOverlaysIt(t *testing.T) {
 		if got := r.Header.Get("Authorization"); got != "Bearer secret-key" {
 			t.Errorf("Authorization = %q", got)
 		}
-		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.10\",\"tags\":[\"web server\",\"public facing\"],\"confidence\":0.87,\"rationale\":\"Receives web traffic\"}]}"}}]}`)
+		_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.10\",\"tags\":[\"web server\",\"public facing\"],\"confidence\":0.87,\"rationale\":\"Receives web traffic\"}]}"}}]}`)
 	}))
 	defer server.Close()
 
@@ -141,7 +141,7 @@ func TestSuggestTagsPersistsSafeSidecarAndLoadModelOverlaysIt(t *testing.T) {
 func TestSuggestTagsForHostsMergesSidecar(t *testing.T) {
 	reply := func(nodeID, tag string) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"`+nodeID+`\",\"tags\":[\"`+tag+`\"],\"confidence\":0.8,\"rationale\":\"obs\"}]}"}}]}`)
+			_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"`+nodeID+`\",\"tags\":[\"`+tag+`\"],\"confidence\":0.8,\"rationale\":\"obs\"}]}"}}]}`)
 		}
 	}
 	path := filepath.Join(t.TempDir(), "snapshot.json.gz")

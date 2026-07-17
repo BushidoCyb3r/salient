@@ -1,0 +1,15 @@
+version: "2"
+
+linters:
+  exclusions:
+    rules:
+      # Console output errors are not actionable; keep errcheck enabled for all
+      # other calls so real file, network, and cleanup failures still surface.
+      - path: ^(cmd/salient|gui)/.*\.go$
+        source: '^\s*fmt\.Fprint'
+        linters:
+          - errcheck
+      - path: _test\.go$
+        source: '^\s*io\.WriteString'
+        linters:
+          - errcheck

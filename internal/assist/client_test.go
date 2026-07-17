@@ -165,7 +165,7 @@ func TestTagDevicesSupportsProviderAPIs(t *testing.T) {
 				}
 				tt.checkBody(t, body)
 				w.Header().Set("Content-Type", "application/json")
-				io.WriteString(w, tt.response)
+				_, _ = io.WriteString(w, tt.response)
 			}))
 			defer server.Close()
 
@@ -186,7 +186,7 @@ func TestTagDevicesSendsOperatorFacts(t *testing.T) {
 	var captured []byte
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		captured, _ = io.ReadAll(r.Body)
-		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.1\",\"tags\":[\"router\"],\"confidence\":0.9,\"rationale\":\"operator confirmed\"}]}"}}]}`)
+		_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.1\",\"tags\":[\"router\"],\"confidence\":0.9,\"rationale\":\"operator confirmed\"}]}"}}]}`)
 	}))
 	defer server.Close()
 
@@ -217,7 +217,7 @@ func TestTagDevicesForIPsFiltersAndCaps(t *testing.T) {
 	var captured []byte
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		captured, _ = io.ReadAll(r.Body)
-		io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.2\",\"tags\":[\"printer\"],\"confidence\":0.8,\"rationale\":\"ipp\"}]}"}}]}`)
+		_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"tags\":[{\"node_id\":\"10.0.0.2\",\"tags\":[\"printer\"],\"confidence\":0.8,\"rationale\":\"ipp\"}]}"}}]}`)
 	}))
 	defer server.Close()
 
