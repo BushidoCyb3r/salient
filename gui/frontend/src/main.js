@@ -748,6 +748,12 @@ function renderModel(model) {
         mac: n.mac || '', vendor: n.vendor || '', pinned: n.pinned ? 1 : 0,
         aiTags: (n.suggested_tags || []).join(', '), aiConfidence: n.suggestion_confidence || 0,
         aiRationale: n.suggestion_rationale || '', aiModel: n.suggestion_model || '',
+        // Precomputed search haystack — the input handler only reads this.
+        // ponytail: built once at render; device reassignments without a full
+        // reload won't refresh it, which is fine (reloads rebuild the map).
+        hay: (n.label.split('\n')[0] + ' ' + (n.role || '') + ' ' + (n.evidence || []).join('\n') + ' ' +
+          (n.suggested_tags || []).join(', ') + ' ' + (n.device || '') + ' ' + (n.labels || []).join(', ') + ' ' +
+          (n.services || []).join(', ') + ' ' + (n.role_override || '')).toLowerCase(),
       },
       classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.device ? 'dev-linked ' : '') + (n.pinned ? 'pinned ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
     });
@@ -784,7 +790,20 @@ function renderModel(model) {
     });
   }
 
-  if (cy) cy.destroy();
+  // Preserve the camera + selection across the full rebuild when the operator
+  // is looking at the same view (same snapshot, same overview/drill target).
+  // A genuinely different view (other snapshot, drill in/out) still fits fresh.
+  const viewKey = currentSnapshotPath + '|' + (model.overview ? 'ov' : 'fx') + '|' + drilledCIDR;
+  let restore = null;
+  if (cy) {
+    restore = {
+      key: cy.scratch('_viewKey'),
+      zoom: cy.zoom(),
+      pan: { ...cy.pan() },
+      selected: cy.$(':selected').map((e) => e.id()),
+    };
+    cy.destroy();
+  }
   cy = cytoscape({
     container: $('cy'), elements: els, wheelSensitivity: 0.2,
     style: [
@@ -818,6 +837,19 @@ function renderModel(model) {
     ],
   });
   runLayout(curLayout);
+  // Same view as before the rebuild? Restore camera + selection instead of the
+  // fresh fit runLayout just did — no flash, no lost viewport.
+  cy.scratch('_viewKey', viewKey);
+  if (restore && restore.key === viewKey) {
+    cy.zoom(restore.zoom);
+    cy.pan(restore.pan);
+    if (restore.selected.length) {
+      cy.batch(() => restore.selected.forEach((id) => {
+        const el = cy.getElementById(id);
+        if (el.nonempty()) el.select();
+      }));
+    }
+  }
   bindContextMenu();
   renderTerrainButton(model);
 
@@ -828,27 +860,10 @@ function renderModel(model) {
   applyEdgeVisibility();
   if (edgesHidden) logLine('showing high-level segment-to-segment flow — click a host or a VLAN box for its detailed connections, double-click a VLAN to drill in, or check "show all flows"', 'ok');
 
-  $('l-heat').onchange = function () {
-    if (this.checked) {
-      cy.nodes(':childless').forEach((n) => {
-        const c = n.data('comp');
-        n.style('background-color', 'rgb(' + Math.round(40 + 180 * c) + ',' + Math.round(30 + 40 * c) + ',' + Math.round(25 + 20 * c) + ')');
-      });
-    } else {
-      cy.nodes(':childless').forEach((n) => n.removeStyle('background-color'));
-    }
-  };
+  // Layer-toggle handlers are bound once at module scope (see below); here we
+  // only apply the per-render initial state: heat is on by default in overview.
   $('l-heat').checked = overviewMode;
   $('l-heat').onchange();
-  $('l-lbl').onchange = function () { cy.edges().style('text-opacity', this.checked ? 1 : 0); };
-  $('l-flows').onchange = function () {
-    edgesHidden = !!model.overview && !this.checked;
-    applyEdgeVisibility();
-  };
-  $('l-drift').onchange = function () {
-    cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed,.drift-undocumented,.drift-silent,.drift-contradicted')
-      .toggleClass('drift-off', !this.checked);
-  };
 
   cy.on('tap', 'node:childless', (e) => {
     const n = e.target;
@@ -951,6 +966,31 @@ function applyEdgeVisibility() {
     }
   });
 }
+
+// Layer toggles are bound ONCE here; they read the live `cy` at call time so a
+// map rebuild (renderModel) doesn't need to rebind them. renderModel still
+// applies the per-render checked/initial state.
+$('l-heat').onchange = function () {
+  if (!cy) return;
+  if (this.checked) {
+    cy.nodes(':childless').forEach((n) => {
+      const c = n.data('comp');
+      n.style('background-color', 'rgb(' + Math.round(40 + 180 * c) + ',' + Math.round(30 + 40 * c) + ',' + Math.round(25 + 20 * c) + ')');
+    });
+  } else {
+    cy.nodes(':childless').forEach((n) => n.removeStyle('background-color'));
+  }
+};
+$('l-lbl').onchange = function () { if (cy) cy.edges().style('text-opacity', this.checked ? 1 : 0); };
+$('l-flows').onchange = function () {
+  edgesHidden = overviewMode && !this.checked;
+  applyEdgeVisibility();
+};
+$('l-drift').onchange = function () {
+  if (!cy) return;
+  cy.elements('.drift-new,.drift-vanished,.drift-rank-up,.drift-rank-down,.drift-changed,.drift-undocumented,.drift-silent,.drift-contradicted')
+    .toggleClass('drift-off', !this.checked);
+};
 
 // lightEdgesFor reveals just the selected host's real (host-level) connections,
 // hiding the backbone and everything else — focus+context.
@@ -1661,14 +1701,15 @@ function showDeviceCard(name) {
   ev.appendChild(card);
 }
 
+let searchTimer;
 $('search').addEventListener('input', (e) => {
-  if (!cy) return;
+  clearTimeout(searchTimer);
   const q = e.target.value.trim().toLowerCase();
-  if (!q) { cy.nodes(':childless').removeClass('dim'); return; }
-  cy.nodes(':childless').forEach((n) => {
-    const hay = (n.data('label') + ' ' + n.data('role') + ' ' + n.data('ev') + ' ' + n.data('aiTags') + ' ' + n.data('device') + ' ' + n.data('labels') + ' ' + n.data('services') + ' ' + n.data('roleOverride')).toLowerCase();
-    n.toggleClass('dim', !hay.includes(q));
-  });
+  searchTimer = setTimeout(() => {
+    if (!cy) return;
+    if (!q) { cy.nodes(':childless').removeClass('dim'); return; }
+    cy.nodes(':childless').forEach((n) => n.toggleClass('dim', !(n.data('hay') || '').includes(q)));
+  }, 150);
 });
 
 const ctxmenu = $('ctxmenu');
