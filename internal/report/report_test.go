@@ -2,7 +2,9 @@ package report
 
 import (
 	"bytes"
+	"errors"
 	"flag"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,6 +66,22 @@ func TestGraphMLGolden(t *testing.T) {
 		t.Fatal(err)
 	}
 	golden(t, "report.graphml", b.Bytes())
+}
+
+type failingWriter struct{ writes int }
+
+func (w *failingWriter) Write(p []byte) (int, error) {
+	if w.writes == 0 {
+		return 0, io.ErrClosedPipe
+	}
+	w.writes--
+	return len(p), nil
+}
+
+func TestGraphMLPropagatesWriteErrors(t *testing.T) {
+	if err := GraphML(&failingWriter{writes: 2}, fixture()); !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("GraphML error = %v, want %v", err, io.ErrClosedPipe)
+	}
 }
 
 func TestJSONGolden(t *testing.T) {

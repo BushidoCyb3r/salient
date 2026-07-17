@@ -16,9 +16,18 @@ import (
 // (that's the point of the draw.io/yEd path: orthogonal "Visio-style"
 // routing). Add <y:...> geometry only if a real yEd round-trip demands it.
 func GraphMLMap(w io.Writer, m *mapview.Model) error {
-	if _, err := io.WriteString(w, xml.Header); err != nil {
-		return err
+	var writeErr error
+	write := func(s string) {
+		if writeErr == nil {
+			_, writeErr = io.WriteString(w, s)
+		}
 	}
+	writef := func(format string, args ...any) {
+		if writeErr == nil {
+			_, writeErr = fmt.Fprintf(w, format, args...)
+		}
+	}
+	write(xml.Header)
 	const head = `<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
   <key id="d_label" for="node" attr.name="label" attr.type="string"/>
   <key id="d_role" for="node" attr.name="role" attr.type="string"/>
@@ -31,9 +40,7 @@ func GraphMLMap(w io.Writer, m *mapview.Model) error {
   <key id="e_conns" for="edge" attr.name="conn_count" attr.type="long"/>
   <graph id="map" edgedefault="directed">
 `
-	if _, err := io.WriteString(w, head); err != nil {
-		return err
-	}
+	write(head)
 	byGroup := map[string][]mapview.MapNode{}
 	var floating []mapview.MapNode
 	for _, n := range m.Nodes {
@@ -44,7 +51,7 @@ func GraphMLMap(w io.Writer, m *mapview.Model) error {
 		byGroup[n.Group] = append(byGroup[n.Group], n)
 	}
 	writeNode := func(indent string, n mapview.MapNode) {
-		fmt.Fprintf(w, "%s<node id=%q>\n", indent, esc(n.ID))
+		writef("%s<node id=%q>\n", indent, esc(n.ID))
 		gw := ""
 		if n.Gateway {
 			gw = "observed"
@@ -52,36 +59,36 @@ func GraphMLMap(w io.Writer, m *mapview.Model) error {
 				gw = "inferred"
 			}
 		}
-		fmt.Fprintf(w, "%s  <data key=\"d_label\">%s</data>\n", indent, esc(n.Label))
-		fmt.Fprintf(w, "%s  <data key=\"d_role\">%s</data>\n", indent, esc(n.Role))
-		fmt.Fprintf(w, "%s  <data key=\"d_tier\">%s</data>\n", indent, esc(string(n.Tier)))
-		fmt.Fprintf(w, "%s  <data key=\"d_comp\">%.4f</data>\n", indent, n.Composite)
+		writef("%s  <data key=\"d_label\">%s</data>\n", indent, esc(n.Label))
+		writef("%s  <data key=\"d_role\">%s</data>\n", indent, esc(n.Role))
+		writef("%s  <data key=\"d_tier\">%s</data>\n", indent, esc(string(n.Tier)))
+		writef("%s  <data key=\"d_comp\">%.4f</data>\n", indent, n.Composite)
 		if gw != "" {
-			fmt.Fprintf(w, "%s  <data key=\"d_gw\">%s</data>\n", indent, gw)
+			writef("%s  <data key=\"d_gw\">%s</data>\n", indent, gw)
 		}
-		fmt.Fprintf(w, "%s</node>\n", indent)
+		writef("%s</node>\n", indent)
 	}
 	for _, g := range m.Groups {
-		fmt.Fprintf(w, "    <node id=%q>\n      <data key=\"d_label\">%s</data>\n", esc(g.ID), esc(g.Label))
+		writef("    <node id=%q>\n      <data key=\"d_label\">%s</data>\n", esc(g.ID), esc(g.Label))
 		if g.BlindSpot {
-			io.WriteString(w, "      <data key=\"d_blind\">true</data>\n")
+			write("      <data key=\"d_blind\">true</data>\n")
 		}
-		fmt.Fprintf(w, "      <graph id=\"%s:\" edgedefault=\"directed\">\n", esc(g.ID))
+		writef("      <graph id=\"%s:\" edgedefault=\"directed\">\n", esc(g.ID))
 		for _, n := range byGroup[g.ID] {
 			writeNode("        ", n)
 		}
-		io.WriteString(w, "      </graph>\n    </node>\n")
+		write("      </graph>\n    </node>\n")
 	}
 	for _, n := range floating {
 		writeNode("    ", n)
 	}
 	for i, e := range m.Edges {
-		fmt.Fprintf(w, "    <edge id=\"e%d\" source=%q target=%q>\n", i, esc(e.Src), esc(e.Dst))
-		fmt.Fprintf(w, "      <data key=\"e_class\">%s</data>\n", esc(e.Class))
-		fmt.Fprintf(w, "      <data key=\"e_label\">%s</data>\n", esc(e.Label))
-		fmt.Fprintf(w, "      <data key=\"e_conns\">%d</data>\n", e.Conns)
-		io.WriteString(w, "    </edge>\n")
+		writef("    <edge id=\"e%d\" source=%q target=%q>\n", i, esc(e.Src), esc(e.Dst))
+		writef("      <data key=\"e_class\">%s</data>\n", esc(e.Class))
+		writef("      <data key=\"e_label\">%s</data>\n", esc(e.Label))
+		writef("      <data key=\"e_conns\">%d</data>\n", e.Conns)
+		write("    </edge>\n")
 	}
-	_, err := io.WriteString(w, "  </graph>\n</graphml>\n")
-	return err
+	write("  </graph>\n</graphml>\n")
+	return writeErr
 }

@@ -30,26 +30,42 @@ func GraphML(w io.Writer, snap graph.Snapshot) error {
 		return err
 	}
 	for _, n := range snap.Nodes {
-		fmt.Fprintf(w, "    <node id=%q>\n", esc(n.IP))
-		writeData(w, "d_ip", n.IP)
-		writeData(w, "d_role", string(n.TopRole()))
-		writeData(w, "d_subnet", n.Subnet)
-		writeData(w, "d_comp", fmt.Sprintf("%.4f", n.Scores.Composite))
-		writeData(w, "d_rank", fmt.Sprintf("%d", n.Scores.Rank))
-		io.WriteString(w, "    </node>\n")
+		if _, err := fmt.Fprintf(w, "    <node id=%q>\n", esc(n.IP)); err != nil {
+			return err
+		}
+		for _, data := range [][2]string{
+			{"d_ip", n.IP}, {"d_role", string(n.TopRole())}, {"d_subnet", n.Subnet},
+			{"d_comp", fmt.Sprintf("%.4f", n.Scores.Composite)}, {"d_rank", fmt.Sprintf("%d", n.Scores.Rank)},
+		} {
+			if err := writeData(w, data[0], data[1]); err != nil {
+				return err
+			}
+		}
+		if _, err := io.WriteString(w, "    </node>\n"); err != nil {
+			return err
+		}
 	}
 	for i, e := range snap.Edges {
-		fmt.Fprintf(w, "    <edge id=\"e%d\" source=%q target=%q>\n", i, esc(e.Src), esc(e.Dst))
-		writeData(w, "e_svc", e.Service)
-		writeData(w, "e_conn", fmt.Sprintf("%d", e.ConnCount))
-		io.WriteString(w, "    </edge>\n")
+		if _, err := fmt.Fprintf(w, "    <edge id=\"e%d\" source=%q target=%q>\n", i, esc(e.Src), esc(e.Dst)); err != nil {
+			return err
+		}
+		if err := writeData(w, "e_svc", e.Service); err != nil {
+			return err
+		}
+		if err := writeData(w, "e_conn", fmt.Sprintf("%d", e.ConnCount)); err != nil {
+			return err
+		}
+		if _, err := io.WriteString(w, "    </edge>\n"); err != nil {
+			return err
+		}
 	}
 	_, err := io.WriteString(w, "  </graph>\n</graphml>\n")
 	return err
 }
 
-func writeData(w io.Writer, key, val string) {
-	fmt.Fprintf(w, "      <data key=%q>%s</data>\n", key, esc(val))
+func writeData(w io.Writer, key, val string) error {
+	_, err := fmt.Fprintf(w, "      <data key=%q>%s</data>\n", key, esc(val))
+	return err
 }
 
 func esc(s string) string {

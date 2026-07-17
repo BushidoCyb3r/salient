@@ -83,6 +83,12 @@ func TestGraphMLMapGolden(t *testing.T) {
 	golden(t, "map.graphml", b.Bytes())
 }
 
+func TestGraphMLMapPropagatesWriteErrors(t *testing.T) {
+	if err := GraphMLMap(&failingWriter{writes: 2}, mapFixture()); err == nil {
+		t.Fatal("GraphMLMap returned nil after a write failure")
+	}
+}
+
 func TestHTMLMapSelfContainedAndHasEvidence(t *testing.T) {
 	var b bytes.Buffer
 	if err := HTMLMap(&b, mapFixture()); err != nil {
