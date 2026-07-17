@@ -1574,12 +1574,16 @@ async function renderHints() {
     div.appendChild(document.createTextNode('"' + h.hostname + '" seen on ' + h.ips.length + ' IPs — same device?'));
     const act = document.createElement('div');
     act.className = 'act';
+    const nameIn = document.createElement('input');
+    nameIn.value = h.hostname;
+    nameIn.placeholder = h.hostname;
     const link = document.createElement('button');
-    link.textContent = 'link as ' + h.hostname;
+    link.textContent = 'link';
     link.onclick = async () => {
+      const name = nameIn.value.trim() || h.hostname;
       try {
-        for (const ip of h.ips) await AssignIP(h.hostname, ip);
-        logLine('linked ' + h.ips.length + ' IPs as device "' + h.hostname + '"', 'ok');
+        for (const ip of h.ips) await AssignIP(name, ip);
+        logLine('linked ' + h.ips.length + ' IPs as device "' + name + '"', 'ok');
         await refreshDevices();
       } catch (err) { logLine('link failed: ' + err, 'err'); }
     };
@@ -1589,6 +1593,7 @@ async function renderHints() {
       try { await DismissHint(h.key); await refreshDevices(); }
       catch (err) { logLine('dismiss failed: ' + err, 'err'); }
     };
+    act.appendChild(nameIn);
     act.appendChild(link);
     act.appendChild(dis);
     div.appendChild(act);
@@ -1623,6 +1628,41 @@ function showDeviceCard(name) {
   const head = document.createElement('div');
   head.textContent = '◈ ' + d.name + (d.type ? ' (' + d.type + ')' : '');
   head.style.color = '#a78bfa';
+  const pencil = document.createElement('button');
+  pencil.textContent = '✎';
+  pencil.title = 'rename device';
+  const doRename = async (newName) => {
+    if (!newName || newName === d.name) { showDeviceCard(d.name); return; }
+    try {
+      await SaveDevice(d.name, { name: newName, type: d.type || '', notes: d.notes || '', ips: d.ips || [], owns_cidrs: d.owns_cidrs || [] });
+      logLine('renamed "' + d.name + '" → "' + newName + '"', 'ok');
+      await refreshDevices();
+      showDeviceCard(newName);
+    } catch (err) { logLine('rename failed: ' + err, 'err'); }
+  };
+  pencil.onclick = () => {
+    head.textContent = '';
+    const inp = document.createElement('input');
+    inp.className = 'rename';
+    inp.value = d.name;
+    const ok = document.createElement('button');
+    ok.textContent = 'rename';
+    ok.onclick = () => doRename(inp.value.trim());
+    const cancel = document.createElement('button');
+    cancel.textContent = 'cancel';
+    cancel.onclick = () => showDeviceCard(d.name);
+    inp.onkeydown = (e) => {
+      if (e.key === 'Enter') doRename(inp.value.trim());
+      else if (e.key === 'Escape') showDeviceCard(d.name);
+    };
+    head.appendChild(inp);
+    head.appendChild(ok);
+    head.appendChild(cancel);
+    inp.focus();
+    inp.select();
+  };
+  head.appendChild(document.createTextNode(' '));
+  head.appendChild(pencil);
   card.appendChild(head);
   const notes = document.createElement('textarea');
   notes.value = d.notes || '';
