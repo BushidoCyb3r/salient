@@ -112,7 +112,7 @@ func TestAssignCreatesMovesAndDeduplicates(t *testing.T) {
 
 func TestUnassignRemovesIPKeepsDevice(t *testing.T) {
 	var r Registry
-	r.Assign("router", "10.0.0.1")
+	_, _ = r.Assign("router", "10.0.0.1")
 	r.Unassign("10.0.0.1")
 	if r.DeviceForIP("10.0.0.1") != nil {
 		t.Fatal("IP still owned after Unassign")
@@ -149,7 +149,7 @@ func TestUpsertCreateRenameAndInvariants(t *testing.T) {
 
 func TestDeleteAndDismiss(t *testing.T) {
 	var r Registry
-	r.Assign("router", "10.0.0.1")
+	_, _ = r.Assign("router", "10.0.0.1")
 	r.Delete("router")
 	if len(r.Devices) != 0 || r.DeviceForIP("10.0.0.1") != nil {
 		t.Fatal("Delete left the device behind")

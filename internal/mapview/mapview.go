@@ -744,7 +744,7 @@ func filterFocus(nodes []graph.Node, focus string) []graph.Node {
 	if focus == "" {
 		return nodes
 	}
-	keep := func(a netip.Addr) bool { return true }
+	var keep func(netip.Addr) bool
 	switch focus {
 	case "private", "internal":
 		keep = func(a netip.Addr) bool { return a.IsPrivate() }

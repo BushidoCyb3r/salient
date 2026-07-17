@@ -360,7 +360,7 @@ func parsePorts(next func() (string, bool), peek func() (string, bool), setCavea
 		case "eq":
 			return PortRange{p, p}, true
 		case "gt":
-			if p >= 65535 {
+			if p == 65535 {
 				return PortRange{}, true
 			}
 			return PortRange{p + 1, 65535}, true

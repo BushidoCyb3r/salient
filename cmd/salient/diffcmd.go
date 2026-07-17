@@ -53,7 +53,7 @@ func newDiffCmd() *cobra.Command {
 				if err := safefile.Write(out, func(w io.Writer) error { return report.DriftHTML(w, d) }); err != nil {
 					return err
 				}
-				fmt.Fprintln(cmd.OutOrStdout(), out)
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), out)
 			default:
 				return fmt.Errorf("unknown --format %q (html|json)", format)
 			}
@@ -64,7 +64,7 @@ func newDiffCmd() *cobra.Command {
 				}); err != nil {
 					return err
 				}
-				fmt.Fprintln(cmd.OutOrStdout(), out)
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), out)
 			}
 			fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this drift report describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
 			return nil

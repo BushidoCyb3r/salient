@@ -127,7 +127,7 @@ func (c *Client) Info(ctx context.Context) (ClusterInfo, error) {
 	if err != nil {
 		return info, fmt.Errorf("connecting to Elasticsearch: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.IsError() {
 		return info, apiError("info", res.StatusCode, res.Body)
 	}
@@ -156,7 +156,7 @@ func (c *Client) ResolveIndices(ctx context.Context, pattern string) ([]IndexInf
 	if err != nil {
 		return nil, fmt.Errorf("resolving indices %q: %w", pattern, err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.IsError() {
 		return nil, apiError("resolve index", res.StatusCode, res.Body)
 	}
@@ -195,7 +195,7 @@ func (c *Client) search(ctx context.Context, pattern, body string) (map[string]j
 	if err != nil {
 		return nil, fmt.Errorf("search against %q: %w", pattern, err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.IsError() {
 		return nil, apiError("search", res.StatusCode, res.Body)
 	}
@@ -221,7 +221,7 @@ func (c *Client) searchSources(ctx context.Context, pattern, body string) ([]jso
 	if err != nil {
 		return nil, fmt.Errorf("search against %q: %w", pattern, err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.IsError() {
 		return nil, apiError("search", res.StatusCode, res.Body)
 	}
@@ -257,7 +257,7 @@ func (c *Client) FieldPresence(ctx context.Context, pattern string, fields []str
 	if err != nil {
 		return nil, fmt.Errorf("field_caps against %q: %w", pattern, err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.IsError() {
 		return nil, apiError("field_caps", res.StatusCode, res.Body)
 	}
@@ -300,7 +300,7 @@ func (c *Client) CheckWritePrivileges(ctx context.Context, pattern string) (Writ
 	if err != nil {
 		return WritePrivilegeCheck{}, fmt.Errorf("privilege check: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.IsError() {
 		// A key without permission to even ask is fine — just report
 		// that the check could not be performed.

@@ -42,7 +42,7 @@ func newAnalyzeCmd() *cobra.Command {
 				return err
 			}
 			if allowRemote {
-				fmt.Fprintf(cmd.ErrOrStderr(), "%sWARNING: summarized network topology may leave this host for the configured analysis endpoint.%s\n", ansiRed, ansiReset)
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%sWARNING: summarized network topology may leave this host for the configured analysis endpoint.%s\n", ansiRed, ansiReset)
 			}
 			result, err := assist.Analyze(cmd.Context(), assist.Config{
 				Endpoint: endpoint, Model: model, APIKey: os.Getenv(config.EnvAssistAPIKey),
@@ -64,8 +64,8 @@ func newAnalyzeCmd() *cobra.Command {
 			if err := safefile.WriteFile(output, raw); err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), output)
-			fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this analysis describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), output)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%sHandling reminder: this analysis describes network terrain — protect it at the network's classification.%s\n", ansiYellow, ansiReset)
 			return nil
 		},
 	}

@@ -299,7 +299,7 @@ func complete(ctx context.Context, cfg Config, system, user string) (string, err
 	if err != nil {
 		return "", fmt.Errorf("analysis request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, config.AssistMaxResponseBytes))
 	if err != nil {
 		return "", err

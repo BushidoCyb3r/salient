@@ -65,10 +65,11 @@ func ParseUniFi(files map[string][]byte, source string) (DeclaredDevice, error) 
 			// handled in pass 1
 		case has(item, "ruleset") && has(item, "action"):
 			recognized++
-			switch added, cav := addRules(&dev, item, rulesetIdx, netByID); {
-			case added == statusBadAction:
+			added, cav := addRules(&dev, item, rulesetIdx, netByID)
+			switch added {
+			case statusBadAction:
 				unknownAction++
-			case added == statusDisabled:
+			case statusDisabled:
 				disabled++
 			default:
 				caveated += cav

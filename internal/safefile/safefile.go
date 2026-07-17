@@ -31,7 +31,7 @@ func Write(path string, render func(io.Writer) error) error {
 	if err != nil {
 		return err
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 
 	var token [16]byte
 	if _, err := rand.Read(token[:]); err != nil {
@@ -42,7 +42,9 @@ func Write(path string, render func(io.Writer) error) error {
 	if err != nil {
 		return err
 	}
-	defer root.Remove(tmp)
+	// Cleanup of the temp file is best-effort by design: a successful rename
+	// removes it, and a leftover on the error path is harmless.
+	defer func() { _ = root.Remove(tmp) }()
 	if err := render(f); err != nil {
 		_ = f.Close()
 		return err

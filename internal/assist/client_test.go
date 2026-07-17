@@ -19,7 +19,7 @@ func TestAnalyzeSendsCappedSnapshotAndValidatesCitations(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		requestBody = string(body)
 		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"choices":[{"message":{"content":"{\"summary\":\"DNS is key terrain\",\"findings\":[{\"title\":\"DNS dependency\",\"severity\":\"medium\",\"rationale\":\"Many clients depend on it\",\"node_ids\":[\"10.0.0.1\"],\"edge_ids\":[\"10.0.0.2>10.0.0.1:53\"],\"confidence\":0.8}]}"}}]}`)
+		_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"summary\":\"DNS is key terrain\",\"findings\":[{\"title\":\"DNS dependency\",\"severity\":\"medium\",\"rationale\":\"Many clients depend on it\",\"node_ids\":[\"10.0.0.1\"],\"edge_ids\":[\"10.0.0.2>10.0.0.1:53\"],\"confidence\":0.8}]}"}}]}`)
 	}))
 	defer server.Close()
 
@@ -65,7 +65,7 @@ func TestAnalyzeSendsCappedSnapshotAndValidatesCitations(t *testing.T) {
 
 func TestAnalyzeRejectsUnknownCitations(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, `{"choices":[{"message":{"content":"{\"summary\":\"x\",\"findings\":[{\"title\":\"x\",\"node_ids\":[\"192.0.2.99\"]}]}"}}]}`)
+		_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"summary\":\"x\",\"findings\":[{\"title\":\"x\",\"node_ids\":[\"192.0.2.99\"]}]}"}}]}`)
 	}))
 	defer server.Close()
 	_, err := Analyze(context.Background(), Config{Endpoint: server.URL, Model: "test", MaxNodes: 1}, graph.Snapshot{Nodes: []graph.Node{{IP: "10.0.0.1"}}})

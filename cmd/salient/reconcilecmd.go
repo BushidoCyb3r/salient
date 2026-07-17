@@ -40,7 +40,7 @@ and role-contradicted. --map renders a briefing map with the same flags.`,
 			if err != nil {
 				return err
 			}
-			defer f.Close()
+			defer func() { _ = f.Close() }()
 			assets, warnings, err := reconcile.ParseCSV(f)
 			if err != nil {
 				return fmt.Errorf("parsing asset list: %w", err)

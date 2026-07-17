@@ -3,7 +3,6 @@ package escli
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -61,12 +60,12 @@ func TestFetchEdgesMaxEdgesTruncates(t *testing.T) {
 	_, cli := newMockES(t, map[string]http.HandlerFunc{
 		"/logs-*/_search": func(w http.ResponseWriter, r *http.Request) {
 			// Always claims another page exists.
-			jsonHandler(200, fmt.Sprintf(`{"hits":{"total":{"value":100}},"aggregations":{"edges":{
+			jsonHandler(200, `{"hits":{"total":{"value":100}},"aggregations":{"edges":{
 				"after_key":{"src":"x","dst":"y","port":1},
 				"buckets":[{"key":{"src":"10.0.0.1","dst":"10.0.0.2","port":80},"doc_count":1,
 					"bytes_out":{"value":0},"bytes_in":{"value":0},
 					"first":{"value":1750000000000},"last":{"value":1750000000000},
-					"sensors":{"buckets":[]}}]}}}`))(w, r)
+					"sensors":{"buckets":[]}}]}}}`)(w, r)
 		},
 	})
 	edges, truncated, err := cli.FetchEdges(context.Background(), DefaultFieldMap(), 24*time.Hour, nil, 3)

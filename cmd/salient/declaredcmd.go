@@ -57,7 +57,7 @@ nothing is written.`,
 			}
 			devs, warnings := netconfig.ParseConfigs(files)
 			for _, w := range warnings {
-				fmt.Fprintf(cmd.ErrOrStderr(), "%swarning:%s %s\n", ansiYellow, ansiReset, w)
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%swarning:%s %s\n", ansiYellow, ansiReset, w)
 			}
 			res := declaredResult{
 				Inventory: netconfig.DiffInventory(snap, devs),

@@ -13,7 +13,7 @@ func loadFixture(t *testing.T) DeclaredDevice {
 	if err != nil {
 		t.Fatalf("open fixture: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dev, err := ParseCiscoIOS(f, "ios-router.cfg")
 	if err != nil {
 		t.Fatalf("ParseCiscoIOS: %v", err)
@@ -79,7 +79,7 @@ func TestParseCiscoIOS_Switchport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open fixture: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dev, err := ParseCiscoIOS(f, "ios-switch.cfg")
 	if err != nil {
 		t.Fatalf("ParseCiscoIOS: %v", err)

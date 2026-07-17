@@ -16,7 +16,7 @@ func TestAnalyzeCommandWritesProtectedArtifact(t *testing.T) {
 	var auth string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth = r.Header.Get("Authorization")
-		io.WriteString(w, `{"choices":[{"message":{"content":"{\"summary\":\"No material findings\",\"findings\":[]}"}}]}`)
+		_, _ = io.WriteString(w, `{"choices":[{"message":{"content":"{\"summary\":\"No material findings\",\"findings\":[]}"}}]}`)
 	}))
 	defer server.Close()
 	t.Setenv(config.EnvAssistAPIKey, "secret")

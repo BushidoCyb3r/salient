@@ -116,9 +116,7 @@ func Compare(from, to graph.Snapshot, opts DiffOptions) Diff {
 		if !slices.Equal(fromRoles, toRoles) {
 			d.RoleChanges = append(d.RoleChanges, RoleChange{IP: ip, From: fromRoles, To: toRoles})
 		}
-		for _, change := range identityChanges(ip, old, n) {
-			d.IdentityChanges = append(d.IdentityChanges, change)
-		}
+		d.IdentityChanges = append(d.IdentityChanges, identityChanges(ip, old, n)...)
 	}
 	for ip, n := range oldNodes {
 		if _, exists := newNodes[ip]; !exists {
