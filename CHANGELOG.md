@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Native GUI builds now copy and verify the vendored map libraries from `web/`
+  during the frontend build itself. Clean macOS and Windows release runners no
+  longer produce an app that fails with `Can't find variable: cytoscape` after
+  loading a snapshot.
+
 ### Changed
 - Future release assets retain the established GUI/package names; only the
   standalone command-line binaries carry the `salient-cli-*` prefix.

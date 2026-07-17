@@ -7,7 +7,7 @@ graphify-out/
 .claude/
 .superpowers/
 
-# Vendored map JS is single-sourced from web/ and copied in by `make gui-vendor`.
+# Vendored map JS is single-sourced from web/ and copied by the frontend build.
 gui/frontend/public/vendor/
 docs/superpowers/plans/
 

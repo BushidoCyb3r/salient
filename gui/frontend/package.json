@@ -4,8 +4,12 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
+    "sync-vendor": "node scripts/vendor.js",
+    "predev": "npm run sync-vendor",
     "dev": "vite",
+    "prebuild": "npm run sync-vendor",
     "build": "vite build",
+    "postbuild": "node scripts/vendor.js --check",
     "test": "node --test",
     "preview": "vite preview"
   },
