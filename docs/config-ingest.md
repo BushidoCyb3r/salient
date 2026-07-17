@@ -76,32 +76,34 @@ credential, or a browser cookie.
 3. Create an API key, give it a recognizable name such as `salient-readonly`,
    and copy it when shown. Salient only calls documented GET endpoints even if
    the application does not offer a separate read-only permission toggle.
-4. On the workstation running the standalone CLI, read the key without echoing
-   it and export the four collections. If you downloaded a release binary
-   instead of installing it as `salient`, substitute its path, such as
-   `./salient-cli-linux-amd64`, `./salient-cli-darwin-arm64`, or
-   `.\salient-cli-windows-amd64.exe`. A downloaded Linux/macOS binary may first
-   need `chmod +x <downloaded-cli>`.
+4. On the workstation running the standalone CLI, use only the block matching
+   your shell; Bash and Zsh `read` options are not interchangeable. Run the
+   `read` command by itself, wait for its hidden prompt, then paste the key and
+   press Enter. **Do not append the key to the `read` command.** These examples
+   use the filenames from the release page; if you installed or renamed the
+   binary as `salient`, use that name instead.
 
    Linux with Bash:
 
    ```bash
+   chmod +x ./salient-cli-linux-amd64
    read -rsp 'UniFi Network Integration API key: ' SALIENT_UNIFI_API_KEY
    printf '\n'
    export SALIENT_UNIFI_API_KEY
 
-   salient unifi-export --controller https://192.168.1.1
+   ./salient-cli-linux-amd64 unifi-export --controller https://192.168.1.1
    unset SALIENT_UNIFI_API_KEY
    ```
 
    macOS with the default Zsh:
 
    ```zsh
+   chmod +x ./salient-cli-darwin-arm64
    read -s "SALIENT_UNIFI_API_KEY?UniFi Network Integration API key: "
    printf '\n'
    export SALIENT_UNIFI_API_KEY
 
-   salient unifi-export --controller https://192.168.1.1
+   ./salient-cli-darwin-arm64 unifi-export --controller https://192.168.1.1
    unset SALIENT_UNIFI_API_KEY
    ```
 
@@ -299,6 +301,12 @@ Validate and remove the cookie jar exactly as for UniFi OS.
 
 #### Troubleshooting and coverage
 
+- macOS `read: -p: no coprocess`: Bash `read -rsp` syntax was run in Zsh. Use
+  the macOS Zsh block above. The final word in the `read` command must be the
+  variable name `SALIENT_UNIFI_API_KEY`, never the key itself.
+- `no UniFi API key provided`: the hidden prompt did not set the variable or
+  the export step was skipped. Repeat the block for the current shell; type the
+  key only after the prompt appears.
 - Official exporter `401` or `403`: confirm that the value came from the local
   **Network → Integrations** page, not the Site Manager API page, and regenerate
   it if necessary. A Network Integration API key is sent as `X-API-Key` and is
