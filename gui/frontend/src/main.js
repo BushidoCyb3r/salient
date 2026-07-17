@@ -1,5 +1,5 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, PickDeviceConfigs, LoadDeclared, ClearDeclared, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
-import { EventsOn } from '../wailsjs/runtime/runtime.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, PickDeviceConfigs, LoadDeclared, ClearDeclared, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider, EventsOn } from './bindings.js';
+import { csvCell, leadDossierText, leadReasonLabel, topTerrainNodes } from './helpers.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -184,12 +184,6 @@ function rgAddRow(vals) {
   return tr;
 }
 
-// csvCell quotes a value only when it holds a comma, quote, or newline (RFC 4180).
-function csvCell(s) {
-  s = (s || '').trim();
-  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-}
-
 $('rec-manual').onclick = () => {
   if (!currentSnapshotPath) { logLine('open a snapshot before reconciling', 'warn'); return; }
   $('rg-rows').innerHTML = '';
@@ -357,7 +351,6 @@ const tierColor = { core: '#241a15', service: '#141d2b', client: '#1c232d' };
 const topoBandColor = { boundary: '#3a2417', router: '#12243f', switch: '#12331f' };
 const topoBorder = { boundary: '#e3a008', router: '#5a86ff', switch: '#3fb950' };
 const tierBorder = { core: '#d9773f', service: '#4d8fe0', client: '#586274' };
-const TERRAIN_TOP_N = 15;
 const layouts = {
   // Tight, tiled fcose: pack each segment's hosts into a compact grid inside its
   // box (so boxes come out small and uniform, not ballooned by wide separation),
@@ -902,13 +895,6 @@ function renderModel(model) {
   cy.on('tap', (e) => { if (e.target === cy) applyEdgeVisibility(); });
 }
 
-function topTerrainNodes(model) {
-  return (model.nodes || [])
-    .filter((n) => n.rank > 0 && (!n.agg_count || n.device))
-    .sort((a, b) => a.rank - b.rank)
-    .slice(0, TERRAIN_TOP_N);
-}
-
 function renderTerrainButton(model) {
   const count = topTerrainNodes(model).length;
   $('terrainbtn').disabled = count === 0;
@@ -1241,15 +1227,6 @@ async function openHuntLeads() {
   $('hl-filter').focus();
 }
 
-const LEAD_REASON_LABELS = {
-  'policy-denied': 'policy denied',
-  'contradicted': 'role contradicted',
-  'undocumented': 'undocumented',
-  'new-provider': 'new provider',
-  'new-service': 'new service',
-  'sole-provider': 'sole provider',
-};
-
 function renderLeadRows(q) {
   const list = $('hl-list');
   list.innerHTML = '';
@@ -1262,7 +1239,7 @@ function renderLeadRows(q) {
     li.textContent = l.ip + ' — ' + l.service;
     const reason = document.createElement('span');
     reason.className = 'role';
-    reason.textContent = ' · ' + (LEAD_REASON_LABELS[l.reason] || l.reason);
+    reason.textContent = ' · ' + leadReasonLabel(l.reason);
     li.appendChild(reason);
     if (l.rank) {
       const rank = document.createElement('span');
@@ -1282,21 +1259,7 @@ function showLeadDossier(l) {
   const ev = $('ev');
   ev.textContent = '';
   activateTab('investigate');
-  const text =
-    l.ip + (l.hostname ? ' (' + l.hostname + ')' : '') +
-    '\nreason: ' + (LEAD_REASON_LABELS[l.reason] || l.reason) +
-    '\nservice: ' + l.service + ' (port ' + l.port + ')' +
-    (l.inventory_status ? '\ninventory: ' + l.inventory_status : '') +
-    (l.rank ? '\nrank: #' + l.rank : '') +
-    '\nevidence: ' + l.evidence +
-    (l.rule_evidence ? '\ndenied by: ' + l.rule_evidence : '') +
-    '\nclients: ' + l.clients + (l.sample_clients ? ' (' + l.sample_clients.join(', ') + ')' : '') +
-    (l.subnets ? '\nsubnets: ' + l.subnets.join(', ') : '') +
-    (l.sensors ? '\nsensors: ' + l.sensors.join(', ') : '') +
-    '\nalternate providers: ' + (l.alternate_providers && l.alternate_providers.length ? l.alternate_providers.join(', ') : 'no alternate provider observed') +
-    '\nfirst seen: ' + l.first_seen +
-    '\nlast seen: ' + l.last_seen;
-  ev.appendChild(document.createTextNode(text));
+  ev.appendChild(document.createTextNode(leadDossierText(l)));
 
   const row = document.createElement('div');
   row.className = 'devcard';
@@ -1890,3 +1853,5 @@ EventsOn('device:warning', (msg) => logLine('warning: ' + msg, 'warn'));
 /* native File-menu events still work in the console */
 EventsOn('snapshot:open', openSnapshot);
 EventsOn('snapshots:refresh', () => refreshList(false));
+
+document.documentElement.dataset.salientReady = 'true';
