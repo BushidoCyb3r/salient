@@ -47,7 +47,8 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	}
 	sort.Slice(idx, func(i, j int) bool {
 		a, b := &nodes[idx[i]], &nodes[idx[j]]
-		am, bm := nodeDrift[a.IP] != "", nodeDrift[b.IP] != ""
+		am := nodeDrift[a.IP] != "" || opts.DeclaredDevices[a.IP].Name != ""
+		bm := nodeDrift[b.IP] != "" || opts.DeclaredDevices[b.IP].Name != ""
 		if am != bm {
 			return am
 		}
@@ -86,7 +87,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	segMarked := map[string]bool{}
 	for _, ns := range segHosts {
 		for _, i := range ns {
-			if nodeDrift[nodes[i].IP] != "" {
+			if nodeDrift[nodes[i].IP] != "" || opts.DeclaredDevices[nodes[i].IP].Name != "" {
 				segMarked[groupCIDR(nodes[i].IP, nodes[i].Subnet)] = true
 				break
 			}
@@ -133,7 +134,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// capped so a huge grid can't hairball.
 	retained := map[string]bool{}
 	for i := range nodes {
-		if opts.Pinned[nodes[i].IP] && graph.TerrainAddr(nodes[i].IP) {
+		if (opts.Pinned[nodes[i].IP] || opts.DeclaredDevices[nodes[i].IP].Name != "") && graph.TerrainAddr(nodes[i].IP) {
 			retained[nodes[i].IP] = true
 		}
 	}
@@ -229,6 +230,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// Observed L2 gateways are real evidence — add them before budgeting
 	// edges. Inferred gateways are guesses and come last, in leftover space.
 	hasObserved := m.addObservedGateways(snap)
+	m.addDeclaredDevices(opts.DeclaredDevices)
 
 	// Declared-config gateways are evidence too (a device config named them):
 	// badge them before budgeting edges, alongside any observed L2 node, and
@@ -275,7 +277,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 		m.Findings = append(m.Findings, fmt.Sprintf("show-all-private: %d RFC1918 hosts exceed the %d cap — showing the %d highest-ranked, the rest re-aggregated (map would be too dense otherwise)", privateTotal, config.MapAllPrivateCap, privatePromoted))
 	}
 	if n := m.Elements(); n > config.MapTargetElements {
-		m.Findings = append(m.Findings, fmt.Sprintf("overview exceeds the %d-element target (%d) because flagged changes are never dropped", config.MapTargetElements, n))
+		m.Findings = append(m.Findings, fmt.Sprintf("overview exceeds the %d-element target (%d) because flagged changes and imported devices are never dropped", config.MapTargetElements, n))
 	}
 	m.Findings = append(m.Findings, fmt.Sprintf("segment-flow overview: %d elements reduced to %d — each VLAN shows its top hosts and the strongest dependencies; drill into a segment (or use --focus CIDR) for full detail", detailedElements, m.Elements()))
 

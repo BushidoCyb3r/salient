@@ -219,10 +219,7 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	opts := a.mapOptions()
-	// Reapply declared-config gateway identity when configs have been ingested,
-	// so the overlay survives a plain snapshot reload.
-	opts.DeclaredGateways = a.declaredGateways(snap)
+	opts := a.mapOptionsFor(snap)
 	return a.finishModel(resolved, mapview.Build(snap, opts))
 }
 
@@ -235,7 +232,7 @@ func (a *App) LoadFocusedModel(path, cidr string) (*mapview.Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	opts := a.mapOptions()
+	opts := a.mapOptionsFor(snap)
 	opts.Focus = cidr
 	// Drilling in means "show me everything in this VLAN": no client
 	// aggregation, every host individual — that is the point of the drill.
@@ -256,7 +253,7 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 		return nil, err
 	}
 	d := snapshot.Compare(from, to, snapshot.DiffOptions{})
-	model := mapview.BuildDrift(to, d, a.mapOptions())
+	model := mapview.BuildDrift(to, d, a.mapOptionsFor(to))
 	for _, warning := range d.CompatibilityWarnings {
 		model.Findings = append(model.Findings, "comparison warning: "+warning)
 	}
@@ -299,7 +296,7 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 	if err != nil {
 		return nil, err
 	}
-	model, err := a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
+	model, err := a.finishModel(resolved, mapview.Build(snap, a.mapOptionsFor(snap)))
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +324,7 @@ func (a *App) FlowEndpointIPs(path, srcID, dstID, class string) ([]string, error
 	if err != nil {
 		return nil, err
 	}
-	model := mapview.Build(snap, a.mapOptions())
+	model := mapview.Build(snap, a.mapOptionsFor(snap))
 	return model.EdgeMemberIPs(snap, srcID, dstID, class), nil
 }
 
@@ -440,7 +437,7 @@ func (a *App) reconcileFrom(snapshotPath string, assets io.Reader) (*mapview.Mod
 		return nil, fmt.Errorf("asset list: %w", err)
 	}
 	res := reconcile.Compare(snap, parsed)
-	model := mapview.BuildReconcile(snap, res, parsed, a.mapOptions())
+	model := mapview.BuildReconcile(snap, res, parsed, a.mapOptionsFor(snap))
 	for _, w := range warnings {
 		model.Findings = append(model.Findings, "asset list: "+w)
 	}
@@ -590,7 +587,7 @@ func (a *App) ExportMap(path string, format string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	mm, err := a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
+	mm, err := a.finishModel(resolved, mapview.Build(snap, a.mapOptionsFor(snap)))
 	if err != nil {
 		return "", err
 	}

@@ -746,7 +746,7 @@ function renderModel(model) {
         // reload won't refresh it, which is fine (reloads rebuild the map).
         hay: (n.label.split('\n')[0] + ' ' + (n.role || '') + ' ' + (n.evidence || []).join('\n') + ' ' +
           (n.suggested_tags || []).join(', ') + ' ' + (n.device || '') + ' ' + (n.labels || []).join(', ') + ' ' +
-          (n.services || []).join(', ') + ' ' + (n.role_override || '')).toLowerCase(),
+          (n.device_type || '') + ' ' + (n.services || []).join(', ') + ' ' + (n.role_override || '')).toLowerCase(),
       },
       classes: (n.drift ? 'drift-' + n.drift + ' ' : '') + (n.device ? 'dev-linked ' : '') + (n.pinned ? 'pinned ' : '') + (n.suggested_tags?.length ? 'ai-tagged' : ''),
     });
@@ -1024,7 +1024,7 @@ function showNodeEvidence(n) {
     (override ? '\nrole: ✎ ' + override + ' (operator)\ninferred: ' + n.data('role') : '\nrole: ' + n.data('role')) +
     (n.data('rank') ? '\nrank: #' + n.data('rank') : '') +
     '\ncomposite: ' + (n.data('comp') || 0).toFixed(2) + (n.data('drift') ? '\ndrift: ' + n.data('drift') : '') +
-    (n.data('device') ? '\ndevice: ◈ ' + n.data('device') : '') +
+    (n.data('device') ? '\ndevice: ◈ ' + n.data('device') + (n.data('deviceType') ? ' (' + n.data('deviceType') + ')' : '') : '') +
     (n.data('labels') ? '\nlabels: ' + n.data('labels') : '') +
     (n.data('services') ? '\nservices: ' + n.data('services') : '') +
     (n.data('mac') ? '\nMAC: ' + n.data('mac') + (n.data('vendor') ? ' (' + n.data('vendor') + ')' : '') : '') +
@@ -1367,7 +1367,7 @@ function renderHostList(q) {
         (h.role_override ? '\nrole: ✎ ' + h.role_override + ' (operator)\ninferred: ' + h.role : '\nrole: ' + h.role) +
         (h.rank ? '\nrank: #' + h.rank : '') +
         '\ncomposite: ' + (h.composite || 0).toFixed(2) +
-        (h.device ? '\ndevice: ◈ ' + h.device : '') +
+        (h.device ? '\ndevice: ◈ ' + h.device + (h.device_type ? ' (' + h.device_type + ')' : '') : '') +
         ((h.labels || []).length ? '\nlabels: ' + h.labels.join(', ') : '') +
         ((h.services || []).length ? '\nservices: ' + h.services.join(', ') : '') +
         (h.mac ? '\nMAC: ' + h.mac + (h.vendor ? ' (' + h.vendor + ')' : '') : '') +

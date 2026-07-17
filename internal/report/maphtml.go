@@ -94,7 +94,7 @@ const mapHTML = `<!DOCTYPE html>
 const model = {{.Model}};
 const els = [];
 for (const g of model.groups) els.push({data:{id:g.id, label:g.label, blind:g.blind_spot?1:0, covered:(g.sensors&&g.sensors.length)?1:0}, classes:'grp'+(g.blind_spot?' blind':'')});
-for (const n of model.nodes) els.push({data:{id:n.id, parent:n.group||undefined, label:n.label.split('\n')[0], role:n.role, tier:n.tier,
+for (const n of model.nodes) els.push({data:{id:n.id, parent:n.group||undefined, label:(n.device?n.device+' · ':'')+n.label.split('\n')[0], role:n.role, tier:n.tier,
   comp:n.composite||0, rank:n.rank||0, gw:n.gateway?1:0, inf:n.inferred?1:0, agg:n.agg_count||0, drift:n.drift||'', ev:(n.evidence||[]).join('\n')},
   classes:n.drift?'drift-'+n.drift:''});
 for (let i=0;i<model.edges.length;i++){const e=model.edges[i];

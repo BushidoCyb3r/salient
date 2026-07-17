@@ -138,6 +138,10 @@ the standalone CLI's `unifi-export` command to create four local JSON files,
 then open a snapshot in the desktop console and import all four through
 **Data → Device Configs → Load device configs…**. See the
 [complete UniFi CLI-to-GUI workflow](docs/config-ingest.md#unifi).
+Adopted gateways, switches, and access points whose management IP or MAC
+matches an observed snapshot node are retained and named on the map as
+`NetworkGear`; controller-only devices are reported but not fabricated as
+traffic nodes.
 
 The CLI is a static binary. On Linux or macOS, make the downloaded CLI executable
 before its first run:

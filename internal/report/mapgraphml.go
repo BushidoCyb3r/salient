@@ -52,6 +52,10 @@ func GraphMLMap(w io.Writer, m *mapview.Model) error {
 	}
 	writeNode := func(indent string, n mapview.MapNode) {
 		writef("%s<node id=%q>\n", indent, esc(n.ID))
+		label := n.Label
+		if n.Device != "" {
+			label = n.Device + " · " + label
+		}
 		gw := ""
 		if n.Gateway {
 			gw = "observed"
@@ -59,7 +63,7 @@ func GraphMLMap(w io.Writer, m *mapview.Model) error {
 				gw = "inferred"
 			}
 		}
-		writef("%s  <data key=\"d_label\">%s</data>\n", indent, esc(n.Label))
+		writef("%s  <data key=\"d_label\">%s</data>\n", indent, esc(label))
 		writef("%s  <data key=\"d_role\">%s</data>\n", indent, esc(n.Role))
 		writef("%s  <data key=\"d_tier\">%s</data>\n", indent, esc(string(n.Tier)))
 		writef("%s  <data key=\"d_comp\">%.4f</data>\n", indent, n.Composite)

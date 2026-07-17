@@ -330,7 +330,11 @@ Validate and remove the cookie jar exactly as for UniFi OS.
 Salient autodetects the legacy JSON wrapper (`{"meta": ..., "data": [...]}`)
 or the official export's bare arrays. Networks provide VLANs and subnets,
 firewall policies provide rules, zones resolve their network scope, and device
-inventory associates controller devices with observed MACs.
+inventory associates adopted gateways, switches, and access points with
+observed nodes by management IP or MAC. A match keeps the node visible, labels
+it with the UniFi name/model, and assigns the evidence-backed `NetworkGear`
+role. An adopted device with no observed match is listed in the inventory
+result and task-log count but is not drawn with invented traffic.
 
 ## Using it
 
@@ -340,8 +344,9 @@ Open a snapshot, then in the **Data** tab → **Device Configs** →
 *Load device configs…*. Select one or more exported files (Cisco text and
 UniFi JSON can be mixed in one selection). For an Integration API export,
 select all four `unifi-integration-*.json` files in the same file-picker
-operation. The map stamps declared gateway identity onto the inferred gateways,
-and the task log lists the diff findings.
+operation. The map stamps declared gateway identity onto inferred gateways and
+names matched adopted devices; the task log reports how many adopted devices
+matched observed nodes.
 The ingest persists, so it reapplies automatically when you reload the
 snapshot, and feeds the Hunt view's declared-policy leads. Clear it with the
 `×` on the chip.
@@ -353,8 +358,9 @@ salient declared --snapshot SNAP.json.gz --configs ios-router.cfg,unifi-integrat
 ```
 
 Prints `{ "inventory": …, "policy": … }` JSON on stdout: `inventory` is the
-declared-vs-observed reconciliation (declared gateways, silent subnets,
-undeclared CIDRs), `policy` is the firewall reconciliation (denied-but-observed
+declared-vs-observed reconciliation (adopted devices and their observed IPs,
+declared gateways, silent subnets, undeclared CIDRs), `policy` is the firewall
+reconciliation (denied-but-observed
 violations, unused permits, and a count of rules skipped because they couldn't
 be honestly evaluated from flow data). Comma-separate multiple files; UniFi
 JSON exports are grouped into one controller automatically.

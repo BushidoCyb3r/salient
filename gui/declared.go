@@ -72,16 +72,43 @@ func (a *App) invalidateDeclaredCache() {
 	a.declMu.Unlock()
 }
 
-// declaredGateways re-derives the declared gateway map for a snapshot from the
-// persisted device configs, if any. Re-diffing (rather than reusing the stored
-// gateway map) keeps the overlay correct for whichever snapshot is loaded — the
-// gateways depend on which subnets hold observed nodes.
-func (a *App) declaredGateways(snap graph.Snapshot) map[string]string {
+// declaredInventory re-derives config matches for whichever snapshot is loaded.
+func (a *App) declaredInventory(snap graph.Snapshot) *netconfig.InventoryResult {
 	art, err := a.loadDeclaredArtifact()
 	if err != nil || art == nil {
 		return nil
 	}
-	return netconfig.DiffInventory(snap, art.Devices).DeclaredGateways
+	inv := netconfig.DiffInventory(snap, art.Devices)
+	return &inv
+}
+
+func (a *App) declaredGateways(snap graph.Snapshot) map[string]string {
+	inv := a.declaredInventory(snap)
+	if inv == nil {
+		return nil
+	}
+	return inv.DeclaredGateways
+}
+
+func applyDeclaredInventory(opts *mapview.Options, inv netconfig.InventoryResult) {
+	opts.DeclaredGateways = inv.DeclaredGateways
+	for _, d := range inv.AdoptedDevices {
+		if d.ObservedIP == "" {
+			continue
+		}
+		if opts.DeclaredDevices == nil {
+			opts.DeclaredDevices = map[string]mapview.DeclaredDevice{}
+		}
+		opts.DeclaredDevices[d.ObservedIP] = mapview.DeclaredDevice{Name: d.Name, Model: d.Model}
+	}
+}
+
+func (a *App) mapOptionsFor(snap graph.Snapshot) mapview.Options {
+	opts := a.mapOptions()
+	if inv := a.declaredInventory(snap); inv != nil {
+		applyDeclaredInventory(&opts, *inv)
+	}
+	return opts
 }
 
 // declaredPolicy re-derives the policy diff for a snapshot from persisted
@@ -151,7 +178,7 @@ func (a *App) LoadDeclared(snapshotPath string, configPaths []string) (*mapview.
 	a.invalidateDeclaredCache() // configs changed on disk
 
 	opts := a.mapOptions()
-	opts.DeclaredGateways = inv.DeclaredGateways
+	applyDeclaredInventory(&opts, inv)
 	model := mapview.Build(snap, opts)
 	model.Findings = append(model.Findings, declaredFindings(devs, inv, pol, warnings)...)
 	return a.finishModel(resolved, model)
@@ -181,6 +208,15 @@ func declaredFindings(devs []netconfig.DeclaredDevice, inv netconfig.InventoryRe
 	}
 	out = append(out, fmt.Sprintf("device configs: %d device(s) declared, %d gateway(s) identified, %d silent subnet(s), %d undeclared CIDR(s)",
 		len(devs), len(inv.DeclaredGateways), len(inv.SilentSubnets), len(inv.UndeclaredCIDRs)))
+	if total := len(inv.AdoptedDevices); total > 0 {
+		observed := 0
+		for _, d := range inv.AdoptedDevices {
+			if d.ObservedIP != "" {
+				observed++
+			}
+		}
+		out = append(out, fmt.Sprintf("device configs: %d of %d adopted UniFi device(s) matched observed map nodes", observed, total))
+	}
 	out = append(out, fmt.Sprintf("declared policy: %d denied-but-observed violation(s), %d unused permit(s), %d rule(s) skipped (caveated)",
 		len(pol.Violations), len(pol.UnusedPermits), pol.SkippedRules))
 	for _, w := range inv.Warnings {

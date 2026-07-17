@@ -47,6 +47,7 @@ func TestDiffInventory(t *testing.T) {
 			{Device: "ap-01", Source: "unifi.json", IPs: []string{"10.0.1.10"}, ByMAC: true},
 			{Device: "core-rtr", Source: "core.cfg", IPs: []string{"10.0.1.1"}, ByMAC: false}, // 10.0.2.1 gw IP not observed
 		},
+		AdoptedDevices:   []AdoptedDevice{{Name: "ap-01", ObservedIP: "10.0.1.10"}},
 		DeclaredGateways: map[string]string{"10.0.1.1": "core-rtr", "10.0.2.1": "core-rtr"},
 		SilentSubnets:    []SilentSubnet{{CIDR: "10.0.9.0/24", Device: "core-rtr", InBlindSpot: true}},
 		UndeclaredCIDRs:  []string{"10.0.3.0/24"},

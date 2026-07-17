@@ -79,7 +79,8 @@ type Binding struct {
 
 type Interface struct {
 	Name     string    `json:"name"`
-	Prefixes []string  `json:"prefixes"` // CIDRs (primary + secondaries)
+	Model    string    `json:"model,omitempty"` // UniFi adopted-device model/type
+	Prefixes []string  `json:"prefixes"`        // CIDRs (primary + secondaries)
 	VLAN     int       `json:"vlan,omitempty"`
 	Trunk    bool      `json:"trunk,omitempty"` // switchport mode trunk
 	Shutdown bool      `json:"shutdown,omitempty"`

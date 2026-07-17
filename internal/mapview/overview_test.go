@@ -102,6 +102,36 @@ func TestOverviewPinsLowRankHost(t *testing.T) {
 	}
 }
 
+func TestOverviewRetainsDeclaredUniFiDevice(t *testing.T) {
+	var nodes []graph.Node
+	for i := 0; i < 60; i++ {
+		nodes = append(nodes, graph.Node{
+			IP: fmt.Sprintf("10.0.0.%d", i+1), Subnet: "10.0.0.0/24",
+			Scores: graph.ScoreSet{Composite: 1.0 - float64(i)*0.01, Rank: i + 1},
+		})
+	}
+	ip := "10.0.0.55"
+	m := buildOverview(graph.Snapshot{Nodes: nodes}, Options{
+		GroupPrefix: 24,
+		DeclaredDevices: map[string]DeclaredDevice{
+			ip: {Name: "Core Switch", Model: "USW-Pro-24"},
+		},
+	}, nil, nil, 0)
+	for _, n := range m.Nodes {
+		if n.ID != ip {
+			continue
+		}
+		if n.Device != "Core Switch" || n.DeviceType != "USW-Pro-24" || n.Role != string(graph.RoleNetworkGear) || n.Tier != TierCore {
+			t.Fatalf("declared device overlay = %+v", n)
+		}
+		if !hasEvidence(n.Evidence, "device identity imported from UniFi Network: Core Switch (USW-Pro-24)") {
+			t.Fatalf("declared device evidence = %v", n.Evidence)
+		}
+		return
+	}
+	t.Fatal("declared UniFi device was aggregated out of the overview")
+}
+
 // TestOverviewRetainAllPrivate promotes every RFC1918 host to its own node
 // while external peers still collapse, and enforces the cap.
 func TestOverviewRetainAllPrivate(t *testing.T) {

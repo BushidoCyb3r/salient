@@ -40,6 +40,9 @@ open a snapshot in the console, then select all four generated JSON files under
 **Data → Device Configs → Load device configs…**. The
 [config-ingestion guide](config-ingest.md#unifi) includes API-key creation,
 Linux/macOS/Windows commands, TLS options, and the generated filenames.
+Matched adopted gateways, switches, and access points are named and retained
+as `NetworkGear` map nodes. Devices the controller knows but Zeek did not
+observe remain inventory findings rather than synthetic traffic nodes.
 
 ## Building
 

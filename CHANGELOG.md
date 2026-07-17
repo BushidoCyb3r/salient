@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Imported UniFi Network inventories now retain and label observed adopted
+  gateways, switches, and access points by management IP or MAC, including
+  low-ranked devices that would otherwise collapse into an overview aggregate.
+  Unobserved controller devices remain explicit inventory records rather than
+  synthetic traffic nodes.
+
 ## [0.6.1] - 2026-07-17
 
 UniFi declared-gateway visibility fix.

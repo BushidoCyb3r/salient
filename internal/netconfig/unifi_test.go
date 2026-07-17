@@ -215,15 +215,19 @@ func TestParseUniFi_IntegrationAPI(t *testing.T) {
 	if len(dev.Interfaces) != 3 {
 		t.Fatalf("integration devices = %+v", dev.Interfaces)
 	}
-	if dev.Interfaces[0].Prefixes[0] != "10.10.0.1/24" || dev.Interfaces[1].Prefixes[0] != "10.20.0.1/24" || dev.Interfaces[2].MAC != "aa:bb:cc:dd:ee:ff" {
+	if dev.Interfaces[0].Prefixes[0] != "10.10.0.1/24" || dev.Interfaces[1].Prefixes[0] != "10.20.0.1/24" || dev.Interfaces[2].MAC != "aa:bb:cc:dd:ee:ff" || dev.Interfaces[2].Model != "UDMPRO" {
 		t.Errorf("integration devices = %+v", dev.Interfaces)
 	}
 	inv := DiffInventory(graph.Snapshot{Nodes: []graph.Node{
+		{IP: "10.10.0.1", Subnet: "10.10.0.0/24", MAC: "AA:BB:CC:DD:EE:FF"},
 		{IP: "10.10.0.10", Subnet: "10.10.0.0/24"},
 		{IP: "10.20.0.20", Subnet: "10.20.0.0/24"},
 	}}, []DeclaredDevice{dev})
 	if len(inv.DeclaredGateways) != 2 || inv.DeclaredGateways["10.10.0.1"] != "integration-api" || inv.DeclaredGateways["10.20.0.1"] != "integration-api" {
 		t.Errorf("integration gateways = %+v", inv.DeclaredGateways)
+	}
+	if len(inv.AdoptedDevices) != 1 || inv.AdoptedDevices[0].Name != "UDM Pro" || inv.AdoptedDevices[0].Model != "UDMPRO" || inv.AdoptedDevices[0].ObservedIP != "10.10.0.1" {
+		t.Errorf("integration adopted devices = %+v", inv.AdoptedDevices)
 	}
 
 	rs := ruleset(t, dev, "ZONE:Users -> Servers")

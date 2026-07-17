@@ -188,6 +188,9 @@ func SVGMap(w io.Writer, m *mapview.Model) error {
 		}
 		fmt.Fprintf(&b, `<rect x="%.0f" y="%.0f" width="%d" height="%d" rx="7" fill="%s" stroke="%s" stroke-width="1.6"%s/>`+"\n", n.x, n.y, svgNodeW, svgNodeH, fill, stroke, dash)
 		label := strings.Split(n.Label, "\n")[0]
+		if n.Device != "" {
+			label = n.Device + " · " + label
+		}
 		fmt.Fprintf(&b, `<text x="%.0f" y="%.0f" font-size="12" font-weight="600" fill="#1c2330" text-anchor="middle">%s</text>`+"\n", n.x+svgNodeW/2, n.y+18, xmlEsc(label))
 		sub := n.Role
 		if n.Rank > 0 && n.Rank <= 10 {

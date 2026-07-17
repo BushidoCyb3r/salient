@@ -46,6 +46,15 @@ type Options struct {
 	// badges the matching gateway "(declared)" and suppresses inference for
 	// that segment — declared config beats a synthesized guess.
 	DeclaredGateways map[string]string
+	// DeclaredDevices maps an observed management IP to identity imported from
+	// the UniFi Network device inventory. These real observed nodes are retained
+	// and labeled; controller-only devices are not synthesized onto the map.
+	DeclaredDevices map[string]DeclaredDevice
+}
+
+type DeclaredDevice struct {
+	Name  string
+	Model string
 }
 
 // Segment is one operator-declared subnet with an optional display name.
@@ -126,8 +135,8 @@ type MapNode struct {
 	AggCount             int      `json:"agg_count,omitempty"`
 	Evidence             []string `json:"evidence,omitempty"`
 	Drift                string   `json:"drift,omitempty"`         // new, vanished, rank-up, rank-down
-	Device               string   `json:"device,omitempty"`        // operator-assigned device name
-	DeviceType           string   `json:"device_type,omitempty"`   // operator-assigned device type
+	Device               string   `json:"device,omitempty"`        // linked or imported device name
+	DeviceType           string   `json:"device_type,omitempty"`   // linked or imported device type/model
 	Labels               []string `json:"labels,omitempty"`        // durable operator labels
 	RoleOverride         string   `json:"role_override,omitempty"` // operator-corrected role (overlay)
 	Services             []string `json:"services,omitempty"`      // observed named responder services
@@ -381,7 +390,7 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		n := &nodes[i]
 		t := tierOf(n)
 		drift := nodeDrift[n.IP]
-		if !opts.RetainAllPrivate && !opts.Pinned[n.IP] && drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
+		if !opts.RetainAllPrivate && !opts.Pinned[n.IP] && opts.DeclaredDevices[n.IP].Name == "" && drift == "" && t == TierClient && n.TopRole() == graph.RoleUnknown && n.Scores.Composite < config.ClientAggMaxComposite {
 			gid := resolve(n.IP)
 			aggCount[gid]++
 			m.addAggMember(gid+":clients", n)
@@ -406,6 +415,7 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 
 	// Gateways (§8.4): observed (L2 MAC convergence) or inferred fallback.
 	m.addGateways(snap, groups, byIP, resolve)
+	m.addDeclaredDevices(opts.DeclaredDevices)
 
 	// Edge bundling + noise floor (§8.5.2/4). Edges from/to aggregated
 	// clients reroute to the meta-node; endpoints outside focus drop.
@@ -424,6 +434,24 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 	}
 	attachServices(m, snap.Edges)
 	return m
+}
+
+func (m *Model) addDeclaredDevices(declared map[string]DeclaredDevice) {
+	for i := range m.Nodes {
+		d, ok := declared[m.Nodes[i].ID]
+		if !ok || d.Name == "" {
+			continue
+		}
+		m.Nodes[i].Device = d.Name
+		m.Nodes[i].DeviceType = d.Model
+		m.Nodes[i].Role = string(graph.RoleNetworkGear)
+		m.Nodes[i].Tier = TierCore
+		detail := d.Name
+		if d.Model != "" {
+			detail += " (" + d.Model + ")"
+		}
+		m.Nodes[i].Evidence = append(m.Nodes[i].Evidence, "device identity imported from UniFi Network: "+detail)
+	}
 }
 
 // attachServices stamps each host's observed named responder services onto

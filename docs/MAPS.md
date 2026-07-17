@@ -82,8 +82,11 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
   observed on this grid. Dashed "gateway (inferred)" = synthesized from
   cross-subnet traffic because no MAC evidence exists — never observed fact.
 - **Node roles** include `NetworkGear` for hosts serving controller/switch/AP
-  protocols (CAPWAP, PAPI, Smart Install, TACACS+). Clicking a node also shows
-  its observed **MAC** and decoded **vendor** when captured (a host's own NIC;
+  protocols (CAPWAP, PAPI, Smart Install, TACACS+) and for observed management
+  IPs/MACs matched to adopted devices in an imported UniFi inventory. Imported
+  matches are retained and show the controller's device name and model;
+  controller-only devices are not synthesized onto the traffic map. Clicking a
+  node also shows its observed **MAC** and decoded **vendor** when captured (a host's own NIC;
   gateway MACs are excluded so a router's MAC is never mis-attributed).
 - **Amber-bordered nodes** are operator-**pinned** (console): a host forced to
   render individually regardless of rank. **Violet border** = linked to a named

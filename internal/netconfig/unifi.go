@@ -172,7 +172,11 @@ func addDevice(dev *DeclaredDevice, m map[string]any) {
 	if name == "" {
 		name = ustr(m, "mac")
 	}
-	iface := Interface{Name: name, MAC: ustr(m, "mac")}
+	model := ustr(m, "model")
+	if model == "" {
+		model = ustr(m, "type")
+	}
+	iface := Interface{Name: name, Model: model, MAC: ustr(m, "mac")}
 	if ip := ustr(m, "ip"); ip != "" {
 		iface.Prefixes = []string{unifiAddr(ip)}
 	}
@@ -245,7 +249,7 @@ func addUniFiIntegrationDevice(dev *DeclaredDevice, m map[string]any) {
 	if name == "" {
 		name = ustr(m, "macAddress")
 	}
-	iface := Interface{Name: name, MAC: ustr(m, "macAddress")}
+	iface := Interface{Name: name, Model: ustr(m, "model"), MAC: ustr(m, "macAddress")}
 	if ip := ustr(m, "ipAddress"); ip != "" {
 		iface.Prefixes = []string{unifiAddr(ip)}
 	}

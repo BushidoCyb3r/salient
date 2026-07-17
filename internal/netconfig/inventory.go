@@ -3,6 +3,7 @@ package netconfig
 import (
 	"net/netip"
 	"sort"
+	"strings"
 
 	"github.com/BushidoCyb3r/salient/internal/graph"
 )
@@ -13,6 +14,16 @@ type DeviceMatch struct {
 	Source string   `json:"source"`
 	IPs    []string `json:"ips"`    // observed node IPs that matched
 	ByMAC  bool     `json:"by_mac"` // matched only via MAC, not a direct interface IP
+}
+
+// AdoptedDevice is a UniFi Network device and the observed node it matched.
+// ObservedIP is empty when the controller knows the device but the snapshot
+// does not; maps never invent traffic nodes for those devices.
+type AdoptedDevice struct {
+	Name       string `json:"name"`
+	Model      string `json:"model"`
+	IP         string `json:"ip,omitempty"`
+	ObservedIP string `json:"observed_ip,omitempty"`
 }
 
 // SilentSubnet is a declared prefix with no observed member nodes. InBlindSpot
@@ -27,6 +38,7 @@ type SilentSubnet struct {
 // InventoryResult is the declared-vs-observed reconciliation.
 type InventoryResult struct {
 	Matches          []DeviceMatch     `json:"matches"`
+	AdoptedDevices   []AdoptedDevice   `json:"adopted_devices"`
 	DeclaredGateways map[string]string `json:"declared_gateways"` // IP → device hostname
 	SilentSubnets    []SilentSubnet    `json:"silent_subnets"`
 	UndeclaredCIDRs  []string          `json:"undeclared_cidrs"` // observed subnets no declared prefix covers
@@ -49,7 +61,7 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 			nodeAddrs = append(nodeAddrs, a)
 		}
 		if n.MAC != "" {
-			byMAC[n.MAC] = n // ponytail: last-wins on dup MAC; snapshots dedup upstream
+			byMAC[strings.ToLower(strings.TrimSpace(n.MAC))] = n // ponytail: last-wins on dup MAC; snapshots dedup upstream
 		}
 	}
 
@@ -82,6 +94,7 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 			if iface.Shutdown {
 				continue
 			}
+			adopted := AdoptedDevice{Name: iface.Name, Model: iface.Model}
 			// Interface's own IP vs observed nodes; if it routes for others, gateway.
 			for _, cidr := range iface.Prefixes {
 				p, err := netip.ParsePrefix(cidr)
@@ -89,8 +102,12 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 					continue
 				}
 				own, masked := p.Addr(), p.Masked()
+				if adopted.IP == "" {
+					adopted.IP = own.String()
+				}
 				if _, ok := byIP[own]; ok {
 					add(own.String(), false) // DeviceMatch needs the IP observed
+					adopted.ObservedIP = own.String()
 				}
 				// Gateway entry does NOT require the router's own IP to be
 				// observed: real routers often terminate no tracked flows, but
@@ -105,9 +122,13 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 			}
 			// MAC match (UniFi inventory): find the node wearing this NIC.
 			if iface.MAC != "" {
-				if n, ok := byMAC[iface.MAC]; ok {
+				if n, ok := byMAC[strings.ToLower(strings.TrimSpace(iface.MAC))]; ok {
 					add(n.IP, true)
+					adopted.ObservedIP = n.IP // MAC is stronger identity than a possibly stale controller IP.
 				}
+			}
+			if d.Vendor == "unifi" && iface.MAC != "" {
+				res.AdoptedDevices = append(res.AdoptedDevices, adopted)
 			}
 		}
 
@@ -157,6 +178,12 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 	}
 
 	sort.Slice(res.Matches, func(i, j int) bool { return res.Matches[i].Device < res.Matches[j].Device })
+	sort.Slice(res.AdoptedDevices, func(i, j int) bool {
+		if res.AdoptedDevices[i].Name != res.AdoptedDevices[j].Name {
+			return res.AdoptedDevices[i].Name < res.AdoptedDevices[j].Name
+		}
+		return res.AdoptedDevices[i].IP < res.AdoptedDevices[j].IP
+	})
 	sort.Slice(res.SilentSubnets, func(i, j int) bool {
 		if a, b := res.SilentSubnets[i], res.SilentSubnets[j]; a.CIDR != b.CIDR {
 			return a.CIDR < b.CIDR

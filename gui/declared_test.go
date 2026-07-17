@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BushidoCyb3r/salient/internal/graph"
+	"github.com/BushidoCyb3r/salient/internal/mapview"
 	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
@@ -48,7 +49,7 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 		Meta: graph.SnapshotMeta{CreatedAt: t0},
 		Nodes: []graph.Node{
 			// Behind the Gi0/0.40 declared gateway subnet (10.0.40.0/24).
-			{IP: "10.0.40.10", Subnet: "10.0.40.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.9, Rank: 1}},
+			{IP: "10.0.40.10", Subnet: "10.0.40.0/24", MAC: "aa:bb:cc:dd:ee:02", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.9, Rank: 1}},
 			// On a subnet no config declares.
 			{IP: "10.9.9.9", Subnet: "10.9.9.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.5, Rank: 2}},
 		},
@@ -61,6 +62,19 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 	if model == nil {
 		t.Fatal("nil model")
 	}
+	assertDeclaredSwitch := func(modelNodes []mapview.MapNode) {
+		t.Helper()
+		for _, n := range modelNodes {
+			if n.ID == "10.0.40.10" {
+				if n.Device != "Switch-24" || n.DeviceType != "usw" || n.Role != string(graph.RoleNetworkGear) || n.Tier != mapview.TierCore {
+					t.Fatalf("UniFi switch overlay = %+v", n)
+				}
+				return
+			}
+		}
+		t.Fatal("UniFi switch missing from map")
+	}
+	assertDeclaredSwitch(model.Nodes)
 
 	// Findings summarize the diff.
 	var summarized bool
@@ -92,9 +106,11 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 	}
 	// Reapply on a plain snapshot reload: LoadModel must re-derive the gateway
 	// overlay from persisted configs (no error, gateway still resolves).
-	if _, err := a.LoadModel(snapPath); err != nil {
+	reloaded, err := a.LoadModel(snapPath)
+	if err != nil {
 		t.Fatal(err)
 	}
+	assertDeclaredSwitch(reloaded.Nodes)
 	snap := mustLoadSnap(t, snapPath)
 	if a.declaredGateways(snap)["10.0.40.1"] != "edge-rtr-01" {
 		t.Error("declared gateway not reapplied on reload")
