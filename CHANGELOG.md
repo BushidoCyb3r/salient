@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- UniFi Integration API network gateway addresses now reach inventory
+  reconciliation and remain visible as declared gateways even when a condensed
+  overview already exceeds its element target.
+
 ## [0.6.0] - 2026-07-17
 
 Official UniFi Network Integration API support.

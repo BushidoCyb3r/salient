@@ -389,9 +389,6 @@ func (m *Model) addDeclaredGateways(declared map[string]string, resolve func(str
 		if stamped[ip] || covered[gid] || !segBox[gid] {
 			continue
 		}
-		if m.Elements() >= config.MapTargetElements {
-			break
-		}
 		covered[gid] = true
 		m.Nodes = append(m.Nodes, MapNode{
 			ID: gid + ":gw", Group: gid, Label: "gateway (declared)",

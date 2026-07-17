@@ -314,6 +314,21 @@ func TestOverviewDeclaredGateway(t *testing.T) {
 	}
 }
 
+func TestDeclaredGatewaySurvivesFullBudget(t *testing.T) {
+	seg := groupID("10.0.0.0/24")
+	m := Model{Groups: []Group{{ID: seg, CIDR: "10.0.0.0/24"}}}
+	for i := 0; i < config.MapTargetElements; i++ {
+		m.Nodes = append(m.Nodes, MapNode{ID: fmt.Sprintf("noise-%d", i)})
+	}
+	m.addDeclaredGateways(map[string]string{"10.0.0.1": "core-rtr"}, func(string) string { return seg })
+	for _, n := range m.Nodes {
+		if n.Group == seg && n.Gateway && strings.Contains(n.Label, "(declared)") {
+			return
+		}
+	}
+	t.Fatal("declared gateway was dropped when the overview budget was full")
+}
+
 // TestOverviewDeclaredGatewayBadgesObservedHost: when the declared gateway IP
 // is itself an observed, retained host, that node is badged in place (label
 // suffix + config evidence) rather than duplicated by a synthetic node.

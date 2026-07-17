@@ -84,7 +84,7 @@ func TestUniFiExportCommand(t *testing.T) {
 		t.Fatalf("ParseConfigs warnings=%v devices=%+v", warnings, devs)
 	}
 	dev := devs[0]
-	if len(dev.VLANs) != 2 || len(dev.Interfaces) != 1 || len(dev.Rulesets) != 1 || len(dev.Rulesets[0].Rules) != 1 {
+	if len(dev.VLANs) != 2 || len(dev.Interfaces) != 3 || len(dev.Rulesets) != 1 || len(dev.Rulesets[0].Rules) != 1 {
 		t.Fatalf("exported model = %+v", dev)
 	}
 	if rule := dev.Rulesets[0].Rules[0]; rule.DstPorts.Lo != 443 || rule.Caveat != "" {

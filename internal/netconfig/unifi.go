@@ -212,12 +212,18 @@ func addUniFiIntegrationNetwork(dev *DeclaredDevice, m map[string]any) (string, 
 			subnet = candidate
 		}
 	}
+	vlanID := unum(m, "vlanId")
 	dev.VLANs = append(dev.VLANs, VLAN{
-		ID:      unum(m, "vlanId"),
+		ID:      vlanID,
 		Name:    ustr(m, "name"),
 		Subnet:  subnet,
 		Purpose: strings.ToLower(ustr(m, "management")),
 	})
+	if subnet != "" && ubool(m, "enabled") && strings.EqualFold(ustr(m, "management"), "GATEWAY") {
+		dev.Interfaces = append(dev.Interfaces, Interface{
+			Name: ustr(m, "name"), Prefixes: []string{subnet}, VLAN: vlanID,
+		})
+	}
 
 	dhcp := umap(ipv4, "dhcpConfiguration")
 	if subnet != "" && strings.EqualFold(ustr(dhcp, "mode"), "SERVER") {

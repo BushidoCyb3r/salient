@@ -212,8 +212,18 @@ func TestParseUniFi_IntegrationAPI(t *testing.T) {
 	if len(dev.DHCPPools) != 1 || dev.DHCPPools[0].DNS[0] != "10.10.0.53" {
 		t.Fatalf("integration DHCP pools = %+v", dev.DHCPPools)
 	}
-	if len(dev.Interfaces) != 1 || dev.Interfaces[0].MAC != "aa:bb:cc:dd:ee:ff" {
+	if len(dev.Interfaces) != 3 {
 		t.Fatalf("integration devices = %+v", dev.Interfaces)
+	}
+	if dev.Interfaces[0].Prefixes[0] != "10.10.0.1/24" || dev.Interfaces[1].Prefixes[0] != "10.20.0.1/24" || dev.Interfaces[2].MAC != "aa:bb:cc:dd:ee:ff" {
+		t.Errorf("integration devices = %+v", dev.Interfaces)
+	}
+	inv := DiffInventory(graph.Snapshot{Nodes: []graph.Node{
+		{IP: "10.10.0.10", Subnet: "10.10.0.0/24"},
+		{IP: "10.20.0.20", Subnet: "10.20.0.0/24"},
+	}}, []DeclaredDevice{dev})
+	if len(inv.DeclaredGateways) != 2 || inv.DeclaredGateways["10.10.0.1"] != "integration-api" || inv.DeclaredGateways["10.20.0.1"] != "integration-api" {
+		t.Errorf("integration gateways = %+v", inv.DeclaredGateways)
 	}
 
 	rs := ruleset(t, dev, "ZONE:Users -> Servers")
