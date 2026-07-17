@@ -6,6 +6,9 @@ defilade-data/
 graphify-out/
 .claude/
 .superpowers/
+
+# Vendored map JS is single-sourced from web/ and copied in by `make gui-vendor`.
+gui/frontend/public/vendor/
 docs/superpowers/plans/
 
 # Internal-only docs (handoffs, design plan, specs) — not for public repo

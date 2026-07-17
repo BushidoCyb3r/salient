@@ -15,7 +15,7 @@ LDFLAGS := -s -w
 GOOS    ?= $(shell $(GO) env GOOS)
 GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
 
-.PHONY: deps gui-deps build gui gui-test test check lint cross package-linux clean integration
+.PHONY: deps gui-deps gui-vendor build gui gui-test test check lint cross package-linux clean integration
 
 deps:
 	$(GO_ENV) $(GO) mod download
@@ -33,14 +33,22 @@ $(NFPM):
 	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
 	$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/goreleaser/nfpm/v2/cmd/nfpm@$(NFPM_VERSION)
 
-gui-deps: deps $(WAILS)
+gui-deps: deps gui-vendor $(WAILS)
 	cd gui && $(GO_ENV) $(GO) mod download
 	cd gui/frontend && npm ci
+
+# web/ is the single source of truth for the vendored map JS (go:embed needs
+# it there for the HTML report export). The GUI frontend serves the same files
+# from public/vendor/, which is gitignored and reproduced here before any
+# frontend build so the two copies can never drift.
+gui-vendor:
+	mkdir -p gui/frontend/public/vendor
+	cp web/*.js gui/frontend/public/vendor/
 
 build:
 	CGO_ENABLED=0 $(GO_ENV) $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o bin/$(BINARY) $(PKG)
 
-gui: $(WAILS)
+gui: gui-vendor $(WAILS)
 	cd gui && PATH="$(GO_PATH)$(PATH)" $(GO_ENV) $(WAILS) build $(GUI_TAGS)
 
 # VERSION drives the .deb/.rpm version string; pass explicitly for real
