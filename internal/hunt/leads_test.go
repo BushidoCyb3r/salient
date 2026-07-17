@@ -54,6 +54,10 @@ func TestBuildLeadsSoleProvider(t *testing.T) {
 	if len(leads[0].Subnets) != 1 || leads[0].Subnets[0] != "10.0.3.0/24" {
 		t.Errorf("bad subnets: %+v", leads[0].Subnets)
 	}
+	// Query is single-sourced from OQLQuery, never re-derived by callers.
+	if got, want := leads[0].Query, OQLQuery(leads[0]); got != want {
+		t.Errorf("Query = %q, want %q", got, want)
+	}
 }
 
 func TestBuildLeadsSuppressesApprovedProvider(t *testing.T) {

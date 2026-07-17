@@ -80,6 +80,9 @@ type Lead struct {
 	LastSeen        time.Time           `json:"last_seen"`
 	Rank            int                 `json:"rank,omitempty"`
 	InventoryStatus string              `json:"inventory_status,omitempty"`
+	// Query is the Security Onion Hunt query for this lead — see OQLQuery,
+	// the single source; callers must not re-derive it.
+	Query string `json:"query"`
 	// RuleEvidence names the declared deny rule this responder's traffic
 	// violated: "<device> <config-file>:<line> — <raw rule>", plus a
 	// "(confidence: partial)" suffix when the device had caveated rules the
@@ -370,6 +373,7 @@ func BuildLeads(current graph.Snapshot, diff *snapshot.Diff, rec *reconcile.Resu
 		if approved[ProviderKey(l.IP, l.Port)] {
 			continue
 		}
+		l.Query = OQLQuery(*l)
 		leads = append(leads, *l)
 	}
 	sort.Slice(leads, func(i, j int) bool {

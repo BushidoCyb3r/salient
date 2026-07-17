@@ -1242,6 +1242,7 @@ async function openHuntLeads() {
 }
 
 const LEAD_REASON_LABELS = {
+  'policy-denied': 'policy denied',
   'contradicted': 'role contradicted',
   'undocumented': 'undocumented',
   'new-provider': 'new provider',
@@ -1288,6 +1289,7 @@ function showLeadDossier(l) {
     (l.inventory_status ? '\ninventory: ' + l.inventory_status : '') +
     (l.rank ? '\nrank: #' + l.rank : '') +
     '\nevidence: ' + l.evidence +
+    (l.rule_evidence ? '\ndenied by: ' + l.rule_evidence : '') +
     '\nclients: ' + l.clients + (l.sample_clients ? ' (' + l.sample_clients.join(', ') + ')' : '') +
     (l.subnets ? '\nsubnets: ' + l.subnets.join(', ') : '') +
     (l.sensors ? '\nsensors: ' + l.sensors.join(', ') : '') +
@@ -1301,7 +1303,7 @@ function showLeadDossier(l) {
   const copyBtn = document.createElement('button');
   copyBtn.textContent = 'copy Hunt query';
   copyBtn.onclick = () => {
-    const query = 'destination.ip:"' + l.ip + '" AND destination.port:' + l.port;
+    const query = l.query;
     navigator.clipboard.writeText(query).then(
       () => logLine('copied Hunt query for ' + l.ip, 'ok'),
       () => logLine('clipboard copy failed — query: ' + query, 'warn'));
@@ -1314,8 +1316,20 @@ function showLeadDossier(l) {
       await ApproveProvider(l.ip + ':' + l.port);
       hlHosts = hlHosts.filter((x) => !(x.ip === l.ip && x.port === l.port));
       renderHostList($('hl-filter').value.toLowerCase());
-      ev.textContent = 'approved — lead hidden';
+      ev.textContent = 'approved — lead hidden ';
       logLine('approved ' + l.ip + ':' + l.port + ' as an expected provider', 'ok');
+      const undoBtn = document.createElement('button');
+      undoBtn.textContent = 'undo';
+      undoBtn.onclick = async () => {
+        try {
+          await UnapproveProvider(l.ip + ':' + l.port);
+          hlHosts.push(l);
+          renderHostList($('hl-filter').value.toLowerCase());
+          logLine('unapproved ' + l.ip + ':' + l.port + ' — lead restored', 'ok');
+          showLeadDossier(l);
+        } catch (err) { logLine('undo failed: ' + err, 'err'); }
+      };
+      ev.appendChild(undoBtn);
     } catch (err) { logLine('approve failed: ' + err, 'err'); }
   };
   row.appendChild(copyBtn);
