@@ -1,6 +1,7 @@
 # Field map verification worksheet (Phase 0 output)
 
-**Status: VERIFIED against one real grid** (2026-07-11, homelab/production
+**Status: VERIFIED against one real grid** (2026-07-11; transport rechecked
+2026-07-17, homelab/production
 Security Onion grid, cluster `securityonion`, Elasticsearch 9.3.3, single
 sensor `deathstar`). Every default in `internal/escli/fieldmap.go` matched
 this grid exactly — zero fieldmap overrides were needed. `salient discover`,
@@ -21,6 +22,7 @@ against any new grid before trusting it blind.
 | Originator IP | `source.ip` | `source.ip` | ES 9.3.3 | ☑ |
 | Responder IP | `destination.ip` | `destination.ip` | ES 9.3.3 | ☑ |
 | Responder port | `destination.port` | `destination.port` | ES 9.3.3 | ☑ |
+| Transport | `network.transport` | `network.transport` — keyword values observed: `tcp`, `udp`, `icmp`, and `unknown_transport` | ES 9.3.3 | ☑ |
 | Service | `network.protocol` | `network.protocol` — real values incl. multi-tag `"quic,ssl"` style strings; `ClassifyEvidence` treats any non-empty non-placeholder string as protocol-confirmed, so this is handled correctly | ES 9.3.3 | ☑ |
 | Orig bytes | `source.bytes` | `source.bytes` | ES 9.3.3 | ☑ |
 | Resp bytes | `destination.bytes` | `destination.bytes` | ES 9.3.3 | ☑ |
@@ -36,6 +38,12 @@ against any new grid before trusting it blind.
 | Raw message blob | `message` | `message` — raw Zeek JSON string; consumed for x509 fingerprint extraction | ES 9.3.3 | ☑ |
 | TLS server name | `ssl.server_name` | `ssl.server_name` — present on `zeek.ssl`, used as the TLS-side join hint | ES 9.3.3 | ☑ |
 | SSH host key | `ssh.host_key` | `ssh.host_key` — present on `zeek.ssh`, direct SSH identity evidence | ES 9.3.3 | ☑ |
+
+The 2026-07-17 transport recheck used a fresh 30-minute live scan: all 2,455
+saved edges carried `proto` (`udp`: 1,874; `tcp`: 490; `icmp`: 88;
+`unknown_transport`: 3). This verifies the field through Elasticsearch
+aggregation, snapshot persistence, and policy-diff input rather than only
+schema presence.
 
 The responder MAC drives two features: L2 gateway detection and per-node
 vendor identification. **On this grid both are unavailable** — confirmed via

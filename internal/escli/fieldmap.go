@@ -94,7 +94,7 @@ func DefaultFieldMap() FieldMap {
 		SourceIP:         "source.ip",         // UNVERIFIED
 		DestinationIP:    "destination.ip",    // UNVERIFIED
 		DestinationPort:  "destination.port",  // UNVERIFIED
-		Transport:        "network.transport", // UNVERIFIED
+		Transport:        "network.transport", // verified against a real SO 3.x/ES9 grid, 2026-07-17
 		Service:          "network.protocol",  // UNVERIFIED
 		SourceBytes:      "source.bytes",      // UNVERIFIED
 		DestinationBytes: "destination.bytes", // UNVERIFIED
@@ -190,7 +190,7 @@ func mergeList(dst *[]string, v []string) {
 func (fm FieldMap) CoreConnFields() []string {
 	return []string{
 		fm.SourceIP, fm.DestinationIP, fm.DestinationPort,
-		fm.Service, fm.SourceBytes, fm.DestinationBytes,
+		fm.Transport, fm.Service, fm.SourceBytes, fm.DestinationBytes,
 		fm.ObserverName,
 	}
 }

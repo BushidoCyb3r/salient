@@ -50,6 +50,13 @@ func TestDiffPolicy_ProtoScopedMatching(t *testing.T) {
 		t.Errorf("udp edge should not hit tcp-only deny, got %+v", udp.Violations)
 	}
 
+	icmp := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{
+		edgeProto("10.0.1.5", "10.0.2.9", 445, "icmp"),
+	}}, []DeclaredDevice{dev})
+	if len(icmp.Violations) != 0 {
+		t.Errorf("icmp edge should not hit tcp-only deny, got %+v", icmp.Violations)
+	}
+
 	empty := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{
 		edgeProto("10.0.1.5", "10.0.2.9", 445, ""),
 	}}, []DeclaredDevice{dev})
