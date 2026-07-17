@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-07-17
+
+UniFi adopted-device map identity.
+
 ### Added
 - Imported UniFi Network inventories now retain and label observed adopted
   gateways, switches, and access points by management IP or MAC, including
@@ -359,7 +363,8 @@ supply-chain, and local-artifact safety.
 - `refreshDevices` dropped the pin set from the in-memory registry, which could
   leave the pin/unpin menu label stale.
 
-[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/BushidoCyb3r/salient/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/BushidoCyb3r/salient/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/BushidoCyb3r/salient/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/BushidoCyb3r/salient/compare/v0.5.0...v0.5.1
