@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"net/netip"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/gofrs/flock"
 
 	"github.com/BushidoCyb3r/salient/internal/assist"
 	"github.com/BushidoCyb3r/salient/internal/config"
@@ -17,19 +20,29 @@ import (
 
 func (a *App) registryPath() string { return filepath.Join(a.DataDir, "devices.json") }
 
-// mutateRegistry serializes load-mutate-save under the App mutex so two
-// GUI actions can't interleave writes.
+// mutateRegistry serializes the full load-mutate-save transaction both within
+// this App and across GUI processes, preventing stale loads from losing writes.
 func (a *App) mutateRegistry(fn func(*devices.Registry) error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	r, err := devices.Load(a.registryPath())
+	path := a.registryPath()
+	if err := os.MkdirAll(filepath.Dir(path), config.OutputDirMode); err != nil {
+		return fmt.Errorf("creating device registry directory: %w", err)
+	}
+	lock := flock.New(path + ".lock")
+	if err := lock.Lock(); err != nil {
+		return fmt.Errorf("locking device registry: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	r, err := devices.Load(path)
 	if err != nil {
 		return err
 	}
 	if err := fn(&r); err != nil {
 		return err
 	}
-	return r.Save(a.registryPath())
+	return r.Save(path)
 }
 
 // ListDevices returns the whole registry for the Devices sidebar.

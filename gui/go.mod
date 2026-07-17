@@ -4,6 +4,7 @@ go 1.26.5
 
 require (
 	github.com/BushidoCyb3r/salient v0.0.0-00010101000000-000000000000
+	github.com/gofrs/flock v0.13.0
 	github.com/wailsapp/wails/v2 v2.13.0
 )
 
@@ -30,6 +31,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/rogpeppe/go-internal v1.15.0 // indirect
 	github.com/samber/lo v1.49.1 // indirect
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

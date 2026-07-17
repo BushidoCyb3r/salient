@@ -1,15 +1,100 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/BushidoCyb3r/salient/internal/devices"
 	"github.com/BushidoCyb3r/salient/internal/graph"
 	"github.com/BushidoCyb3r/salient/internal/mapview"
 )
+
+func TestRegistryMutationsSerializeAcrossProcesses(t *testing.T) {
+	if dataDir := os.Getenv("SALIENT_REGISTRY_LOCK_TEST_DIR"); dataDir != "" {
+		if err := os.WriteFile(os.Getenv("SALIENT_REGISTRY_LOCK_TEST_READY"), nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := (&App{DataDir: dataDir}).SetLabels("10.0.0.2", []string{"child"}); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+
+	dataDir := t.TempDir()
+	a := &App{DataDir: dataDir}
+	held, release := make(chan struct{}), make(chan struct{})
+	parentDone := make(chan error, 1)
+	go func() {
+		parentDone <- a.mutateRegistry(func(r *devices.Registry) error {
+			r.Labels = map[string][]string{"10.0.0.1": {"parent"}}
+			close(held)
+			<-release
+			return nil
+		})
+	}()
+	<-held
+	released := false
+	defer func() {
+		if !released {
+			close(release)
+			<-parentDone
+		}
+	}()
+
+	ready := filepath.Join(dataDir, "child-ready")
+	cmd := exec.Command(os.Args[0], "-test.run=^TestRegistryMutationsSerializeAcrossProcesses$")
+	cmd.Env = append(os.Environ(),
+		"SALIENT_REGISTRY_LOCK_TEST_DIR="+dataDir,
+		"SALIENT_REGISTRY_LOCK_TEST_READY="+ready,
+	)
+	var output bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &output, &output
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	childDone := make(chan error, 1)
+	go func() { childDone <- cmd.Wait() }()
+	defer func() { _ = cmd.Process.Kill() }()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if _, err := os.Stat(ready); err == nil {
+			break
+		} else if !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("child process did not start")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	select {
+	case err := <-childDone:
+		t.Fatalf("child mutation completed while parent held the transaction lock: %v\n%s", err, output.String())
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	close(release)
+	released = true
+	if err := <-parentDone; err != nil {
+		t.Fatal(err)
+	}
+	if err := <-childDone; err != nil {
+		t.Fatalf("child mutation: %v\n%s", err, output.String())
+	}
+	reg, err := devices.Load(filepath.Join(dataDir, "devices.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(reg.Labels) != 2 || reg.Labels["10.0.0.1"][0] != "parent" || reg.Labels["10.0.0.2"][0] != "child" {
+		t.Fatalf("overlapping mutations lost an update: %#v", reg.Labels)
+	}
+}
 
 func TestRegistryBindingsRoundTrip(t *testing.T) {
 	a := &App{DataDir: t.TempDir()}
@@ -292,9 +377,11 @@ func TestHostnameHints(t *testing.T) {
 	}
 
 	// A hint whose IPs are already all in one device disappears.
-	reg.Assign("router", "192.168.20.1")
-	reg.Assign("router", "10.10.40.1")
-	reg.Assign("router", "10.18.61.1")
+	for _, ip := range []string{"192.168.20.1", "10.10.40.1", "10.18.61.1"} {
+		if _, err := reg.Assign("router", ip); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if got := hostnameHints(nodes, &reg); len(got) != 0 {
 		t.Fatalf("linked hint should vanish: %#v", got)
 	}
