@@ -14,7 +14,7 @@ func TestDefaultFieldMapComplete(t *testing.T) {
 		"MessageField": fm.MessageField, "SSLServerName": fm.SSLServerName,
 		"SSHHostKey": fm.SSHHostKey,
 		"SourceIP":   fm.SourceIP, "DestinationIP": fm.DestinationIP,
-		"DestinationPort": fm.DestinationPort, "Service": fm.Service,
+		"DestinationPort": fm.DestinationPort, "Transport": fm.Transport, "Service": fm.Service,
 		"SourceBytes": fm.SourceBytes, "DestinationBytes": fm.DestinationBytes,
 		"SourceMAC": fm.SourceMAC, "DestinationMAC": fm.DestinationMAC,
 	} {

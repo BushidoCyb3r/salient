@@ -21,14 +21,14 @@ func TestFetchEdgesPagination(t *testing.T) {
 			var body string
 			if n == 1 {
 				body = `{"hits":{"total":{"value":100}},"aggregations":{"edges":{
-					"after_key":{"src":"10.0.0.1","dst":"10.0.0.2","port":445},
-					"buckets":[{"key":{"src":"10.0.0.1","dst":"10.0.0.2","port":445},"doc_count":10,
+					"after_key":{"src":"10.0.0.1","dst":"10.0.0.2","port":445,"proto":"tcp"},
+					"buckets":[{"key":{"src":"10.0.0.1","dst":"10.0.0.2","port":445,"proto":"tcp"},"doc_count":10,
 						"bytes_out":{"value":1000},"bytes_in":{"value":2000},
 						"first":{"value":1750000000000},"last":{"value":1750086400000},
 						"sensors":{"buckets":[{"key":"s1","doc_count":10}]}}]}}}`
 			} else {
 				body = `{"hits":{"total":{"value":100}},"aggregations":{"edges":{
-					"buckets":[{"key":{"src":"10.0.0.3","dst":"10.0.0.2","port":88},"doc_count":5,
+					"buckets":[{"key":{"src":"10.0.0.3","dst":"10.0.0.2","port":88,"proto":null},"doc_count":5,
 						"bytes_out":{"value":10},"bytes_in":{"value":20},
 						"first":{"value":1750000000000},"last":{"value":1750086400000},
 						"sensors":{"buckets":[]}}]}}}`
@@ -47,9 +47,13 @@ func TestFetchEdgesPagination(t *testing.T) {
 		t.Fatalf("want 2 edges over 2 pages, got %d edges, %d calls", len(edges), calls.Load())
 	}
 	e := edges[0]
-	if e.Src != "10.0.0.1" || e.Dst != "10.0.0.2" || e.Port != 445 || e.Service != "smb" ||
+	if e.Src != "10.0.0.1" || e.Dst != "10.0.0.2" || e.Port != 445 || e.Proto != "tcp" || e.Service != "smb" ||
 		e.ConnCount != 10 || e.BytesOut != 1000 || e.BytesIn != 2000 || e.Sensors[0] != "s1" {
 		t.Errorf("bad first edge: %+v", e)
+	}
+	// missing_bucket → null proto key decodes to "".
+	if edges[1].Proto != "" {
+		t.Errorf("null proto should decode to empty, got %q", edges[1].Proto)
 	}
 	if e.FirstSeen.IsZero() || !e.LastSeen.After(e.FirstSeen) {
 		t.Errorf("bad timestamps: %v %v", e.FirstSeen, e.LastSeen)

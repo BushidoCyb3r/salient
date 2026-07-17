@@ -188,14 +188,20 @@ func DiffPolicy(snap graph.Snapshot, devs []DeclaredDevice) PolicyResult {
 				if !app.scope(pe.src, pe.dst) {
 					continue
 				}
-				// Edge carries no protocol (graph.Edge has Port/Service only),
-				// so evaluate it as both tcp and udp. First matching rule per
-				// proto decides; a deny on either proto is one Violation.
-				// ponytail: two passes over the rule list per edge; fine at
-				// config scale, revisit if edge counts get large.
+				// When the edge carries a known transport, evaluate only that
+				// proto. Otherwise (empty, "icmp", ...) fall back to evaluating
+				// both tcp and udp — this covers pre-proto snapshots and grids
+				// where network.transport is unmapped. First matching rule per
+				// proto decides; a deny on any evaluated proto is one Violation.
+				// ponytail: up to two passes over the rule list per edge; fine
+				// at config scale, revisit if edge counts get large.
+				protos := []string{"tcp", "udp"}
+				if pe.e.Proto == "tcp" || pe.e.Proto == "udp" {
+					protos = []string{pe.e.Proto}
+				}
 				denied := false
 				denyRule := defaultDeny
-				for _, proto := range [2]string{"tcp", "udp"} {
+				for _, proto := range protos {
 					idx := firstMatch(app.rs.Rules, pe.src, pe.dst, pe.e.Port, proto)
 					if idx < 0 {
 						if app.rs.Default == Deny && !denied {

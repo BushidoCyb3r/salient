@@ -192,6 +192,7 @@ export namespace graph {
 	    src: string;
 	    dst: string;
 	    port: number;
+	    proto?: string;
 	    service: string;
 	    evidence?: string;
 	    conn_count: number;
@@ -213,6 +214,7 @@ export namespace graph {
 	        this.src = source["src"];
 	        this.dst = source["dst"];
 	        this.port = source["port"];
+	        this.proto = source["proto"];
 	        this.service = source["service"];
 	        this.evidence = source["evidence"];
 	        this.conn_count = source["conn_count"];

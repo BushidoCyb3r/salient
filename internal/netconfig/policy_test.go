@@ -33,6 +33,38 @@ func edge(src, dst string, port uint16) graph.Edge {
 	return graph.Edge{Src: src, Dst: dst, Port: port}
 }
 
+func edgeProto(src, dst string, port uint16, proto string) graph.Edge {
+	return graph.Edge{Src: src, Dst: dst, Port: port, Proto: proto}
+}
+
+// The edge deny rule is tcp-only. A udp-proto edge must not match it; the same
+// flow with empty proto still does (both-protos fallback); a tcp-proto edge
+// matches.
+func TestDiffPolicy_ProtoScopedMatching(t *testing.T) {
+	dev := edgeIOSDevice()
+
+	udp := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{
+		edgeProto("10.0.1.5", "10.0.2.9", 445, "udp"),
+	}}, []DeclaredDevice{dev})
+	if len(udp.Violations) != 0 {
+		t.Errorf("udp edge should not hit tcp-only deny, got %+v", udp.Violations)
+	}
+
+	empty := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{
+		edgeProto("10.0.1.5", "10.0.2.9", 445, ""),
+	}}, []DeclaredDevice{dev})
+	if len(empty.Violations) != 1 {
+		t.Errorf("empty-proto edge should hit deny via fallback, got %+v", empty.Violations)
+	}
+
+	tcp := DiffPolicy(graph.Snapshot{Edges: []graph.Edge{
+		edgeProto("10.0.1.5", "10.0.2.9", 445, "tcp"),
+	}}, []DeclaredDevice{dev})
+	if len(tcp.Violations) != 1 {
+		t.Errorf("tcp edge should hit tcp deny, got %+v", tcp.Violations)
+	}
+}
+
 func TestDiffPolicy_DenyHitAndPermitPass(t *testing.T) {
 	snap := graph.Snapshot{Edges: []graph.Edge{
 		edge("10.0.1.5", "10.0.2.9", 445), // in scope, hits deny -> Violation

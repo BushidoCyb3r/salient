@@ -76,9 +76,12 @@ type TemporalProfile struct {
 // (server) Dst, observed on Port. Bytes and timestamps are aggregate over the
 // analysis window.
 type Edge struct {
-	Src       string           `json:"src"`
-	Dst       string           `json:"dst"`
-	Port      uint16           `json:"port"`
+	Src  string `json:"src"`
+	Dst  string `json:"dst"`
+	Port uint16 `json:"port"`
+	// Proto is the transport protocol ("tcp"/"udp") from conn.log; empty on
+	// older snapshots and unmapped grids.
+	Proto     string           `json:"proto,omitempty"`
 	Service   string           `json:"service"`
 	Evidence  EvidenceLevel    `json:"evidence,omitempty"`
 	ConnCount int64            `json:"conn_count"`

@@ -32,6 +32,7 @@ type FieldMap struct {
 	SourceIP         string `yaml:"source_ip"`
 	DestinationIP    string `yaml:"destination_ip"`
 	DestinationPort  string `yaml:"destination_port"`
+	Transport        string `yaml:"transport"`
 	Service          string `yaml:"service"`
 	SourceBytes      string `yaml:"source_bytes"`
 	DestinationBytes string `yaml:"destination_bytes"`
@@ -93,6 +94,7 @@ func DefaultFieldMap() FieldMap {
 		SourceIP:         "source.ip",         // UNVERIFIED
 		DestinationIP:    "destination.ip",    // UNVERIFIED
 		DestinationPort:  "destination.port",  // UNVERIFIED
+		Transport:        "network.transport", // UNVERIFIED
 		Service:          "network.protocol",  // UNVERIFIED
 		SourceBytes:      "source.bytes",      // UNVERIFIED
 		DestinationBytes: "destination.bytes", // UNVERIFIED
@@ -145,6 +147,7 @@ func LoadFieldMap(path string) (FieldMap, error) {
 	merge(&fm.SourceIP, override.SourceIP)
 	merge(&fm.DestinationIP, override.DestinationIP)
 	merge(&fm.DestinationPort, override.DestinationPort)
+	merge(&fm.Transport, override.Transport)
 	merge(&fm.Service, override.Service)
 	merge(&fm.SourceBytes, override.SourceBytes)
 	merge(&fm.DestinationBytes, override.DestinationBytes)

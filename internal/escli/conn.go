@@ -28,6 +28,7 @@ func EdgeAggQuery(fm FieldMap, window time.Duration, scope []string, pageSize in
 			source("src", fm.SourceIP),
 			source("dst", fm.DestinationIP),
 			source("port", fm.DestinationPort),
+			protoSource("proto", fm.Transport),
 		},
 	}
 	if afterKey != nil {
@@ -56,6 +57,13 @@ func EdgeAggQuery(fm FieldMap, window time.Duration, scope []string, pageSize in
 
 func source(name, field string) map[string]any {
 	return map[string]any{name: map[string]any{"terms": map[string]any{"field": field}}}
+}
+
+// protoSource is like source but tolerates documents missing the field, so
+// conn records without a transport (older grids, unmapped fields) still
+// aggregate into a bucket with a null proto key.
+func protoSource(name, field string) map[string]any {
+	return map[string]any{name: map[string]any{"terms": map[string]any{"field": field, "missing_bucket": true}}}
 }
 
 // scopeFilter builds an OR of CIDR filters over source or destination IP.
@@ -132,9 +140,10 @@ func parseEdgePage(res map[string]json.RawMessage) ([]graph.Edge, map[string]any
 		AfterKey map[string]any `json:"after_key"`
 		Buckets  []struct {
 			Key struct {
-				Src  string      `json:"src"`
-				Dst  string      `json:"dst"`
-				Port json.Number `json:"port"`
+				Src   string      `json:"src"`
+				Dst   string      `json:"dst"`
+				Port  json.Number `json:"port"`
+				Proto string      `json:"proto"` // null (missing_bucket) decodes to ""
 			} `json:"key"`
 			DocCount int64 `json:"doc_count"`
 			BytesOut struct {
@@ -183,6 +192,7 @@ func parseEdgePage(res map[string]json.RawMessage) ([]graph.Edge, map[string]any
 			Src:       b.Key.Src,
 			Dst:       b.Key.Dst,
 			Port:      port,
+			Proto:     b.Key.Proto,
 			Service:   config.ServiceName(port),
 			ConnCount: b.DocCount,
 			BytesOut:  int64(b.BytesOut.Value),
