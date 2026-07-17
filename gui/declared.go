@@ -18,11 +18,11 @@ import (
 
 // declaredArtifact is the sanitized persistence for ingested device configs.
 // It holds only parsed DeclaredDevices — secrets are already stripped by the
-// parsers — plus the last diff results. Raw config text is never written.
+// parsers. Raw config text is never written. Diffs are not persisted: they
+// depend on the loaded snapshot, so declaredGateways/declaredPolicy re-derive
+// them from Devices at read time.
 type declaredArtifact struct {
 	Devices   []netconfig.DeclaredDevice `json:"devices"`
-	Inventory netconfig.InventoryResult  `json:"inventory"`
-	Policy    netconfig.PolicyResult     `json:"policy"`
 	UpdatedAt time.Time                  `json:"updated_at"`
 }
 
@@ -140,7 +140,7 @@ func (a *App) LoadDeclared(snapshotPath string, configPaths []string) (*mapview.
 	pol := netconfig.DiffPolicy(snap, devs)
 
 	raw, err := json.MarshalIndent(declaredArtifact{
-		Devices: devs, Inventory: inv, Policy: pol, UpdatedAt: time.Now().UTC(),
+		Devices: devs, UpdatedAt: time.Now().UTC(),
 	}, "", "  ")
 	if err != nil {
 		return nil, err

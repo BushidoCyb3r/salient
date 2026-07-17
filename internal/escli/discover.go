@@ -13,24 +13,16 @@ import (
 // DatasetCountsQuery aggregates document counts per dataset value within
 // the lookback window.
 func DatasetCountsQuery(fm FieldMap, window time.Duration, termsSize int) (string, error) {
-	q := map[string]any{
-		"size": 0,
-		"query": map[string]any{
-			"bool": map[string]any{
-				"filter": []any{rangeFilter(fm.Timestamp, window)},
-			},
-		},
-		"aggs": map[string]any{
-			"datasets": map[string]any{
-				"terms": map[string]any{"field": fm.DatasetField, "size": termsSize},
-			},
-		},
-	}
-	return marshal(q)
+	return termsAggQuery(fm, window, termsSize, "datasets", fm.DatasetField)
 }
 
 // SensorsQuery aggregates observer.name values within the window.
 func SensorsQuery(fm FieldMap, window time.Duration, termsSize int) (string, error) {
+	return termsAggQuery(fm, window, termsSize, "sensors", fm.ObserverName)
+}
+
+// termsAggQuery builds a windowed terms aggregation over field, named aggName.
+func termsAggQuery(fm FieldMap, window time.Duration, termsSize int, aggName, field string) (string, error) {
 	q := map[string]any{
 		"size": 0,
 		"query": map[string]any{
@@ -39,8 +31,8 @@ func SensorsQuery(fm FieldMap, window time.Duration, termsSize int) (string, err
 			},
 		},
 		"aggs": map[string]any{
-			"sensors": map[string]any{
-				"terms": map[string]any{"field": fm.ObserverName, "size": termsSize},
+			aggName: map[string]any{
+				"terms": map[string]any{"field": field, "size": termsSize},
 			},
 		},
 	}

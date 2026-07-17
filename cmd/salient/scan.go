@@ -41,10 +41,7 @@ func runScan(cmd *cobra.Command, opts *globalOpts, window time.Duration, scope [
 	out := cmd.OutOrStdout()
 	errOut := cmd.ErrOrStderr()
 
-	cfg, err := opts.clientConfig(cmd.ErrOrStderr())
-	if err != nil {
-		return err
-	}
+	cfg := opts.clientConfig(cmd.ErrOrStderr())
 	fm, err := opts.fieldMap()
 	if err != nil {
 		return err

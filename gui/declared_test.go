@@ -90,10 +90,6 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 	if len(art.Devices) != 2 { // IOS router + folded UniFi controller
 		t.Errorf("persisted device count = %d, want 2", len(art.Devices))
 	}
-	if got := art.Inventory.DeclaredGateways["10.0.40.1"]; got != "edge-rtr-01" {
-		t.Errorf("declared gateway 10.0.40.1 = %q, want edge-rtr-01", got)
-	}
-
 	// Reapply on a plain snapshot reload: LoadModel must re-derive the gateway
 	// overlay from persisted configs (no error, gateway still resolves).
 	if _, err := a.LoadModel(snapPath); err != nil {

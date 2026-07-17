@@ -61,7 +61,7 @@ to the local filesystem. No agents, no scans, no changes to the SO stack.`,
 
 // clientConfig resolves flags and environment into an escli.Config,
 // printing the mandatory warnings to out as it goes.
-func (o *globalOpts) clientConfig(out io.Writer) (escli.Config, error) {
+func (o *globalOpts) clientConfig(out io.Writer) escli.Config {
 	esURL := o.esURL
 	if esURL == "" {
 		esURL = os.Getenv(config.EnvESURL)
@@ -83,7 +83,7 @@ func (o *globalOpts) clientConfig(out io.Writer) (escli.Config, error) {
 		CACertPath:         o.caCert,
 		InsecureSkipVerify: o.insecureSkipVerify,
 		Timeout:            config.HTTPTimeout,
-	}, nil
+	}
 }
 
 func (o *globalOpts) fieldMap() (escli.FieldMap, error) {

@@ -120,7 +120,7 @@ func unifiItems(b []byte) []map[string]any {
 
 func addNetwork(dev *DeclaredDevice, m map[string]any) {
 	subnet := ustr(m, "ip_subnet")
-	vlan, _ := unum(m, "vlan")
+	vlan := unum(m, "vlan")
 	dev.VLANs = append(dev.VLANs, VLAN{ID: vlan, Name: ustr(m, "name"), Subnet: subnet, Purpose: ustr(m, "purpose")})
 
 	if ubool(m, "dhcpd_enabled") {
@@ -188,7 +188,7 @@ func addRules(dev *DeclaredDevice, m map[string]any, rulesetIdx func(string) int
 	src, srcOK := resolve("src_address", "src_networkconf_id")
 	dst, dstOK := resolve("dst_address", "dst_networkconf_id")
 	rsName := ustr(m, "ruleset")
-	line, _ := unum(m, "rule_index")
+	line := unum(m, "rule_index")
 
 	base := Rule{
 		Action: act,
@@ -369,9 +369,9 @@ func ubool(m map[string]any, k string) bool {
 	return b
 }
 
-func unum(m map[string]any, k string) (int, bool) {
-	f, ok := m[k].(float64)
-	return int(f), ok
+func unum(m map[string]any, k string) int {
+	f, _ := m[k].(float64)
+	return int(f)
 }
 
 func nonEmptyList(m map[string]any, k string) bool {
