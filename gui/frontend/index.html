@@ -280,6 +280,14 @@
         <div id="rec-chip" style="display:none;margin-top:6px;align-items:center;gap:6px">
           <span id="rec-label" class="hint" style="flex:1"></span><button id="rec-clear">×</button>
         </div>
+        <h2>Device Configs</h2>
+        <div style="display:flex;gap:6px">
+          <button id="cfg-load" style="flex:1">Load device configs…</button>
+        </div>
+        <div id="cfg-chip" style="display:none;margin-top:6px;align-items:center;gap:6px">
+          <span id="cfg-label" class="hint" style="flex:1"></span><button id="cfg-clear">×</button>
+        </div>
+        <span class="hint">Cisco IOS running-config or UniFi JSON. Upload only — no live pull, secrets stripped. See docs/config-ingest.md.</span>
         <h2>Export</h2>
         <div style="display:flex;gap:6px">
           <select id="exportfmt" style="flex:1">

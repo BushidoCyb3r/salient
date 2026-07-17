@@ -52,6 +52,7 @@ to the local filesystem. No agents, no scans, no changes to the SO stack.`,
 	root.AddCommand(newStabilityCmd())
 	root.AddCommand(newMissionCmd())
 	root.AddCommand(newReconcileCmd())
+	root.AddCommand(newDeclaredCmd())
 	root.AddCommand(newAnalyzeCmd())
 	root.AddCommand(newListCmd())
 	root.AddCommand(newViewCmd())

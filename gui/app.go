@@ -44,6 +44,9 @@ type App struct {
 	// openFileFn, when set, replaces runtime.OpenFileDialog — PickAssetCSV
 	// is then unit-testable without the Wails runtime.
 	openFileFn func(opts runtime.OpenDialogOptions) (string, error)
+	// openMultiFn, when set, replaces runtime.OpenMultipleFilesDialog —
+	// PickDeviceConfigs is then unit-testable without the Wails runtime.
+	openMultiFn func(opts runtime.OpenDialogOptions) ([]string, error)
 
 	mu     sync.Mutex
 	cli    *escli.Client      // set by Connect; nil until connected
@@ -168,7 +171,11 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	return a.finishModel(resolved, mapview.Build(snap, a.mapOptions()))
+	opts := a.mapOptions()
+	// Reapply declared-config gateway identity when configs have been ingested,
+	// so the overlay survives a plain snapshot reload.
+	opts.DeclaredGateways = a.declaredGateways(snap)
+	return a.finishModel(resolved, mapview.Build(snap, opts))
 }
 
 // LoadFocusedModel is the segment drill-down: it re-derives the map focused on
@@ -324,16 +331,19 @@ func (a *App) LoadHuntLeads(path, basePath, assetsPath string) ([]hunt.Lead, err
 		rec = &r
 	}
 
+	// Enrich with declared-policy violations when device configs are ingested.
+	pol := a.declaredPolicy(snap)
+
 	reg, err := devices.Load(a.registryPath())
 	if err != nil {
 		a.emit("device:warning", "device registry unreadable — approved-provider suppression skipped: "+err.Error())
-		return hunt.BuildLeads(snap, diff, rec, nil, nil), nil
+		return hunt.BuildLeads(snap, diff, rec, pol, nil), nil
 	}
 	approved := make(map[string]bool, len(reg.ApprovedProviders))
 	for _, k := range reg.ApprovedProviders {
 		approved[k] = true
 	}
-	return hunt.BuildLeads(snap, diff, rec, nil, approved), nil
+	return hunt.BuildLeads(snap, diff, rec, pol, approved), nil
 }
 
 // PickAssetCSV opens the native Open dialog for an asset inventory CSV.

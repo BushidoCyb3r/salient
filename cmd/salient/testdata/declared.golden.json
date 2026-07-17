@@ -1,0 +1,174 @@
+{
+  "inventory": {
+    "matches": null,
+    "declared_gateways": {
+      "10.0.40.1": "edge-rtr-01"
+    },
+    "silent_subnets": [
+      {
+        "cidr": "10.0.1.0/24",
+        "device": "unifi-controller",
+        "in_blind_spot": false
+      },
+      {
+        "cidr": "10.0.1.1/32",
+        "device": "unifi-controller",
+        "in_blind_spot": false
+      },
+      {
+        "cidr": "10.0.1.2/32",
+        "device": "unifi-controller",
+        "in_blind_spot": false
+      },
+      {
+        "cidr": "10.0.1.3/32",
+        "device": "unifi-controller",
+        "in_blind_spot": false
+      },
+      {
+        "cidr": "10.0.50.0/24",
+        "device": "unifi-controller",
+        "in_blind_spot": false
+      },
+      {
+        "cidr": "203.0.113.0/30",
+        "device": "edge-rtr-01",
+        "in_blind_spot": false
+      },
+      {
+        "cidr": "203.0.113.4/30",
+        "device": "edge-rtr-01",
+        "in_blind_spot": false
+      }
+    ],
+    "undeclared_cidrs": [
+      "10.9.9.0/24"
+    ]
+  },
+  "policy": {
+    "violations": null,
+    "unused_permits": [
+      {
+        "device": "edge-rtr-01",
+        "ruleset": "EDGE_IN",
+        "rule": {
+          "action": "permit",
+          "proto": "tcp",
+          "src": "0.0.0.0/0",
+          "dst": "10.0.1.10/32",
+          "src_ports": {
+            "lo": 0,
+            "hi": 0
+          },
+          "dst_ports": {
+            "lo": 443,
+            "hi": 443
+          },
+          "line": 32,
+          "raw": "permit tcp any host 10.0.1.10 eq 443"
+        }
+      },
+      {
+        "device": "edge-rtr-01",
+        "ruleset": "EDGE_IN",
+        "rule": {
+          "action": "permit",
+          "proto": "tcp",
+          "src": "10.0.1.0/24",
+          "dst": "0.0.0.0/0",
+          "src_ports": {
+            "lo": 0,
+            "hi": 0
+          },
+          "dst_ports": {
+            "lo": 22,
+            "hi": 22
+          },
+          "line": 33,
+          "raw": "permit tcp 10.0.1.0 0.0.0.255 any eq 22"
+        }
+      },
+      {
+        "device": "unifi-controller",
+        "ruleset": "LAN_IN",
+        "rule": {
+          "action": "permit",
+          "proto": "tcp",
+          "src": "0.0.0.0/0",
+          "dst": "10.0.1.10/32",
+          "src_ports": {
+            "lo": 0,
+            "hi": 0
+          },
+          "dst_ports": {
+            "lo": 443,
+            "hi": 443
+          },
+          "line": 2000,
+          "raw": "unifi LAN_IN: accept 0.0.0.0/0-\u003e10.0.1.10/32"
+        }
+      },
+      {
+        "device": "unifi-controller",
+        "ruleset": "LAN_IN",
+        "rule": {
+          "action": "permit",
+          "proto": "tcp",
+          "src": "0.0.0.0/0",
+          "dst": "10.0.1.1/32",
+          "src_ports": {
+            "lo": 0,
+            "hi": 0
+          },
+          "dst_ports": {
+            "lo": 53,
+            "hi": 53
+          },
+          "line": 2002,
+          "raw": "unifi LAN_IN: accept 0.0.0.0/0-\u003e10.0.1.1/32"
+        }
+      },
+      {
+        "device": "unifi-controller",
+        "ruleset": "LAN_IN",
+        "rule": {
+          "action": "permit",
+          "proto": "udp",
+          "src": "0.0.0.0/0",
+          "dst": "10.0.1.1/32",
+          "src_ports": {
+            "lo": 0,
+            "hi": 0
+          },
+          "dst_ports": {
+            "lo": 53,
+            "hi": 53
+          },
+          "line": 2002,
+          "raw": "unifi LAN_IN: accept 0.0.0.0/0-\u003e10.0.1.1/32"
+        }
+      },
+      {
+        "device": "unifi-controller",
+        "ruleset": "LAN_IN",
+        "rule": {
+          "action": "permit",
+          "proto": "udp",
+          "src": "0.0.0.0/0",
+          "dst": "10.0.1.20/32",
+          "src_ports": {
+            "lo": 0,
+            "hi": 0
+          },
+          "dst_ports": {
+            "lo": 8000,
+            "hi": 8080
+          },
+          "line": 2004,
+          "raw": "unifi LAN_IN: accept 0.0.0.0/0-\u003e10.0.1.20/32"
+        }
+      }
+    ],
+    "skipped_rules": 9
+  }
+}

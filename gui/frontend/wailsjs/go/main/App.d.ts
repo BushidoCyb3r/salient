@@ -17,6 +17,8 @@ export function AssignIP(arg1:string,arg2:string):Promise<string>;
 
 export function CancelScan():Promise<void>;
 
+export function ClearDeclared():Promise<void>;
+
 export function Connect(arg1:main.ConnectRequest):Promise<escli.ClusterInfo>;
 
 export function DeleteDevice(arg1:string):Promise<void>;
@@ -39,6 +41,8 @@ export function ListDevices():Promise<devices.Registry>;
 
 export function ListSnapshots():Promise<Array<snapshot.ArtifactEntry>>;
 
+export function LoadDeclared(arg1:string,arg2:Array<string>):Promise<mapview.Model>;
+
 export function LoadDriftModel(arg1:string,arg2:string):Promise<mapview.Model>;
 
 export function LoadFocusedModel(arg1:string,arg2:string):Promise<mapview.Model>;
@@ -54,6 +58,8 @@ export function LoadReconcileModelCSV(arg1:string,arg2:string):Promise<mapview.M
 export function LoadServiceAuthority(arg1:string):Promise<Array<mapview.ServiceProvider>>;
 
 export function PickAssetCSV():Promise<string>;
+
+export function PickDeviceConfigs():Promise<Array<string>>;
 
 export function PinToMap(arg1:string):Promise<void>;
 

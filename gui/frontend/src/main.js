@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, PickDeviceConfigs, LoadDeclared, ClearDeclared, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -133,6 +133,31 @@ $('rec-load').onclick = async () => {
   } catch (err) { logLine('asset CSV pick failed: ' + err, 'err'); }
 };
 $('rec-clear').onclick = () => clearReconcile(true);
+
+/* ---- device configs (Cisco IOS / UniFi JSON) ---- */
+
+function clearDeviceConfigs(reload) {
+  $('cfg-chip').style.display = 'none';
+  ClearDeclared().catch((err) => logLine('clear device configs failed: ' + err, 'err'));
+  if (reload && currentSnapshotPath) openSnapshot(currentSnapshotPath);
+}
+
+$('cfg-load').onclick = async () => {
+  if (!currentSnapshotPath) { logLine('open a snapshot before loading device configs', 'warn'); return; }
+  try {
+    const paths = await PickDeviceConfigs();
+    if (!paths || !paths.length) return;
+    const model = await LoadDeclared(currentSnapshotPath, paths);
+    renderModel(model);
+    refreshDevices();
+    logFindings(model);
+    const findings = (model.findings || []).filter((f) => /device configs|declared policy/.test(f));
+    $('cfg-label').textContent = paths.length + ' file' + (paths.length === 1 ? '' : 's') + ' — ' +
+      (findings.length ? findings.length + ' finding' + (findings.length === 1 ? '' : 's') : 'no findings');
+    $('cfg-chip').style.display = 'flex';
+  } catch (err) { logLine('device configs failed: ' + err, 'err'); }
+};
+$('cfg-clear').onclick = () => clearDeviceConfigs(true);
 
 /* ---- manual asset entry grid (native CSV columns, no file needed) ---- */
 

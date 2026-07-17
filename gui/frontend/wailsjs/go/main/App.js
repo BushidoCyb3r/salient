@@ -18,6 +18,10 @@ export function CancelScan() {
   return window['go']['main']['App']['CancelScan']();
 }
 
+export function ClearDeclared() {
+  return window['go']['main']['App']['ClearDeclared']();
+}
+
 export function Connect(arg1) {
   return window['go']['main']['App']['Connect'](arg1);
 }
@@ -62,6 +66,10 @@ export function ListSnapshots() {
   return window['go']['main']['App']['ListSnapshots']();
 }
 
+export function LoadDeclared(arg1, arg2) {
+  return window['go']['main']['App']['LoadDeclared'](arg1, arg2);
+}
+
 export function LoadDriftModel(arg1, arg2) {
   return window['go']['main']['App']['LoadDriftModel'](arg1, arg2);
 }
@@ -92,6 +100,10 @@ export function LoadServiceAuthority(arg1) {
 
 export function PickAssetCSV() {
   return window['go']['main']['App']['PickAssetCSV']();
+}
+
+export function PickDeviceConfigs() {
+  return window['go']['main']['App']['PickDeviceConfigs']();
 }
 
 export function PinToMap(arg1) {
