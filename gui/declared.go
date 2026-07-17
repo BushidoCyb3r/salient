@@ -14,7 +14,6 @@ import (
 	"github.com/BushidoCyb3r/salient/internal/mapview"
 	"github.com/BushidoCyb3r/salient/internal/netconfig"
 	"github.com/BushidoCyb3r/salient/internal/safefile"
-	"github.com/BushidoCyb3r/salient/internal/snapshot"
 )
 
 // declaredArtifact is the sanitized persistence for ingested device configs.
@@ -31,9 +30,21 @@ func (a *App) declaredPath() string { return filepath.Join(a.DataDir, "declared.
 
 // loadDeclaredArtifact reads persisted device configs; nil (no error) when none
 // have been ingested yet. A corrupt file surfaces as an error to the caller.
+// Reads through the single-entry cache: declaredGateways/declaredPolicy call
+// this on every map build, but the file only changes via LoadDeclared/
+// ClearDeclared, which refresh the cache.
 func (a *App) loadDeclaredArtifact() (*declaredArtifact, error) {
+	a.declMu.Lock()
+	if a.declCached {
+		art := a.declArt
+		a.declMu.Unlock()
+		return art, nil
+	}
+	a.declMu.Unlock()
+
 	raw, err := os.ReadFile(a.declaredPath())
 	if os.IsNotExist(err) {
+		a.setDeclaredCache(nil)
 		return nil, nil
 	}
 	if err != nil {
@@ -43,7 +54,22 @@ func (a *App) loadDeclaredArtifact() (*declaredArtifact, error) {
 	if err := json.Unmarshal(raw, &art); err != nil {
 		return nil, fmt.Errorf("decoding declared configs: %w", err)
 	}
+	a.setDeclaredCache(&art)
 	return &art, nil
+}
+
+// setDeclaredCache stores the parsed artifact (nil meaning "no file"); both are
+// valid cached states. invalidateDeclaredCache forces the next read to re-parse.
+func (a *App) setDeclaredCache(art *declaredArtifact) {
+	a.declMu.Lock()
+	a.declArt, a.declCached = art, true
+	a.declMu.Unlock()
+}
+
+func (a *App) invalidateDeclaredCache() {
+	a.declMu.Lock()
+	a.declArt, a.declCached = nil, false
+	a.declMu.Unlock()
 }
 
 // declaredGateways re-derives the declared gateway map for a snapshot from the
@@ -93,7 +119,7 @@ func (a *App) PickDeviceConfigs() ([]string, error) {
 // identity and findings applied.
 func (a *App) LoadDeclared(snapshotPath string, configPaths []string) (*mapview.Model, error) {
 	resolved := a.resolveSnapshotPath(snapshotPath)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +148,7 @@ func (a *App) LoadDeclared(snapshotPath string, configPaths []string) (*mapview.
 	if err := safefile.WriteFile(a.declaredPath(), raw); err != nil {
 		return nil, err
 	}
+	a.invalidateDeclaredCache() // configs changed on disk
 
 	opts := a.mapOptions()
 	opts.DeclaredGateways = inv.DeclaredGateways
@@ -136,6 +163,7 @@ func (a *App) ClearDeclared() error {
 	if err := os.Remove(a.declaredPath()); err != nil && !os.IsNotExist(err) {
 		return err
 	}
+	a.invalidateDeclaredCache()
 	return nil
 }
 

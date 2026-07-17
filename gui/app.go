@@ -21,6 +21,7 @@ import (
 	"github.com/BushidoCyb3r/salient/internal/config"
 	"github.com/BushidoCyb3r/salient/internal/devices"
 	"github.com/BushidoCyb3r/salient/internal/escli"
+	"github.com/BushidoCyb3r/salient/internal/graph"
 	"github.com/BushidoCyb3r/salient/internal/hunt"
 	"github.com/BushidoCyb3r/salient/internal/mapview"
 	"github.com/BushidoCyb3r/salient/internal/reconcile"
@@ -53,6 +54,21 @@ type App struct {
 	info   escli.ClusterInfo  // connected cluster identity
 	fm     escli.FieldMap     // field map resolved at connect time
 	cancel context.CancelFunc // non-nil while a scan is running
+
+	// ponytail: single-entry snapshot cache by design — the console views one
+	// snapshot at a time and reloads it constantly (overlay toggles, drill
+	// in/out, reconcile). A drift compare's baseline load just evicts and
+	// reloads. Grow to an LRU only if multi-snapshot workflows appear.
+	snapMu   sync.Mutex
+	snapPath string // resolved path of the cached snapshot; "" when empty
+	snap     graph.Snapshot
+
+	// ponytail: single-entry declared-config cache by design — there is exactly
+	// one declared.json. Holds the parsed artifact so declaredGateways/
+	// declaredPolicy stop re-reading and re-parsing it on every map build.
+	declMu     sync.Mutex
+	declArt    *declaredArtifact
+	declCached bool // distinguishes "cached nil" (no file) from "not yet loaded"
 }
 
 // NewApp creates a new App application struct
@@ -98,6 +114,38 @@ func (a *App) resolveSnapshotPath(path string) string {
 		return path
 	}
 	return filepath.Join(a.DataDir, path)
+}
+
+// loadSnapshot is a read-through one-entry cache over snapshot.Load, keyed by
+// resolved path. snapshot.Load re-reads and gunzips the file each call, which
+// the console does dozens of times per session; caching the last-loaded
+// snapshot makes overlay toggles and drill in/out instant. The snapshot is
+// treated as read-only by every caller, so the shared value is safe.
+func (a *App) loadSnapshot(resolved string) (graph.Snapshot, error) {
+	a.snapMu.Lock()
+	if a.snapPath == resolved && resolved != "" {
+		snap := a.snap
+		a.snapMu.Unlock()
+		return snap, nil
+	}
+	a.snapMu.Unlock()
+
+	snap, err := snapshot.Load(resolved)
+	if err != nil {
+		return graph.Snapshot{}, err
+	}
+	a.snapMu.Lock()
+	a.snapPath, a.snap = resolved, snap
+	a.snapMu.Unlock()
+	return snap, nil
+}
+
+// invalidateSnapshotCache drops the cached snapshot. Called when a scan writes
+// a new one and on Connect (a different grid means different terrain).
+func (a *App) invalidateSnapshotCache() {
+	a.snapMu.Lock()
+	a.snapPath, a.snap = "", graph.Snapshot{}
+	a.snapMu.Unlock()
 }
 
 // finishModel applies the per-snapshot overlays every map view needs:
@@ -167,7 +215,7 @@ func (a *App) mapOptions() mapview.Options {
 // LoadModel loads a snapshot and re-derives its briefing-map model fresh.
 func (a *App) LoadModel(path string) (*mapview.Model, error) {
 	resolved := a.resolveSnapshotPath(path)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +231,7 @@ func (a *App) LoadModel(path string) (*mapview.Model, error) {
 // single VLAN and offer a "back to overview" return.
 func (a *App) LoadFocusedModel(path, cidr string) (*mapview.Model, error) {
 	resolved := a.resolveSnapshotPath(path)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -198,12 +246,12 @@ func (a *App) LoadFocusedModel(path, cidr string) (*mapview.Model, error) {
 // LoadDriftModel builds a drift-overlaid map: fromPath is the baseline,
 // toPath the snapshot under review. Drift counts ride Model.Findings.
 func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
-	from, err := snapshot.Load(a.resolveSnapshotPath(fromPath))
+	from, err := a.loadSnapshot(a.resolveSnapshotPath(fromPath))
 	if err != nil {
 		return nil, fmt.Errorf("baseline snapshot: %w", err)
 	}
 	resolved := a.resolveSnapshotPath(toPath)
-	to, err := snapshot.Load(resolved)
+	to, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +295,7 @@ func (a *App) LoadDriftModel(fromPath, toPath string) (*mapview.Model, error) {
 // unranked hosts follow ordered by IP string, matching the map's own sort.
 func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, error) {
 	resolved := a.resolveSnapshotPath(path)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +323,7 @@ func (a *App) AggregateHosts(path string, nodeID string) ([]mapview.MapNode, err
 // service class label. Empty when neither end is aggregated.
 func (a *App) FlowEndpointIPs(path, srcID, dstID, class string) ([]string, error) {
 	resolved := a.resolveSnapshotPath(path)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +335,7 @@ func (a *App) FlowEndpointIPs(path, srcID, dstID, class string) ([]string, error
 // one row per sensitive-service provider, sorted by client count. Pure
 // aggregation over the stored snapshot — no live ES query.
 func (a *App) LoadServiceAuthority(path string) ([]mapview.ServiceProvider, error) {
-	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	snap, err := a.loadSnapshot(a.resolveSnapshotPath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -301,14 +349,14 @@ func (a *App) LoadServiceAuthority(path string) ([]mapview.ServiceProvider, erro
 // derived leads (undocumented/contradicted). Pure composition over
 // already-loaded snapshots — no live ES query.
 func (a *App) LoadHuntLeads(path, basePath, assetsPath string) ([]hunt.Lead, error) {
-	snap, err := snapshot.Load(a.resolveSnapshotPath(path))
+	snap, err := a.loadSnapshot(a.resolveSnapshotPath(path))
 	if err != nil {
 		return nil, err
 	}
 
 	var diff *snapshot.Diff
 	if basePath != "" {
-		base, err := snapshot.Load(a.resolveSnapshotPath(basePath))
+		base, err := a.loadSnapshot(a.resolveSnapshotPath(basePath))
 		if err != nil {
 			return nil, fmt.Errorf("baseline snapshot: %w", err)
 		}
@@ -383,7 +431,7 @@ func (a *App) LoadReconcileModelCSV(snapshotPath, csvText string) (*mapview.Mode
 
 func (a *App) reconcileFrom(snapshotPath string, assets io.Reader) (*mapview.Model, error) {
 	resolved := a.resolveSnapshotPath(snapshotPath)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -420,7 +468,7 @@ type TagArtifact struct {
 // The API key is used only for this request and is never persisted.
 func (a *App) SuggestTags(req TagRequest) (*assist.TagResult, error) {
 	resolved := a.resolveSnapshotPath(req.SnapshotPath)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -458,7 +506,7 @@ func (a *App) SuggestTags(req TagRequest) (*assist.TagResult, error) {
 // accumulate rather than clobber.
 func (a *App) SuggestTagsForHosts(req TagRequest, ips []string) (*assist.TagResult, error) {
 	resolved := a.resolveSnapshotPath(req.SnapshotPath)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -538,7 +586,7 @@ func loadTagArtifact(snapshotPath string) (*TagArtifact, error) {
 // ExportImage below, which rasterizes the live Cytoscape canvas instead.
 func (a *App) ExportMap(path string, format string) (string, error) {
 	resolved := a.resolveSnapshotPath(path)
-	snap, err := snapshot.Load(resolved)
+	snap, err := a.loadSnapshot(resolved)
 	if err != nil {
 		return "", err
 	}
@@ -656,6 +704,8 @@ func (a *App) Connect(req ConnectRequest) (escli.ClusterInfo, error) {
 	a.mu.Lock()
 	a.cli, a.info, a.fm = cli, info, fm
 	a.mu.Unlock()
+	// A different grid means different terrain — drop any cached snapshot.
+	a.invalidateSnapshotCache()
 
 	// Surface the same trust warnings the CLI prints — a GUI-only operator
 	// otherwise never sees that TLS verification is off or that the key can
@@ -726,6 +776,8 @@ func (a *App) RunScan(req ScanRequest) (*scan.Result, error) {
 		a.emit("scan:error", err.Error())
 		return nil, err
 	}
+	// A new snapshot landed on disk; any cached one is now stale.
+	a.invalidateSnapshotCache()
 	a.emit("scan:done", res.SnapshotPath)
 	return &res, nil
 }
