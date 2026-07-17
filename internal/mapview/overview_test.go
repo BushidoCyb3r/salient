@@ -3,6 +3,7 @@ package mapview
 import (
 	"fmt"
 	"net/netip"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -260,6 +261,115 @@ func TestOverviewKeepsCrossVLANEdges(t *testing.T) {
 	if cross == 0 {
 		t.Fatalf("no cross-VLAN edges survived the overview (of %d edges) — the routed dependencies were trimmed", len(m.Edges))
 	}
+}
+
+// TestOverviewDeclaredGateway: a declared-config gateway for a segment gets a
+// "(declared)" gateway node carrying config evidence, and no inferred gateway
+// is emitted for that same segment. Empty/nil DeclaredGateways leaves the
+// overview byte-identical to today (regression on an existing fixture shape).
+func TestOverviewDeclaredGateway(t *testing.T) {
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: 0.5, Rank: rank}})
+	}
+	// Two busy VLANs — enough hosts to force the condensed overview.
+	for v := 0; v < 2; v++ {
+		for h := 0; h < 60; h++ {
+			add(fmt.Sprintf("10.0.%d.%d", v, h+1), fmt.Sprintf("10.0.%d.0/24", v))
+		}
+	}
+	edges := []graph.Edge{{Src: "10.0.0.1", Dst: "10.0.1.1", Port: 445, ConnCount: 100}}
+	snap := graph.Snapshot{Nodes: nodes, Edges: edges}
+
+	// Router interface 10.0.0.254 is declared but never observed (no node).
+	declared := map[string]string{"10.0.0.254": "core-rtr"}
+	m := buildOverview(snap, Options{GroupPrefix: 24, DeclaredGateways: declared}, nil, nil, 999)
+
+	seg := groupID("10.0.0.0/24")
+	var declaredNode *MapNode
+	for i := range m.Nodes {
+		n := &m.Nodes[i]
+		if n.Group == seg && n.Gateway && strings.Contains(n.Label, "(declared)") {
+			declaredNode = n
+		}
+		if n.Group == seg && strings.Contains(n.Label, "(inferred)") {
+			t.Errorf("inferred gateway %q not suppressed by declared config", n.ID)
+		}
+	}
+	if declaredNode == nil {
+		t.Fatalf("no declared gateway node for segment %s", seg)
+	}
+	if !hasEvidence(declaredNode.Evidence, "gateway declared by core-rtr config") {
+		t.Errorf("declared gateway missing config evidence, got %v", declaredNode.Evidence)
+	}
+
+	// Regression: nil vs empty DeclaredGateways must yield identical node sets.
+	a := nodeIDSet(buildOverview(snap, Options{GroupPrefix: 24}, nil, nil, 999))
+	b := nodeIDSet(buildOverview(snap, Options{GroupPrefix: 24, DeclaredGateways: map[string]string{}}, nil, nil, 999))
+	if !reflect.DeepEqual(a, b) {
+		t.Errorf("empty DeclaredGateways changed the node set:\n nil=%v\n empty=%v", a, b)
+	}
+}
+
+// TestOverviewDeclaredGatewayBadgesObservedHost: when the declared gateway IP
+// is itself an observed, retained host, that node is badged in place (label
+// suffix + config evidence) rather than duplicated by a synthetic node.
+func TestOverviewDeclaredGatewayBadgesObservedHost(t *testing.T) {
+	var nodes []graph.Node
+	rank := 0
+	add := func(ip, subnet string, composite float64) {
+		rank++
+		nodes = append(nodes, graph.Node{IP: ip, Subnet: subnet,
+			Scores: graph.ScoreSet{Composite: composite, Rank: rank}})
+	}
+	// The gateway host ranks top so it is retained as its own node.
+	add("10.0.0.1", "10.0.0.0/24", 0.99)
+	for h := 0; h < 60; h++ {
+		add(fmt.Sprintf("10.0.0.%d", h+10), "10.0.0.0/24", 0.1)
+		add(fmt.Sprintf("10.0.1.%d", h+10), "10.0.1.0/24", 0.1)
+	}
+	snap := graph.Snapshot{Nodes: nodes}
+	declared := map[string]string{"10.0.0.1": "core-rtr"}
+	m := buildOverview(snap, Options{GroupPrefix: 24, DeclaredGateways: declared}, nil, nil, 999)
+
+	count := 0
+	for _, n := range m.Nodes {
+		if n.ID == "10.0.0.1" {
+			count++
+			if !n.Gateway || !strings.Contains(n.Label, "(declared)") {
+				t.Errorf("observed gateway host not badged: gateway=%v label=%q", n.Gateway, n.Label)
+			}
+			if !hasEvidence(n.Evidence, "gateway declared by core-rtr config") {
+				t.Errorf("observed gateway host missing config evidence, got %v", n.Evidence)
+			}
+		}
+		if n.ID == groupID("10.0.0.0/24")+":gw" {
+			t.Errorf("synthetic gateway duplicates the badged observed host")
+		}
+	}
+	if count != 1 {
+		t.Fatalf("expected exactly one node for the gateway IP, got %d", count)
+	}
+}
+
+func nodeIDSet(m *Model) map[string]bool {
+	s := map[string]bool{}
+	for _, n := range m.Nodes {
+		s[n.ID] = true
+	}
+	return s
+}
+
+func hasEvidence(ev []string, want string) bool {
+	for _, e := range ev {
+		if e == want {
+			return true
+		}
+	}
+	return false
 }
 
 func TestTrimOverviewEdgesDriftExempt(t *testing.T) {

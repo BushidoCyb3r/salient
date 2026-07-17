@@ -230,6 +230,11 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// edges. Inferred gateways are guesses and come last, in leftover space.
 	hasObserved := m.addObservedGateways(snap)
 
+	// Declared-config gateways are evidence too (a device config named them):
+	// badge them before budgeting edges, alongside any observed L2 node, and
+	// record which segments they cover so inference is suppressed there.
+	declaredSegs := m.addDeclaredGateways(opts.DeclaredGateways, resolve)
+
 	visible := retained
 	m.bundleEdges(filterFocusEdges(snap.Edges, byIP), visible, byIP, resolve, opts.MinConns, edgeDrift)
 	m.resolve, m.visible, m.byIP = resolve, visible, byIP
@@ -255,7 +260,7 @@ func buildOverview(snap graph.Snapshot, opts Options, nodeDrift map[string]strin
 	// guess must never displace a real dependency edge or clutter a VLAN that
 	// already shows its own hosts.
 	if !hasObserved {
-		m.addInferredGateways(snap, byIP, resolve, groupHasRetained)
+		m.addInferredGateways(snap, byIP, resolve, groupHasRetained, declaredSegs)
 	}
 
 	for _, cidr := range snap.Meta.ZeroCovCIDRs {
@@ -315,7 +320,7 @@ func (m *Model) addObservedGateways(snap graph.Snapshot) bool {
 // and only while element budget remains. Groups are taken in ID order for
 // determinism, strongest-terrain groups first would need a rank the
 // aggregate doesn't carry, so ID order is the stable, explainable choice.
-func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.Node, resolve func(string) string, groupHasRetained map[string]bool) {
+func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.Node, resolve func(string) string, groupHasRetained, declaredSegs map[string]bool) {
 	crossGroup := map[string]bool{}
 	for _, e := range snap.Edges {
 		s, sOK := byIP[e.Src]
@@ -333,7 +338,7 @@ func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.
 		}
 		// Only real internal CIDR groups that route, aren't already shown by
 		// a retained host, and fit the budget get a dashed inferred gateway.
-		if crossGroup[g.ID] && g.CIDR != "" && !groupHasRetained[g.ID] {
+		if crossGroup[g.ID] && g.CIDR != "" && !groupHasRetained[g.ID] && !declaredSegs[g.ID] {
 			m.Nodes = append(m.Nodes, MapNode{
 				ID: g.ID + ":gw", Group: g.ID, Label: "gateway (inferred)",
 				Role: "Gateway", Tier: TierCore, Gateway: true, Inferred: true,
@@ -341,6 +346,60 @@ func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.
 			})
 		}
 	}
+}
+
+// addDeclaredGateways stamps declared-config identity onto the overview's
+// gateways. A retained host sitting at a declared gateway IP is badged in
+// place; every other declared gateway whose IP resolves into a real segment
+// box gets a synthesized "gateway (declared)" node. Returns the set of segment
+// group IDs it covered so the caller suppresses inferred gateways there —
+// declared config beats a synthesized guess. Observed L2 gateway nodes are
+// MAC-keyed and left untouched, so they still appear alongside.
+func (m *Model) addDeclaredGateways(declared map[string]string, resolve func(string) string) map[string]bool {
+	covered := map[string]bool{}
+	if len(declared) == 0 {
+		return covered
+	}
+	// Badge any already-visible host that is a declared gateway IP.
+	stamped := map[string]bool{}
+	for i := range m.Nodes {
+		if host := declared[m.Nodes[i].ID]; host != "" {
+			m.Nodes[i].Gateway = true
+			m.Nodes[i].Label += " (declared)"
+			m.Nodes[i].Evidence = append(m.Nodes[i].Evidence, fmt.Sprintf("gateway declared by %s config", host))
+			covered[m.Nodes[i].Group] = true
+			stamped[m.Nodes[i].ID] = true
+		}
+	}
+	// Only real segment boxes (with a CIDR) can host a synthesized gateway —
+	// the "other"/"external"/"sparse" lumps carry no routed structure.
+	segBox := map[string]bool{}
+	for _, g := range m.Groups {
+		if g.CIDR != "" {
+			segBox[g.ID] = true
+		}
+	}
+	ips := make([]string, 0, len(declared))
+	for ip := range declared {
+		ips = append(ips, ip)
+	}
+	sort.Strings(ips) // deterministic node order
+	for _, ip := range ips {
+		gid := resolve(ip)
+		if stamped[ip] || covered[gid] || !segBox[gid] {
+			continue
+		}
+		if m.Elements() >= config.MapTargetElements {
+			break
+		}
+		covered[gid] = true
+		m.Nodes = append(m.Nodes, MapNode{
+			ID: gid + ":gw", Group: gid, Label: "gateway (declared)",
+			Role: "Gateway", Tier: TierCore, Gateway: true,
+			Evidence: []string{fmt.Sprintf("gateway declared by %s config", declared[ip])},
+		})
+	}
+	return covered
 }
 
 // trimOverviewEdges keeps every drift/overlay-flagged edge (a drift map

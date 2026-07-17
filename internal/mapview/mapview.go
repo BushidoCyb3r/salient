@@ -41,6 +41,11 @@ type Options struct {
 	// (rank-ordered, capped at config.MapAllPrivateCap). External hosts still
 	// collapse. For grids with a manageable internal host count.
 	RetainAllPrivate bool
+	// DeclaredGateways maps a gateway IP to the device hostname whose config
+	// declares it (netconfig InventoryResult.DeclaredGateways). The overview
+	// badges the matching gateway "(declared)" and suppresses inference for
+	// that segment — declared config beats a synthesized guess.
+	DeclaredGateways map[string]string
 }
 
 // Segment is one operator-declared subnet with an optional display name.
