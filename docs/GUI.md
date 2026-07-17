@@ -5,19 +5,36 @@ runs scans with live progress, and browses the resulting snapshots and briefing
 maps — reuses the same Cytoscape map as `salient map --format html`, with added
 right-click actions, search, and PNG/HTML/GraphML export.
 
-It runs the same read-only scan pipeline as the CLI (`internal/scan`): the only
-Elasticsearch traffic is the aggregation queries a `salient scan` issues, and
-the only writes are the snapshot, report, and map under `<data-dir>`
-(default `salient-data/`, same as the CLI). The API key lives in memory only —
-never persisted to disk, never included in an emitted event. Model-assisted
-`diff` and `reconcile` stay CLI-only; the console reads whatever snapshots those
-and its own scans leave in `<data-dir>/{snapshots,reports,maps}`. Optional device
-tagging can submit a capped snapshot summary to an operator-configured model
-endpoint and stores validated suggestions in a separate protected sidecar.
+It runs the same read-only scan pipeline as the CLI (`internal/scan`). Grid
+traffic is limited to cluster information, index/field discovery, privilege
+checks, and aggregate search queries. Scans write their snapshot, report, and
+map under `<data-dir>` (default `salient-data/`, same as the CLI); operator
+devices, sanitized declared configs, tag sidecars, and explicit exports are
+also local-only. The API key lives in memory — never persisted to disk or
+included in an emitted event. Model-assisted device tagging can submit a capped
+snapshot summary to an operator-configured model endpoint and stores validated
+suggestions in a separate protected sidecar. The console also loads drift
+comparisons, asset reconciliation, and declared-config overlays through the
+same backend packages as the CLI.
+
+## Installing a release
+
+Download the desktop build for your platform from
+[GitHub Releases](https://github.com/BushidoCyb3r/salient/releases/latest):
+
+- Debian/Ubuntu: the `.deb` asset
+- Fedora/RHEL/Rocky: the `.rpm` asset
+- macOS: `Salient-macOS.zip`
+- Windows: `Salient-Windows.exe`
+
+The Linux packages install the console as `salient-gui` and add a desktop-menu
+entry. The macOS and Windows builds are unsigned, so verify the file against the
+release's `SHA256SUMS` before accepting the platform warning. Assets labeled or
+named `salient-cli-*` are the separate command-line binary.
 
 ## Building
 
-Requires Go 1.26.4 or newer, Node.js/npm, and the platform packages below.
+Requires Go 1.26.5 or newer, Node.js/npm, and the platform packages below.
 The repository installs its pinned Wails CLI version and all Go/npm dependencies:
 
 Linux additionally needs the system webview library:
@@ -59,7 +76,11 @@ compiles with the `-tags webkit2_41` tag automatically (it probes
 - No sensor-coverage toggle yet (the CLI HTML map's `l-cov` layer) —
   dropped from the initial port.
 
-## Manual QA checklist (per OS — no automated GUI test harness exists)
+## Manual QA checklist
+
+CI tests the Go backend, frontend helper modules, production frontend build, and
+a headless-browser ready-state smoke path. Native window, webview, clipboard,
+and file-dialog behavior still require this checklist on each target OS.
 
 Exercise against the fake grid: `go run ./testdata/fakees -port 9299`, connect to
 `http://127.0.0.1:9299` with any base64 key (e.g. `dGVzdDp0ZXN0`).
@@ -101,5 +122,5 @@ Exercise against the fake grid: `go run ./testdata/fakees -port 9299`, connect t
       (≤100) and merges into the sidecar without clobbering other groups' tags
 - [ ] Right-click a host → Pin to map: it renders as its own amber-bordered
       node; Unpin returns it to the aggregate; the pin survives a reload
-- [ ] **show all private hosts** checkbox promotes RFC1918 hosts to their own
+- [ ] **show every private host (dense)** promotes RFC1918 hosts to their own
       nodes (external still collapses) and the choice persists across reloads

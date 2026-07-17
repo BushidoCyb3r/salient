@@ -1,19 +1,41 @@
-# README
+# Salient desktop console
 
-## About
+This directory is the Wails v2 desktop module. It uses the same scan, snapshot,
+map, drift, reconciliation, and declared-config packages as the CLI while
+presenting them through the native operator console.
 
-This is the official Wails Vanilla template.
+## Build
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+From the repository root:
 
-## Live Development
+```sh
+make gui-deps
+make gui
+```
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+The native binary or application bundle is written under `gui/build/bin/`.
+Linux webview packages and platform-specific runtime notes are documented in
+[the desktop console guide](../docs/GUI.md).
 
-## Building
+## Test
 
-To build a redistributable, production mode package, use `wails build`.
+```sh
+cd gui
+go test ./...
+
+cd frontend
+npm ci
+npm test
+npm run build
+```
+
+`make gui` regenerates `frontend/wailsjs`, and CI fails if those generated
+bindings do not match the Go backend. Frontend code should import backend calls
+through `frontend/src/bindings.js`; do not hand-edit `frontend/wailsjs`.
+
+For live frontend development after `make gui-deps`:
+
+```sh
+cd gui
+../.tools/bin/wails dev
+```

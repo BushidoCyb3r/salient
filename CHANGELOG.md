@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Future release assets retain the established GUI/package names; only the
+  standalone command-line binaries carry the `salient-cli-*` prefix.
+
+## [0.5.0] - 2026-07-17
+
+Repository-hardening and live-grid-accuracy release.
+
+### Added
+- Standalone CLI binaries for Linux amd64, macOS arm64, and Windows amd64 are
+  published with the desktop packages on tagged releases.
+- Frontend logic now has testable module seams and Node-based regression tests
+  for CSV output, Hunt Lead rule evidence, and key-terrain selection; CI also
+  runs a headless browser smoke check.
+- `ARCHITECTURE.md` records the evidence-honesty contract, scoring rationale,
+  module map, config-ingest boundaries, and known limits.
+- `web/VERSIONS.md` records versions, upstream archives, and SHA-256 hashes for
+  every vendored JavaScript library.
+- CI enforces tests for both Go modules, static analysis, generated-binding
+  synchronization, dual-entrypoint dead-code checks, commit attribution, and
+  frontend tests.
+
+### Changed
+- Conn-log `network.transport` now persists as `Edge.Proto`; policy comparison
+  evaluates the observed transport instead of guessing both TCP and UDP.
+- The device registry serializes cross-process updates with a file lock, so two
+  desktop instances cannot silently overwrite each other's changes.
+- The pinned Wails tool is refreshed when the cached repo-local binary has the
+  wrong version.
+- Errcheck exclusions are limited to non-actionable console/test writes so file,
+  network, and cleanup failures remain visible.
+
+### Fixed
+- GraphML renderers propagate writer failures instead of silently returning
+  truncated output.
+- Live-grid validation found and fixed a policy edge case where observed ICMP
+  and unknown transports still fell back to TCP/UDP evaluation. A fresh
+  30-minute scan persisted transport on all 2,455 observed edges.
+
 ## [0.4.0] - 2026-07-16
 
 Security-hardening release addressing the 2026-07-15 repository audit
@@ -282,7 +321,9 @@ supply-chain, and local-artifact safety.
 - `refreshDevices` dropped the pin set from the in-memory registry, which could
   leave the pin/unpin menu label stale.
 
-[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/BushidoCyb3r/salient/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/BushidoCyb3r/salient/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/BushidoCyb3r/salient/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/BushidoCyb3r/salient/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/BushidoCyb3r/salient/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/BushidoCyb3r/salient/compare/v0.3.0...v0.3.1

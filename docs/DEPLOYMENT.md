@@ -1,19 +1,29 @@
 # Deployment: read-only access to the SO grid
 
 Salient runs on an analyst workstation and needs exactly one thing: HTTPS reach to
-the manager's Elasticsearch API (:9200) with a read-only API key. No SO changes.
+the manager's Elasticsearch API (:9200) with a read-only API key. Salient makes
+no changes to Security Onion; an administrator may need to allow the workstation
+through the grid firewall as described below.
 
 ## 1. Allow your workstation through the SO firewall
 
-On the manager, as an admin:
+Security Onion manages its host firewall through the grid configuration. In
+SOC, open **Administration → Configuration → firewall**, enable **Show advanced
+settings**, then:
 
-```sh
-sudo so-firewall includehost elastic_agent <workstation-ip>   # SO 2.4: role granting 9200
-sudo so-firewall apply
-```
+1. Add the analyst workstation IP to a custom host group.
+2. Add TCP 9200 to a custom port group.
+3. Associate that host group and port group with the Elasticsearch node the
+   workstation will contact (the manager in the common single-manager path).
+4. Save and **SYNCHRONIZE GRID** to apply the rule immediately.
 
-> Verify the correct role name for your SO version with `sudo so-firewall listhosts`
-> — the goal is TCP 9200 from your workstation to the manager, nothing more.
+The exact role and chain depend on the grid's node layout. Follow Security
+Onion's official
+[host-group and port-group procedure](https://docs.securityonion.net/en/2.4/firewall.html#creating-a-custom-host-group-with-a-custom-port-group)
+and expose only TCP 9200 to the specific workstation. Do not edit `iptables`
+directly: Security Onion's Salt-managed configuration can overwrite it. The
+`so-firewall includehost analyst` shortcut is for SOC web access and does not
+grant this Elasticsearch path.
 
 ## 2. Create a read-only API key
 

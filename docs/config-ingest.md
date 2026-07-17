@@ -14,10 +14,10 @@ traffic (denied-but-observed) or never exercised (unused permits).
 - **Secrets are stripped at parse time.** Enable secrets, SNMP communities,
   TACACS/RADIUS keys, and pre-shared keys are discarded before anything is
   stored. Only the parsed topology and rules are kept.
-- **Raw config text is never persisted.** The sanitized parse
-  (`[]DeclaredDevice`) plus the diff results land in
-  `salient-data/declared.json`. The original file you uploaded is read, diffed,
-  and discarded.
+- **Raw config text is never persisted.** Only the sanitized parsed devices
+  (`[]DeclaredDevice`) land in `salient-data/declared.json`. Inventory and
+  policy diffs are recomputed against the snapshot whenever it is loaded. The
+  original file is read, parsed, and discarded.
 - **Terrain classification applies.** The output describes network layout and
   enforcement policy — protect it at the network's classification.
 

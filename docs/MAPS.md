@@ -172,8 +172,9 @@ with a warning above 120 elements.
   click a node for its role evidence.
 - `--format svg`: deterministic, server-rendered, no browser needed. Drops
   straight into a PowerPoint/Word slide.
-- `--format graphml`: subnet groups as nested `<graph>` elements — the
-  structure yEd and draw.io both import as native group nodes.
+- `--format graphml`: standard GraphML with subnet groups represented as nested
+  `<graph>` elements. The output is XML/golden tested; external-app round-trip
+  remains a manual release check.
 
 ## Importing GraphML into draw.io or yEd (offline)
 
@@ -181,19 +182,18 @@ with a warning above 120 elements.
    Output files are created with mode 0600; pass `--output -` only for an
    explicit stdout pipeline.
 2. **draw.io** (desktop, offline): File → Import from → Device → select the
-   `.graphml` file. draw.io reads the nested `<graph>` elements as swimlane
-   groups; nodes land inside their subnet's container. Re-layout with
-   Arrange → Layout → Vertical Tree for a tiered look, or leave as-is and
-   hand-adjust. Export to `.vsdx` via File → Export as → VSDX if Visio is a
-   hard requirement.
-2. **yEd** (desktop, offline): File → Open, select the `.graphml`. yEd
-   respects the nested-graph grouping natively as folder nodes. Use
-   Layout → Hierarchical for a tiered view, or Layout → Organic for the
-   fcose-equivalent look. yEd's own GraphML dialect (`y:` extensions) is not
-   emitted — yEd still imports plain GraphML fine, it just won't carry
-   yEd-specific styling from Salient; style after import.
+   `.graphml` file. Re-layout with Arrange → Layout → Vertical Tree for a
+   tiered look, then hand-adjust if needed. Export to `.vsdx` via File → Export
+   as → VSDX if Visio is a hard requirement.
+3. **yEd** (desktop, offline): File → Open and select the `.graphml`. Use
+   Layout → Hierarchical for a tiered view or Layout → Organic for a
+   force-directed look. Salient emits standard GraphML, not yEd-specific `y:`
+   styling extensions, so styling may need to be applied after import.
 
-Both apps are offline desktop tools, so this path stays air-gap safe.
+Both apps can be used offline, so this path can stay air-gap safe. Confirm the
+grouping and layout in the exact installed version before using the result in a
+brief; automated tests verify the file structure, not either application's
+import behavior.
 
 ## Drift-highlighted maps
 

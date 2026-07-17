@@ -149,12 +149,13 @@ segments, and approved providers to `salient-data/devices.json`, surviving
 rescans. (The ingested declared-config model is stored separately, in
 `salient-data/declared.json` — see the config-ingest flow below.)
 
-**`internal/assist`** — optional, explicitly enabled model-assisted device
-tagging. It never contacts Elasticsearch and is not used by scan or map. Remote
-endpoints require HTTPS and an explicit egress acknowledgement
-(`--allow-network-data-egress`); without it the request is refused
-(`client.go`). Only capped node/edge summaries are sent, never raw events or
-credentials, and suggestions stay separate from observed evidence until an
+**`internal/assist`** — optional, explicitly enabled model assistance for the
+CLI `analyze` command and desktop device tagging. It never contacts
+Elasticsearch and is not used by scan or map. Remote endpoints require HTTPS
+and an explicit egress acknowledgement (`--allow-network-data-egress`); without
+it the request is refused (`client.go`). Only capped node/edge summaries are
+sent, never raw events or credentials. Analysis findings must cite existing
+snapshot IDs, and tag suggestions stay separate from observed evidence until an
 operator accepts them.
 
 **`internal/report`** — pure renderers over a snapshot: analyst HTML, SVG maps,
@@ -170,13 +171,15 @@ callback. A canceled scan is fatal: it writes no snapshot, report, or map rather
 than announcing an incomplete run as complete.
 
 **`cmd/salient`** — the command-line interface (test-connection, discover, scan,
-list, view, diff, reconcile, declared, mission, stability, map, report).
+list, view, report, map, diff, reconcile, declared, mission, stability, analyze,
+and shell completion).
 
 **`gui/`** — the Wails desktop console, the primary interface. It is a
-**separate Go module** (`gui/go.mod`) with hand-maintained `wailsjs` bindings
-between the Go backend and the frontend. Those bindings can drift from the Go
-method signatures if edited by hand; `make gui` regenerates them, and that is
-the intended workflow when a binding changes.
+**separate Go module** (`gui/go.mod`). Wails generates the backend bindings in
+`gui/frontend/wailsjs`; `make gui` regenerates them, and CI rejects drift. The
+hand-written `gui/frontend/src/bindings.js` facade is the frontend import seam:
+it uses the generated bindings in the native app and provides safe no-op
+behavior for browser tests and the static demo harness.
 
 ## Key data flows
 
@@ -229,7 +232,8 @@ documented in `internal/netconfig/policy.go` and `docs/config-ingest.md`.
   observed flows is **not** proof of compliance or of a blocked path. Unsensed
   east-west traffic and empty windows are blind spots, not silence.
 - **Source ports are not evaluated** in policy verdicts.
-- **OQL is unvalidated against a live grid.** The generated Hunt queries are
-  intentionally minimal and have not been checked against a specific Security
-  Onion version's exact OQL field names (`internal/hunt/oql.go`); confirm before
-  relying on them.
+- **Exact Hunt OQL execution is not live-validated.** The generated queries are
+  intentionally minimal, and their ECS field names were confirmed against the
+  live Elasticsearch mappings. They have not yet been executed through a
+  Security Onion Hunt UI's OQL parser (`internal/hunt/oql.go`); confirm that
+  final syntax path before relying on them operationally.

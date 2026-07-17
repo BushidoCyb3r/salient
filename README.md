@@ -122,13 +122,37 @@ addresses are excluded from the composite. The console's **Key Terrain** button
 shows the top ranked visible hosts/devices and opens a drawer that can zoom to
 the selected node. Collapsed device nodes inherit their strongest member rank.
 
-## Build and run
+## Install and run
+
+### Release downloads
+
+Download the latest build from
+[GitHub Releases](https://github.com/BushidoCyb3r/salient/releases/latest).
+Assets labeled or named `salient-cli-*` are the standalone command-line tool;
+the `.deb`, `.rpm`, `Salient-macOS.zip`, and `Salient-Windows.exe` assets are
+the desktop console. Each release includes `SHA256SUMS` and build-provenance
+attestations.
+
+The CLI is a static binary. On Linux or macOS, make the downloaded CLI executable
+before its first run:
+
+~~~sh
+chmod +x <downloaded-cli>
+./<downloaded-cli> --help
+~~~
+
+Linux desktop packages install their webview dependency through the package
+manager. macOS and Windows builds are unsigned; verify the downloaded file
+against `SHA256SUMS` before accepting the platform warning. See
+[docs/GUI.md](docs/GUI.md) for platform-specific installation and runtime notes.
+
+### Build from source
 
 Prerequisites:
 
 - Git
 - Make
-- Go 1.26.4 or newer
+- Go 1.26.5 or newer
 - Node.js and npm
 
 Linux also needs the native webview development packages:
@@ -148,6 +172,7 @@ git clone https://github.com/BushidoCyb3r/salient.git
 cd salient
 make gui-deps
 make gui
+make build
 ~~~
 
 Launch the resulting application:
@@ -162,9 +187,6 @@ open gui/build/bin/Salient.app
 # Windows PowerShell
 .\gui\build\bin\salient.exe
 ~~~
-
-Platform-specific runtime packages and unsigned-build warnings are documented in
-[docs/GUI.md](docs/GUI.md).
 
 ## First connection
 
@@ -202,10 +224,11 @@ Platform-specific runtime packages and unsigned-build warnings are documented in
 7. Optionally configure **AI Device Tagging** and select **Suggest Tags** to add
    communication-based labels to visible devices.
 
-The default Security Onion field map is an unverified starting point because Zeek
-to ECS mappings vary by deployment and release. Verify it against the target grid
-and record the result in [docs/FIELDMAP.md](docs/FIELDMAP.md) before trusting scan
-output. A wrong field map can produce incomplete terrain.
+The default field map was verified against one Security Onion 3.x / Elasticsearch
+9.3.3 grid. Zeek-to-ECS mappings can still vary by release and deployment, so run
+`test-connection` and `discover` against every target grid before trusting scan
+output. The verified values and known coverage limits are recorded in
+[docs/FIELDMAP.md](docs/FIELDMAP.md).
 
 ## What a scan produces
 
@@ -247,10 +270,10 @@ right-click **Pin to map** promotes any collapsed host to its own node.
 
 ### Showing every private host
 
-Condensed maps keep only top-ranked hosts. The **show all private hosts**
-checkbox (map controls) instead promotes every RFC1918 (private) host to its own
-node while external peers still collapse into one box — a fuller, more accurate
-picture on grids with a manageable internal host count. A cap
+Condensed maps keep only top-ranked hosts. The **show every private host
+(dense)** checkbox in the View tab instead promotes every RFC1918 (private)
+host to its own node while external peers still collapse into one box — a
+fuller, more accurate picture on grids with a manageable internal host count. A cap
 (`config.MapAllPrivateCap`, 1500) bounds it: past that, the highest-ranked
 private hosts are shown and the rest re-aggregate, with a finding noting the
 count so a very large grid can't produce an unrenderable map. The setting
@@ -333,46 +356,72 @@ works (the IP column is detected by content).
 
 ## Command line
 
-The CLI remains available for automation, field discovery, static exports, drift
-analysis, asset reconciliation, and optional snapshot analysis.
+The CLI supports the complete scan and offline-analysis workflow. Examples below
+assume the release binary is available as `salient`; source builds use
+`./bin/salient` instead.
 
 ~~~sh
-make deps
-make build
-
 export SALIENT_ES_URL="https://so-manager:9200"
 export SALIENT_API_KEY="<base64 id:key>"
 
-./bin/salient test-connection --ca-cert grid-ca.pem
-./bin/salient discover --ca-cert grid-ca.pem --window 168h
-./bin/salient scan --ca-cert grid-ca.pem --window 336h \
+salient test-connection --ca-cert grid-ca.pem
+salient discover --ca-cert grid-ca.pem --window 168h
+salient scan --ca-cert grid-ca.pem --window 336h \
     --scope 10.0.0.0/8 --tz America/New_York
-./bin/salient list
-./bin/salient view
+salient list
+salient view
 ~~~
 
-Stored snapshots can also be rendered as HTML, SVG, JSON, or GraphML; compared
-with the diff command; or reconciled against an asset CSV. See
-[docs/MAPS.md](docs/MAPS.md) for map interpretation and export guidance.
+| Command | Purpose |
+|---|---|
+| `test-connection` | Verify authentication, read-only privileges, index discovery, and core field mappings. |
+| `discover` | List datasets, sensors, and L2/MAC coverage for a target grid. |
+| `scan` | Aggregate a window and write a snapshot, analyst report, and briefing map. |
+| `list` / `view` | List stored snapshots or open the local report/map index. |
+| `report` | Re-render a snapshot as HTML, JSON, or GraphML. |
+| `map` | Render a snapshot as interactive HTML, SVG, or GraphML. |
+| `diff` | Compare two snapshots and optionally render a drift-highlighted map. |
+| `reconcile` | Compare a snapshot with an asset CSV and optionally render the findings. |
+| `declared` | Compare exported Cisco IOS/UniFi configs with observed inventory and policy. |
+| `mission` | Score dependency proximity to operator-selected mission systems. |
+| `stability` | Report terrain-rank stability across at least three stored snapshots. |
+| `analyze` | Explicitly send a capped snapshot summary to a configured model endpoint. |
+| `completion` | Generate shell-completion scripts. |
 
-Two CLI-only lenses read an existing snapshot without re-deriving its
-canonical terrain rank:
+Common offline operations:
 
-- `./bin/salient mission --snapshot FILE --scope IP1,IP2,...` — mission
-  relevance overlay. Walks outward from operator-selected mission-system IPs
-  over confirmed edges (up to 3 hops) and scores how closely other hosts
-  support them. An additional lens over the snapshot's evidence, distinct
-  from and never replacing key-terrain/MRT-C rank.
-- `./bin/salient stability` — longitudinal terrain stability across at least
-  3 stored snapshots in `--data-dir`, showing which key terrain holds rank
-  over time versus which is volatile.
+~~~sh
+salient report --snapshot SNAP.json.gz --format json --output report.json
+salient map --snapshot SNAP.json.gz --format graphml --output map.graphml
+salient diff --from OLD.json.gz --to NEW.json.gz --map
+salient reconcile --snapshot SNAP.json.gz --assets assets.csv --map
+salient declared --snapshot SNAP.json.gz --configs router.cfg,unifi.json
+salient mission --snapshot SNAP.json.gz --scope 10.0.1.10,10.0.1.11
+salient stability --data-dir salient-data --format json
+~~~
+
+`analyze` is the only CLI operation that can send network-derived data anywhere
+other than Elasticsearch. Loopback endpoints work without an egress flag;
+remote endpoints require HTTPS and `--allow-network-data-egress`. Supply the
+endpoint credential through `SALIENT_AI_API_KEY`, never a command-line flag:
+
+~~~sh
+export SALIENT_AI_API_KEY='<endpoint credential>'
+salient analyze --snapshot SNAP.json.gz \
+  --endpoint https://approved.example/v1/chat/completions \
+  --model approved-model --allow-network-data-egress
+~~~
+
+Run `salient COMMAND --help` for every flag. See [docs/MAPS.md](docs/MAPS.md)
+for export interpretation and [docs/config-ingest.md](docs/config-ingest.md)
+for supported device-config exports.
 
 ## Security model
 
 - Elasticsearch access is read-only. Salient does not change grid
   configuration, indices, or documents.
-- The console writes only local snapshots, reports, maps, and operator-selected
-  exports.
+- The console writes only local snapshots, reports, maps, operator registries,
+  sanitized declared models, tag sidecars, and operator-selected exports.
 - Runtime assets are bundled locally. There are no CDN dependencies or telemetry.
 - The CLI is a static binary. The desktop console uses the operating system's
   native webview and must be built per target platform.
@@ -456,10 +505,13 @@ web/                   embedded offline map assets
 
 Additional operator documentation:
 
+- [Architecture and design rationale](ARCHITECTURE.md)
 - [Desktop console build and QA](docs/GUI.md)
 - [Read-only deployment](docs/DEPLOYMENT.md)
 - [Field-map verification](docs/FIELDMAP.md)
 - [Map interpretation and export](docs/MAPS.md)
+- [Device-config ingestion](docs/config-ingest.md)
+- [Security policy](SECURITY.md)
 
 ## License
 
