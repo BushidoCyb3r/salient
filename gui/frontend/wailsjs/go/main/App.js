@@ -122,10 +122,6 @@ export function SaveDevice(arg1, arg2) {
   return window['go']['main']['App']['SaveDevice'](arg1, arg2);
 }
 
-export function SetDeviceOwns(arg1, arg2) {
-  return window['go']['main']['App']['SetDeviceOwns'](arg1, arg2);
-}
-
 export function SetLabels(arg1, arg2) {
   return window['go']['main']['App']['SetLabels'](arg1, arg2);
 }

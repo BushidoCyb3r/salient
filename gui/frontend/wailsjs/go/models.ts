@@ -58,19 +58,17 @@ export namespace devices {
 	    type?: string;
 	    notes?: string;
 	    ips: string[];
-	    owns_cidrs?: string[];
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Device(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
 	        this.type = source["type"];
 	        this.notes = source["notes"];
 	        this.ips = source["ips"];
-	        this.owns_cidrs = source["owns_cidrs"];
 	    }
 	}
 	export class Segment {

@@ -1,4 +1,4 @@
-import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, PickDeviceConfigs, LoadDeclared, ClearDeclared, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, SetDeviceOwns, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
+import { Connect, RunScan, CancelScan, ListSnapshots, LoadModel, LoadFocusedModel, LoadDriftModel, LoadReconcileModel, LoadReconcileModelCSV, PickAssetCSV, PickDeviceConfigs, LoadDeclared, ClearDeclared, ExportMap, ExportImage, Legend, SuggestTags, SuggestTagsForHosts, AggregateHosts, FlowEndpointIPs, ListDevices, SaveDevice, DeleteDevice, AssignIP, UnassignIP, SetLabels, SetRole, PinToMap, UnpinFromMap, SetShowAllPrivate, SetSegment, RemoveSegment, DismissHint, DeviceHints, DiscoverGrid, LoadServiceAuthority, LoadHuntLeads, ApproveProvider, UnapproveProvider } from '../wailsjs/go/main/App.js';
 import { EventsOn } from '../wailsjs/runtime/runtime.js';
 
 const $ = (id) => document.getElementById(id);
@@ -563,7 +563,7 @@ function gridLayout() {
   cy.layout({ name: 'preset', positions: (n) => pos[n.id()], fit: true, padding: 40 }).run();
 }
 
-// deviceLayer mirrors devices.DeviceLayer: a device Type → topology band.
+// deviceLayer: a device Type → topology band.
 function deviceLayer(typ) {
   switch ((typ || '').trim().toLowerCase()) {
     case 'firewall': case 'edge': case 'boundary': return 'boundary';
@@ -1634,7 +1634,7 @@ function showDeviceCard(name) {
   const doRename = async (newName) => {
     if (!newName || newName === d.name) { showDeviceCard(d.name); return; }
     try {
-      await SaveDevice(d.name, { name: newName, type: d.type || '', notes: d.notes || '', ips: d.ips || [], owns_cidrs: d.owns_cidrs || [] });
+      await SaveDevice(d.name, { name: newName, type: d.type || '', notes: d.notes || '', ips: d.ips || [] });
       logLine('renamed "' + d.name + '" → "' + newName + '"', 'ok');
       await refreshDevices();
       showDeviceCard(newName);
@@ -1695,7 +1695,7 @@ function showDeviceCard(name) {
   }
   lay.onchange = async () => {
     try {
-      await SaveDevice(d.name, { name: d.name, type: lay.value, notes: d.notes || '', ips: d.ips || [], owns_cidrs: d.owns_cidrs || [] });
+      await SaveDevice(d.name, { name: d.name, type: lay.value, notes: d.notes || '', ips: d.ips || [] });
       logLine('set ' + d.name + ' layer → ' + (lay.value || 'host'), 'ok');
       await refreshDevices(); showDeviceCard(d.name);
     } catch (err) { logLine('layer set failed: ' + err, 'err'); }

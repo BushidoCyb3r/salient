@@ -11,7 +11,6 @@ import (
 	"net/netip"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/BushidoCyb3r/salient/internal/safefile"
 )
@@ -19,59 +18,10 @@ import (
 // Device is one physical device that may own several IPs (e.g. a router
 // with an interface per VLAN).
 type Device struct {
-	Name      string   `json:"name"`
-	Type      string   `json:"type,omitempty"` // router/switch/nas/printer/…
-	Notes     string   `json:"notes,omitempty"`
-	IPs       []string `json:"ips"`
-	OwnsCIDRs []string `json:"owns_cidrs,omitempty"` // ranges routed through this device (topology view)
-}
-
-// DeviceLayer normalizes a device Type into a topology band: boundary
-// (firewall/edge), router (core L3), switch (L2), or "" for a normal host.
-// Drives both band placement and edge routing in the topology layout.
-func DeviceLayer(typ string) string {
-	switch strings.ToLower(strings.TrimSpace(typ)) {
-	case "firewall", "edge", "boundary":
-		return "boundary"
-	case "router", "l3", "gateway":
-		return "router"
-	case "switch", "l2":
-		return "switch"
-	default:
-		return ""
-	}
-}
-
-// SetDeviceOwns replaces the owned-CIDR list of a device (created by name if
-// absent, like the label/role overlays). CIDRs are validated and masked; an
-// empty list clears them. On any invalid CIDR the device is left unchanged.
-func (r *Registry) SetDeviceOwns(name string, cidrs []string) error {
-	if strings.TrimSpace(name) == "" {
-		return fmt.Errorf("device name required")
-	}
-	masked := make([]string, 0, len(cidrs))
-	seen := map[string]bool{}
-	for _, c := range cidrs {
-		p, err := netip.ParsePrefix(strings.TrimSpace(c))
-		if err != nil {
-			return fmt.Errorf("invalid owned CIDR %q", c)
-		}
-		m := p.Masked().String()
-		if !seen[m] {
-			seen[m] = true
-			masked = append(masked, m)
-		}
-	}
-	sort.Strings(masked)
-	for i := range r.Devices {
-		if r.Devices[i].Name == name {
-			r.Devices[i].OwnsCIDRs = masked
-			return nil
-		}
-	}
-	r.Devices = append(r.Devices, Device{Name: name, IPs: []string{}, OwnsCIDRs: masked})
-	sort.Slice(r.Devices, func(i, j int) bool { return r.Devices[i].Name < r.Devices[j].Name })
-	return nil
+	Name  string   `json:"name"`
+	Type  string   `json:"type,omitempty"` // router/switch/nas/printer/…
+	Notes string   `json:"notes,omitempty"`
+	IPs   []string `json:"ips"`
 }
 
 // Registry is the whole devices.json document.

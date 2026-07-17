@@ -69,8 +69,6 @@ export function RunScan(arg1:main.ScanRequest):Promise<scan.Result>;
 
 export function SaveDevice(arg1:string,arg2:devices.Device):Promise<void>;
 
-export function SetDeviceOwns(arg1:string,arg2:Array<string>):Promise<void>;
-
 export function SetLabels(arg1:string,arg2:Array<string>):Promise<void>;
 
 export function SetRole(arg1:string,arg2:string):Promise<void>;
