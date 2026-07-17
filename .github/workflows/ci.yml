@@ -226,10 +226,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-assets
-          cp artifacts/salient-cli-binaries/* release-assets/
-          cp artifacts/salient-gui-linux-packages/*.deb artifacts/salient-gui-linux-packages/*.rpm release-assets/
-          cp artifacts/salient-gui-macos-15/Salient-macOS.zip release-assets/
-          cp artifacts/salient-gui-windows-2025/salient.exe release-assets/Salient-Windows.exe
+          cp artifacts/salient-cli-binaries/salient-linux-amd64 "release-assets/Salient-${GITHUB_REF_NAME}-CLI-Linux-amd64"
+          cp artifacts/salient-cli-binaries/salient-darwin-arm64 "release-assets/Salient-${GITHUB_REF_NAME}-CLI-macOS-arm64"
+          cp artifacts/salient-cli-binaries/salient-windows-amd64.exe "release-assets/Salient-${GITHUB_REF_NAME}-CLI-Windows-amd64.exe"
+          cp artifacts/salient-gui-linux-packages/*.deb "release-assets/Salient-${GITHUB_REF_NAME}-GUI-Linux-amd64.deb"
+          cp artifacts/salient-gui-linux-packages/*.rpm "release-assets/Salient-${GITHUB_REF_NAME}-GUI-Linux-x86_64.rpm"
+          cp artifacts/salient-gui-macos-15/Salient-macOS.zip "release-assets/Salient-${GITHUB_REF_NAME}-GUI-macOS.zip"
+          cp artifacts/salient-gui-windows-2025/salient.exe "release-assets/Salient-${GITHUB_REF_NAME}-GUI-Windows-amd64.exe"
           (cd release-assets && sha256sum * > SHA256SUMS)
       - name: Attest release assets
         uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
