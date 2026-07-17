@@ -11,6 +11,39 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - name: Enforce commit attribution
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          expected_name='BushidoCyb3r'
+          expected_email='BushidoCyb3r@users.noreply.github.com'
+          git cat-file -e "$HEAD_SHA^{commit}"
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+            commits=("$HEAD_SHA")
+          else
+            git cat-file -e "$BASE_SHA^{commit}"
+            mapfile -t commits < <(git rev-list "$BASE_SHA..$HEAD_SHA")
+          fi
+          failed=0
+          for commit in "${commits[@]}"; do
+            IFS=$'\t' read -r author_name author_email committer_name committer_email \
+              < <(git show -s --format='%an%x09%ae%x09%cn%x09%ce' "$commit")
+            if [[ "$author_name" != "$expected_name" || "$author_email" != "$expected_email" ||
+                  "$committer_name" != "$expected_name" || "$committer_email" != "$expected_email" ]]; then
+              echo "Unexpected author or committer identity on $commit"
+              failed=1
+            fi
+            if git show -s --format=%B "$commit" | grep -Eiq '^(co-authored-by[[:space:]]*:|generated[- ]by[[:space:]]*:|generated[- ]with([[:space:]]*:|[[:space:]]+))'; then
+              echo "Prohibited attribution trailer on $commit"
+              failed=1
+            fi
+          done
+          exit "$failed"
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
@@ -37,11 +70,72 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev
       - name: Install Wails CLI
+        if: matrix.os != 'ubuntu-24.04'
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
-      - name: Build GUI
+      - name: Install analysis tools
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
+          go install golang.org/x/tools/cmd/deadcode@v0.48.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Build GUI (Linux)
+        if: matrix.os == 'ubuntu-24.04'
+        run: make gui
+      - name: Check generated Wails bindings
+        if: matrix.os == 'ubuntu-24.04'
+        run: git diff --exit-code -- gui/frontend/wailsjs
+      - name: Build GUI (macOS and Windows)
+        if: matrix.os != 'ubuntu-24.04'
         working-directory: gui
         run: |
-          wails build ${{ matrix.os == 'ubuntu-24.04' && '-tags webkit2_41' || matrix.os == 'macos-15' && '-platform darwin/universal' || '' }}
+          wails build ${{ matrix.os == 'macos-15' && '-platform darwin/universal' || '' }}
+      - name: Test frontend
+        if: matrix.os == 'ubuntu-24.04'
+        working-directory: gui/frontend
+        run: |
+          find src -type f -name '*.js' -exec node --check {} +
+          npm test
+      - name: Smoke-test frontend
+        if: matrix.os == 'ubuntu-24.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory gui/frontend/dist \
+            > "$RUNNER_TEMP/frontend-server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in {1..20}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$browser"
+          timeout 30s "$browser" --headless --disable-gpu --virtual-time-budget=5000 \
+            --dump-dom http://127.0.0.1:4173/ > "$RUNNER_TEMP/frontend-dom.html"
+          grep -Eq '<html[^>]*data-salient-ready="true"' "$RUNNER_TEMP/frontend-dom.html"
+      - name: Static analysis
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          staticcheck ./...
+          (cd gui && staticcheck ./...)
+      - name: Check dead code from both entrypoints
+        if: matrix.os == 'ubuntu-24.04'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/deadcode-root.txt"
+          gui="$RUNNER_TEMP/deadcode-gui.txt"
+          deadcode ./... > "$root"
+          (cd gui && deadcode -filter='github.com/BushidoCyb3r/salient' .) > "$gui"
+          sed -E -e "s#^${GITHUB_WORKSPACE}/##" -e 's#^\.\./##' -e 's/^([^:]+:[0-9]+):.*/\1/' "$root" | sort -u > "$root.norm"
+          sed -E -e "s#^${GITHUB_WORKSPACE}/##" -e 's#^\.\./##' -e 's/^([^:]+:[0-9]+):.*/\1/' "$gui" | sort -u > "$gui.norm"
+          comm -12 "$root.norm" "$gui.norm" > "$RUNNER_TEMP/deadcode-common.txt"
+          if [ -s "$RUNNER_TEMP/deadcode-common.txt" ]; then
+            echo "Code unreachable from both executable entrypoints:"
+            cat "$RUNNER_TEMP/deadcode-common.txt"
+            exit 1
+          fi
       # after the build: frontend/dist is gitignored and go:embed needs it,
       # so the module only compiles once wails build has generated it
       - name: Test GUI module
