@@ -15,7 +15,9 @@ LDFLAGS := -s -w
 GOOS    ?= $(shell $(GO) env GOOS)
 GUI_TAGS ?= $(if $(and $(filter linux,$(GOOS)),$(shell pkg-config --exists webkit2gtk-4.1 2>/dev/null && echo yes)),-tags webkit2_41)
 
-.PHONY: deps gui-deps gui-vendor build gui gui-test test check lint cross package-linux clean integration
+.PHONY: deps gui-deps gui-vendor build gui gui-test test check lint cross package-linux clean integration FORCE
+
+FORCE:
 
 deps:
 	$(GO_ENV) $(GO) mod download
@@ -23,9 +25,11 @@ deps:
 # The pinned repo-local wails CLI. A file target so anything needing it
 # (gui, gui-deps) self-bootstraps on fresh clones and CI — `make gui` must
 # never fail with "no such file" just because gui-deps wasn't run first.
-$(WAILS):
-	mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR)
-	$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+$(WAILS): FORCE
+	@if [ ! -x "$@" ] || [ "$$($@ version 2>/dev/null | head -n 1)" != "$(WAILS_VERSION)" ]; then \
+		mkdir -p $(WAILS_BIN_DIR) $(WAILS_CACHE_DIR); \
+		$(GO_ENV) GOBIN=$(abspath $(WAILS_BIN_DIR)) GOCACHE=$(abspath $(WAILS_CACHE_DIR)) $(GO) install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION); \
+	fi
 
 # Same self-bootstrap rationale as $(WAILS): package-linux must never fail
 # with "no such file" on a fresh clone or CI runner.
