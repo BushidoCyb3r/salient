@@ -454,6 +454,8 @@ export namespace hunt {
 	    last_seen: any;
 	    rank?: number;
 	    inventory_status?: string;
+	    query: string;
+	    rule_evidence?: string;
 	    alternate_providers?: string[];
 	
 	    static createFrom(source: any = {}) {
@@ -476,6 +478,8 @@ export namespace hunt {
 	        this.last_seen = this.convertValues(source["last_seen"], null);
 	        this.rank = source["rank"];
 	        this.inventory_status = source["inventory_status"];
+	        this.query = source["query"];
+	        this.rule_evidence = source["rule_evidence"];
 	        this.alternate_providers = source["alternate_providers"];
 	    }
 	

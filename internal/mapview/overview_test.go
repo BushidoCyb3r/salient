@@ -79,7 +79,7 @@ func TestOverviewPinsLowRankHost(t *testing.T) {
 			Scores: graph.ScoreSet{Composite: 1.0 - float64(i)*0.01, Rank: i + 1},
 		})
 	}
-	pin := "10.0.0.55" // rank 55 — well below MapOverviewTopNodes
+	pin := "10.0.0.55" // rank 55 — far outside any per-segment top-N
 	opts := Options{GroupPrefix: 24, Pinned: map[string]bool{pin: true}}
 	m := buildOverview(graph.Snapshot{Nodes: nodes}, opts, nil, nil, 0)
 

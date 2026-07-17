@@ -72,8 +72,6 @@ const (
 	ClientAggMaxComposite = 0.15 // §8.5 clients below this composite aggregate
 	MapTargetElements     = 60   // §8.5 readability target
 	MapMaxElements        = 120  // above this, unfocused maps condense to an overview
-	MapOverviewTopNodes   = 20   // (legacy) global top-N; superseded by per-segment retention
-	MapOverviewMaxGroups  = 12   // (legacy) global group cap; superseded by MapSegmentMaxGroups
 	MapAllPrivateCap      = 1500 // "show all private" ceiling: promote at most this many RFC1918 hosts before the rest re-aggregate
 	MapSegmentTopHosts    = 5    // segment-flow map: named hosts kept per VLAN box (rest → "N more hosts")
 	MapSegmentMaxGroups   = 64   // segment-flow map: max VLAN boxes before the least-active overflow to "other internal networks"
