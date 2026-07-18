@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-07-18
+
+Cisco IOS map identity parity.
+
 ### Added
 - Cisco IOS running-config imports now retain and label exact observed
   interface/SVI matches on maps as routers, switches, or Layer-3 switches,
