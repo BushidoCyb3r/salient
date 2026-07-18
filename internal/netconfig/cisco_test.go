@@ -99,6 +99,9 @@ func TestParseCiscoIOS_Switchport(t *testing.T) {
 	if access.Trunk {
 		t.Errorf("access port should not be a trunk: %+v", access)
 	}
+	if !access.Switchport {
+		t.Errorf("access port Switchport = false, want true: %+v", access)
+	}
 
 	trunk, ok := byName["GigabitEthernet0/24"]
 	if !ok {
@@ -107,8 +110,21 @@ func TestParseCiscoIOS_Switchport(t *testing.T) {
 	if !trunk.Trunk {
 		t.Errorf("trunk port Trunk = false, want true: %+v", trunk)
 	}
+	if !trunk.Switchport {
+		t.Errorf("trunk port Switchport = false, want true: %+v", trunk)
+	}
 	if trunk.VLAN != 0 {
 		t.Errorf("trunk port VLAN = %d, want 0", trunk.VLAN)
+	}
+}
+
+func TestParseCiscoIOS_Routing(t *testing.T) {
+	dev, err := ParseCiscoIOS(strings.NewReader("hostname dist-sw-01\nip routing\ninterface Vlan10\n ip address 10.0.10.1 255.255.255.0\n switchport\n"), "dist-sw.cfg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !dev.Routing {
+		t.Error("Routing = false, want true for `ip routing`")
 	}
 }
 

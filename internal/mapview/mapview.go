@@ -42,13 +42,13 @@ type Options struct {
 	// collapse. For grids with a manageable internal host count.
 	RetainAllPrivate bool
 	// DeclaredGateways maps a gateway IP to the device hostname whose config
-	// declares it (netconfig InventoryResult.DeclaredGateways). The overview
-	// badges the matching gateway "(declared)" and suppresses inference for
+	// declares it (netconfig InventoryResult.DeclaredGateways). Maps badge the
+	// matching gateway "(declared)" and suppress inference for
 	// that segment — declared config beats a synthesized guess.
 	DeclaredGateways map[string]string
 	// DeclaredDevices maps an observed management IP to identity imported from
-	// the UniFi Network device inventory. These real observed nodes are retained
-	// and labeled; controller-only devices are not synthesized onto the map.
+	// a device config or controller inventory. These real observed nodes are
+	// retained and labeled; config-only devices are not synthesized onto the map.
 	DeclaredDevices map[string]DeclaredDevice
 }
 
@@ -413,15 +413,16 @@ func build(snap graph.Snapshot, opts Options, nodeDrift map[string]string, edgeD
 		})
 	}
 
+	m.Groups = groups
 	// Gateways (§8.4): observed (L2 MAC convergence) or inferred fallback.
 	m.addGateways(snap, groups, byIP, resolve)
 	m.addDeclaredDevices(opts.DeclaredDevices)
+	m.addDeclaredGateways(opts.DeclaredGateways, resolve)
 
 	// Edge bundling + noise floor (§8.5.2/4). Edges from/to aggregated
 	// clients reroute to the meta-node; endpoints outside focus drop.
 	m.bundleEdges(filterFocusEdges(snap.Edges, byIP), visible, byIP, resolve, opts.MinConns, edgeDrift)
 
-	m.Groups = groups
 	m.findings(snap, opts)
 	sortModel(m)
 	m.resolve, m.visible, m.byIP = resolve, visible, byIP
@@ -450,7 +451,7 @@ func (m *Model) addDeclaredDevices(declared map[string]DeclaredDevice) {
 		if d.Model != "" {
 			detail += " (" + d.Model + ")"
 		}
-		m.Nodes[i].Evidence = append(m.Nodes[i].Evidence, "device identity imported from UniFi Network: "+detail)
+		m.Nodes[i].Evidence = append(m.Nodes[i].Evidence, "device identity imported from device config: "+detail)
 	}
 }
 

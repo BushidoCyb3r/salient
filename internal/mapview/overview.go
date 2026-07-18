@@ -350,8 +350,8 @@ func (m *Model) addInferredGateways(snap graph.Snapshot, byIP map[string]*graph.
 	}
 }
 
-// addDeclaredGateways stamps declared-config identity onto the overview's
-// gateways. A retained host sitting at a declared gateway IP is badged in
+// addDeclaredGateways stamps declared-config identity onto map gateways. A
+// retained host sitting at a declared gateway IP is badged in
 // place; every other declared gateway whose IP resolves into a real segment
 // box gets a synthesized "gateway (declared)" node. Returns the set of segment
 // group IDs it covered so the caller suppresses inferred gateways there —
@@ -392,8 +392,26 @@ func (m *Model) addDeclaredGateways(declared map[string]string, resolve func(str
 			continue
 		}
 		covered[gid] = true
+		id := gid + ":gw"
+		converted := false
+		for i := range m.Nodes {
+			if m.Nodes[i].ID != id {
+				continue
+			}
+			m.Nodes[i].Label = "gateway (declared)"
+			m.Nodes[i].Role = "Gateway"
+			m.Nodes[i].Tier = TierCore
+			m.Nodes[i].Gateway = true
+			m.Nodes[i].Inferred = false
+			m.Nodes[i].Evidence = append(m.Nodes[i].Evidence, fmt.Sprintf("gateway declared by %s config", declared[ip]))
+			converted = true
+			break
+		}
+		if converted {
+			continue
+		}
 		m.Nodes = append(m.Nodes, MapNode{
-			ID: gid + ":gw", Group: gid, Label: "gateway (declared)",
+			ID: id, Group: gid, Label: "gateway (declared)",
 			Role: "Gateway", Tier: TierCore, Gateway: true,
 			Evidence: []string{fmt.Sprintf("gateway declared by %s config", declared[ip])},
 		})

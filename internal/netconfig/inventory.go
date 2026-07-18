@@ -10,10 +10,11 @@ import (
 
 // DeviceMatch links a declared device to the observed nodes it was found at.
 type DeviceMatch struct {
-	Device string   `json:"device"` // DeclaredDevice.Hostname
-	Source string   `json:"source"`
-	IPs    []string `json:"ips"`    // observed node IPs that matched
-	ByMAC  bool     `json:"by_mac"` // matched only via MAC, not a direct interface IP
+	Device     string   `json:"device"` // DeclaredDevice.Hostname
+	DeviceType string   `json:"device_type,omitempty"`
+	Source     string   `json:"source"`
+	IPs        []string `json:"ips"`    // observed node IPs that matched
+	ByMAC      bool     `json:"by_mac"` // matched only via MAC, not a direct interface IP
 }
 
 // AdoptedDevice is a UniFi Network device and the observed node it matched.
@@ -75,6 +76,7 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 	var declared []netip.Prefix // aggregate across all devices, for UndeclaredCIDRs
 
 	for _, d := range devs {
+		deviceType, canRoute := declaredDeviceIdentity(d)
 		var matchedIPs []string
 		seenIP := map[string]bool{}
 		gotIP, gotMAC := false, false
@@ -113,10 +115,12 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 				// observed: real routers often terminate no tracked flows, but
 				// mapview must still stamp declared identity onto the inferred
 				// gateway. Enough that the subnet holds an observed node.
-				for _, a := range nodeAddrs {
-					if a != own && masked.Contains(a) {
-						res.DeclaredGateways[own.String()] = d.Hostname
-						break
+				if canRoute {
+					for _, a := range nodeAddrs {
+						if a != own && masked.Contains(a) {
+							res.DeclaredGateways[own.String()] = d.Hostname
+							break
+						}
 					}
 				}
 			}
@@ -135,7 +139,7 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 		if len(matchedIPs) > 0 {
 			sort.Strings(matchedIPs)
 			res.Matches = append(res.Matches, DeviceMatch{
-				Device: d.Hostname, Source: d.Source,
+				Device: d.Hostname, DeviceType: deviceType, Source: d.Source,
 				IPs: matchedIPs, ByMAC: gotMAC && !gotIP,
 			})
 		}
@@ -192,6 +196,29 @@ func DiffInventory(snap graph.Snapshot, devs []DeclaredDevice) InventoryResult {
 	})
 	sort.Strings(res.UndeclaredCIDRs)
 	return res
+}
+
+// declaredDeviceIdentity gives Cisco IOS matches the same map-ready identity
+// UniFi adopted devices already carry. Switchport/SVI presence distinguishes
+// a switch from a router; explicit `ip routing` identifies an L3 switch.
+func declaredDeviceIdentity(d DeclaredDevice) (deviceType string, canRoute bool) {
+	if d.Vendor != "cisco-ios" {
+		return "", true
+	}
+	hasSwitchport := false
+	for _, iface := range d.Interfaces {
+		if iface.Switchport || strings.HasPrefix(strings.ToLower(iface.Name), "vlan") {
+			hasSwitchport = true
+			break
+		}
+	}
+	if hasSwitchport {
+		if d.Routing {
+			return "Cisco IOS Layer 3 switch", true
+		}
+		return "Cisco IOS switch", false
+	}
+	return "Cisco IOS router", true
 }
 
 func overlapsAny(p netip.Prefix, ps []netip.Prefix) bool {

@@ -36,10 +36,28 @@ Copy the output to a `.txt` / `.cfg` / `.conf` file, one file per device.
 Salient autodetects IOS by its `hostname` / `interface` / `access-list` lines.
 
 Parsed: interfaces and their prefixes/VLANs/ACL bindings (including L2
-switchport access VLANs and trunk-mode flags), DHCP pools, static routes, VLAN
-names, and extended/standard access-lists. NAT, VRF, IPv6, and
-reachability simulation are out of scope (declared rules are matched against
-observed flows only).
+switchport access VLANs and trunk-mode flags), the global `ip routing` state,
+DHCP pools, static routes, VLAN names, and extended/standard access-lists.
+NAT, VRF, IPv6, dynamic forwarding tables, and reachability simulation are out
+of scope (declared rules are matched against observed flows only).
+
+Each file becomes one declared Cisco device. When an interface or management
+SVI address exactly matches an observed snapshot node, Salient keeps that node
+visible and labels it with the IOS hostname and one of these types:
+
+- `Cisco IOS router`: neither switchport configuration nor an SVI is present.
+- `Cisco IOS switch`: switchport configuration or an SVI is present and
+  `ip routing` is not enabled.
+- `Cisco IOS Layer 3 switch`: switchport configuration or an SVI is present
+  and `ip routing` is enabled.
+
+A routed interface is eligible to confirm a declared gateway when its subnet
+contains observed hosts. An L2 switch's management SVI is not called a gateway.
+The match is deliberately exact-IP: a running-config normally contains neither
+the chassis management MAC nor a trustworthy dynamic neighbor table. A Cisco
+device whose interface addresses were never observed remains in the inventory
+result and task-log count but is not fabricated as a traffic node. Import one
+running-config per router or switch to identify each of them independently.
 
 ### UniFi
 
@@ -344,9 +362,9 @@ Open a snapshot, then in the **Data** tab → **Device Configs** →
 *Load device configs…*. Select one or more exported files (Cisco text and
 UniFi JSON can be mixed in one selection). For an Integration API export,
 select all four `unifi-integration-*.json` files in the same file-picker
-operation. The map stamps declared gateway identity onto inferred gateways and
-names matched adopted devices; the task log reports how many adopted devices
-matched observed nodes.
+operation. The map stamps declared gateway identity onto normal and condensed
+maps and names matched Cisco IOS and UniFi devices; the task log reports match
+counts for each source.
 The ingest persists, so it reapplies automatically when you reload the
 snapshot, and feeds the Hunt view's declared-policy leads. Clear it with the
 `×` on the chip.
@@ -358,8 +376,9 @@ salient declared --snapshot SNAP.json.gz --configs ios-router.cfg,unifi-integrat
 ```
 
 Prints `{ "inventory": …, "policy": … }` JSON on stdout: `inventory` is the
-declared-vs-observed reconciliation (adopted devices and their observed IPs,
-declared gateways, silent subnets, undeclared CIDRs), `policy` is the firewall
+declared-vs-observed reconciliation (Cisco and adopted-device matches with
+their observed IPs and device types, declared gateways, silent subnets,
+undeclared CIDRs), `policy` is the firewall
 reconciliation (denied-but-observed
 violations, unused permits, and a count of rules skipped because they couldn't
 be honestly evaluated from flow data). Comma-separate multiple files; UniFi

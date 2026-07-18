@@ -92,14 +92,28 @@ func (a *App) declaredGateways(snap graph.Snapshot) map[string]string {
 
 func applyDeclaredInventory(opts *mapview.Options, inv netconfig.InventoryResult) {
 	opts.DeclaredGateways = inv.DeclaredGateways
-	for _, d := range inv.AdoptedDevices {
-		if d.ObservedIP == "" {
-			continue
+	setDevice := func(ip, name, model string) {
+		if ip == "" || name == "" {
+			return
 		}
 		if opts.DeclaredDevices == nil {
 			opts.DeclaredDevices = map[string]mapview.DeclaredDevice{}
 		}
-		opts.DeclaredDevices[d.ObservedIP] = mapview.DeclaredDevice{Name: d.Name, Model: d.Model}
+		opts.DeclaredDevices[ip] = mapview.DeclaredDevice{Name: name, Model: model}
+	}
+	for _, match := range inv.Matches {
+		if match.DeviceType == "" {
+			continue
+		}
+		for _, ip := range match.IPs {
+			setDevice(ip, match.Device, match.DeviceType)
+		}
+	}
+	for _, d := range inv.AdoptedDevices {
+		if d.ObservedIP == "" {
+			continue
+		}
+		setDevice(d.ObservedIP, d.Name, d.Model)
 	}
 }
 
@@ -208,6 +222,21 @@ func declaredFindings(devs []netconfig.DeclaredDevice, inv netconfig.InventoryRe
 	}
 	out = append(out, fmt.Sprintf("device configs: %d device(s) declared, %d gateway(s) identified, %d silent subnet(s), %d undeclared CIDR(s)",
 		len(devs), len(inv.DeclaredGateways), len(inv.SilentSubnets), len(inv.UndeclaredCIDRs)))
+	ciscoTotal := 0
+	for _, d := range devs {
+		if d.Vendor == "cisco-ios" {
+			ciscoTotal++
+		}
+	}
+	if ciscoTotal > 0 {
+		matched := 0
+		for _, m := range inv.Matches {
+			if m.DeviceType != "" {
+				matched++
+			}
+		}
+		out = append(out, fmt.Sprintf("device configs: %d of %d Cisco IOS device(s) matched observed map nodes", matched, ciscoTotal))
+	}
 	if total := len(inv.AdoptedDevices); total > 0 {
 		observed := 0
 		for _, d := range inv.AdoptedDevices {

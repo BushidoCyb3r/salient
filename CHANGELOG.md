@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Cisco IOS running-config imports now retain and label exact observed
+  interface/SVI matches on maps as routers, switches, or Layer-3 switches,
+  reaching the same map-identity seam as imported UniFi devices.
+
+### Fixed
+- L2 Cisco switch management SVIs are no longer classified as gateways, and
+  declared gateway identity now applies consistently to normal/focused maps as
+  well as condensed overviews.
+
 ## [0.6.2] - 2026-07-17
 
 UniFi adopted-device map identity.

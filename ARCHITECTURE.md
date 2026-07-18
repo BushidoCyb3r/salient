@@ -117,9 +117,11 @@ running-config text (`cisco.go`) and both legacy and official UniFi Network API
 JSON (`unifi.go`) into one normalized `DeclaredDevice` model (`types.go`) the
 diffs share; the diffs never see vendor specifics. `inventory.go` reconciles
 declared devices against the observed snapshot (device matches, gateway
-confirmation, adopted UniFi device identity, silent subnets, undeclared CIDRs);
-matched adopted devices are retained and labeled on maps while unobserved
-devices remain inventory-only. `policy.go` evaluates observed
+confirmation, Cisco router/switch identity, adopted UniFi device identity,
+silent subnets, undeclared CIDRs); matched devices are retained and labeled on
+maps while unobserved devices remain inventory-only. Cisco IOS switchport state
+and explicit `ip routing` distinguish L2 switches, L3 switches, and routers so
+a management SVI is not automatically treated as a gateway. `policy.go` evaluates observed
 edges against each device's bound rulesets. Two properties are worth
 internalizing:
 
@@ -200,7 +202,8 @@ reproduced offline without reconnecting to the grid.
 persisted by the importer) → sanitized `[]DeclaredDevice` written to
 `salient-data/declared.json` (devices only) → inventory and policy diffs
 **re-derived against each loaded snapshot** → map badges (declared gateways,
-undeclared-subnet markers) and Hunt Leads (`policy-denied`, priority 0). Because
+matched Cisco/UniFi identity, undeclared-subnet markers) and Hunt Leads
+(`policy-denied`, priority 0). Because
 the diffs are recomputed per snapshot, the declared world always reconciles
 against current observed terrain.
 

@@ -720,6 +720,38 @@ func TestBuildInferredGatewayFallback(t *testing.T) {
 	}
 }
 
+func TestBuildDeclaredGatewayOnDetailedMap(t *testing.T) {
+	var nodes []graph.Node
+	for i := 10; i < 14; i++ {
+		nodes = append(nodes,
+			graph.Node{IP: fmt.Sprintf("10.0.0.%d", i), Subnet: "10.0.0.0/24"},
+			graph.Node{IP: fmt.Sprintf("10.0.1.%d", i), Subnet: "10.0.1.0/24"},
+		)
+	}
+	snap := graph.Snapshot{
+		Nodes: nodes,
+		Edges: []graph.Edge{{Src: "10.0.0.10", Dst: "10.0.1.10", Port: 443, ConnCount: 100}},
+	}
+	m := mapview.Build(snap, mapview.Options{DeclaredGateways: map[string]string{"10.0.0.254": "core-rtr"}})
+	id := "g:10.0.0.0/24:gw"
+	count := 0
+	for _, n := range m.Nodes {
+		if n.ID != id {
+			continue
+		}
+		count++
+		if !n.Gateway || n.Inferred || n.Label != "gateway (declared)" {
+			t.Errorf("detailed declared gateway = %+v", n)
+		}
+		if !strings.Contains(strings.Join(n.Evidence, "\n"), "gateway declared by core-rtr config") {
+			t.Errorf("detailed declared gateway missing config evidence: %v", n.Evidence)
+		}
+	}
+	if count != 1 {
+		t.Fatalf("detailed declared gateway count = %d, want 1", count)
+	}
+}
+
 func TestBuildObservedGatewayFromL2Evidence(t *testing.T) {
 	snap := fixture(t)
 	snap.Meta.L2Gateways = []graph.L2Gateway{{MAC: "aa:bb:cc:dd:ee:ff", Sensor: "s1", IPCount: 40}}

@@ -124,7 +124,7 @@ func TestOverviewRetainsDeclaredUniFiDevice(t *testing.T) {
 		if n.Device != "Core Switch" || n.DeviceType != "USW-Pro-24" || n.Role != string(graph.RoleNetworkGear) || n.Tier != TierCore {
 			t.Fatalf("declared device overlay = %+v", n)
 		}
-		if !hasEvidence(n.Evidence, "device identity imported from UniFi Network: Core Switch (USW-Pro-24)") {
+		if !hasEvidence(n.Evidence, "device identity imported from device config: Core Switch (USW-Pro-24)") {
 			t.Fatalf("declared device evidence = %v", n.Evidence)
 		}
 		return

@@ -83,9 +83,11 @@ labeled "inferred" when there's no L2 evidence, never presented as fact.
   cross-subnet traffic because no MAC evidence exists — never observed fact.
 - **Node roles** include `NetworkGear` for hosts serving controller/switch/AP
   protocols (CAPWAP, PAPI, Smart Install, TACACS+) and for observed management
-  IPs/MACs matched to adopted devices in an imported UniFi inventory. Imported
-  matches are retained and show the controller's device name and model;
-  controller-only devices are not synthesized onto the traffic map. Clicking a
+  addresses matched to imported Cisco IOS or UniFi devices. Cisco matches use
+  an exact interface/SVI IP and show the IOS hostname plus router/switch type;
+  UniFi matches use management IP or MAC and show the controller name/model.
+  Imported matches are retained, while config/controller-only devices are not
+  synthesized onto the traffic map. Clicking a
   node also shows its observed **MAC** and decoded **vendor** when captured (a host's own NIC;
   gateway MACs are excluded so a router's MAC is never mis-attributed).
 - **Amber-bordered nodes** are operator-**pinned** (console): a host forced to

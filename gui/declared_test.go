@@ -25,7 +25,7 @@ func declaredFixturePaths(t *testing.T) []string {
 	t.Helper()
 	var paths []string
 	for _, name := range []string{
-		"ios-router.cfg", "unifi-networkconf.json",
+		"ios-router.cfg", "ios-switch.cfg", "unifi-networkconf.json",
 		"unifi-firewallrule.json", "unifi-device.json",
 	} {
 		p, err := filepath.Abs(filepath.Join("..", "testdata", "netconfig", name))
@@ -48,10 +48,13 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 	writeSnapshot(t, snapPath, graph.Snapshot{
 		Meta: graph.SnapshotMeta{CreatedAt: t0},
 		Nodes: []graph.Node{
+			// Exact Cisco router and switch interface/SVI management addresses.
+			{IP: "10.0.40.1", Subnet: "10.0.40.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.95, Rank: 1}},
+			{IP: "10.0.40.2", Subnet: "10.0.40.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.92, Rank: 2}},
 			// Behind the Gi0/0.40 declared gateway subnet (10.0.40.0/24).
-			{IP: "10.0.40.10", Subnet: "10.0.40.0/24", MAC: "aa:bb:cc:dd:ee:02", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.9, Rank: 1}},
+			{IP: "10.0.40.10", Subnet: "10.0.40.0/24", MAC: "aa:bb:cc:dd:ee:02", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.9, Rank: 3}},
 			// On a subnet no config declares.
-			{IP: "10.9.9.9", Subnet: "10.9.9.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.5, Rank: 2}},
+			{IP: "10.9.9.9", Subnet: "10.9.9.0/24", FirstSeen: t0, LastSeen: t0, Scores: graph.ScoreSet{Composite: 0.5, Rank: 4}},
 		},
 	})
 
@@ -75,6 +78,28 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 		t.Fatal("UniFi switch missing from map")
 	}
 	assertDeclaredSwitch(model.Nodes)
+	assertCisco := func(modelNodes []mapview.MapNode) {
+		t.Helper()
+		seen := map[string]bool{}
+		for _, n := range modelNodes {
+			switch n.ID {
+			case "10.0.40.1":
+				seen[n.ID] = true
+				if n.Device != "edge-rtr-01" || n.DeviceType != "Cisco IOS router" || !n.Gateway || n.Role != string(graph.RoleNetworkGear) || n.Tier != mapview.TierCore {
+					t.Fatalf("Cisco router overlay = %+v", n)
+				}
+			case "10.0.40.2":
+				seen[n.ID] = true
+				if n.Device != "access-sw-01" || n.DeviceType != "Cisco IOS switch" || n.Gateway || n.Role != string(graph.RoleNetworkGear) || n.Tier != mapview.TierCore {
+					t.Fatalf("Cisco switch overlay = %+v", n)
+				}
+			}
+		}
+		if !seen["10.0.40.1"] || !seen["10.0.40.2"] {
+			t.Fatalf("Cisco devices missing from map: seen=%v", seen)
+		}
+	}
+	assertCisco(model.Nodes)
 
 	// Findings summarize the diff.
 	var summarized bool
@@ -101,8 +126,8 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 	if err != nil || art == nil {
 		t.Fatalf("loadDeclaredArtifact: art=%v err=%v", art, err)
 	}
-	if len(art.Devices) != 2 { // IOS router + folded UniFi controller
-		t.Errorf("persisted device count = %d, want 2", len(art.Devices))
+	if len(art.Devices) != 3 { // IOS router + IOS switch + folded UniFi controller
+		t.Errorf("persisted device count = %d, want 3", len(art.Devices))
 	}
 	// Reapply on a plain snapshot reload: LoadModel must re-derive the gateway
 	// overlay from persisted configs (no error, gateway still resolves).
@@ -111,6 +136,7 @@ func TestLoadDeclaredDiffsAndPersists(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertDeclaredSwitch(reloaded.Nodes)
+	assertCisco(reloaded.Nodes)
 	snap := mustLoadSnap(t, snapPath)
 	if a.declaredGateways(snap)["10.0.40.1"] != "edge-rtr-01" {
 		t.Error("declared gateway not reapplied on reload")

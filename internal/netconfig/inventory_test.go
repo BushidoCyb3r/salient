@@ -45,7 +45,7 @@ func TestDiffInventory(t *testing.T) {
 	want := InventoryResult{
 		Matches: []DeviceMatch{
 			{Device: "ap-01", Source: "unifi.json", IPs: []string{"10.0.1.10"}, ByMAC: true},
-			{Device: "core-rtr", Source: "core.cfg", IPs: []string{"10.0.1.1"}, ByMAC: false}, // 10.0.2.1 gw IP not observed
+			{Device: "core-rtr", DeviceType: "Cisco IOS router", Source: "core.cfg", IPs: []string{"10.0.1.1"}, ByMAC: false}, // 10.0.2.1 gw IP not observed
 		},
 		AdoptedDevices:   []AdoptedDevice{{Name: "ap-01", ObservedIP: "10.0.1.10"}},
 		DeclaredGateways: map[string]string{"10.0.1.1": "core-rtr", "10.0.2.1": "core-rtr"},
@@ -54,6 +54,46 @@ func TestDiffInventory(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("DiffInventory mismatch:\n got=%+v\nwant=%+v", got, want)
+	}
+}
+
+func TestDiffInventoryCiscoSwitchGatewayClassification(t *testing.T) {
+	snap := graph.Snapshot{Nodes: []graph.Node{
+		{IP: "10.0.40.2", Subnet: "10.0.40.0/24"},
+		{IP: "10.0.40.10", Subnet: "10.0.40.0/24"},
+	}}
+	switchDevice := DeclaredDevice{
+		Source: "access-sw.cfg", Vendor: "cisco-ios", Hostname: "access-sw-01",
+		Interfaces: []Interface{
+			{Name: "Vlan40", Prefixes: []string{"10.0.40.2/24"}},
+			{Name: "Gi0/1", Switchport: true, VLAN: 40},
+		},
+	}
+
+	l2 := DiffInventory(snap, []DeclaredDevice{switchDevice})
+	if len(l2.Matches) != 1 || l2.Matches[0].DeviceType != "Cisco IOS switch" {
+		t.Fatalf("L2 switch match = %+v", l2.Matches)
+	}
+	if _, ok := l2.DeclaredGateways["10.0.40.2"]; ok {
+		t.Errorf("L2 management SVI incorrectly declared as gateway: %+v", l2.DeclaredGateways)
+	}
+
+	switchDevice.Routing = true
+	l3 := DiffInventory(snap, []DeclaredDevice{switchDevice})
+	if len(l3.Matches) != 1 || l3.Matches[0].DeviceType != "Cisco IOS Layer 3 switch" {
+		t.Fatalf("L3 switch match = %+v", l3.Matches)
+	}
+	if l3.DeclaredGateways["10.0.40.2"] != "access-sw-01" {
+		t.Errorf("L3 switch SVI missing from declared gateways: %+v", l3.DeclaredGateways)
+	}
+}
+
+func TestDeclaredDeviceIdentityRecognizesSVIOnlySwitch(t *testing.T) {
+	typ, canRoute := declaredDeviceIdentity(DeclaredDevice{
+		Vendor: "cisco-ios", Interfaces: []Interface{{Name: "Vlan1", Prefixes: []string{"10.0.0.2/24"}}},
+	})
+	if typ != "Cisco IOS switch" || canRoute {
+		t.Fatalf("SVI-only identity = (%q, %v), want L2 switch", typ, canRoute)
 	}
 }
 

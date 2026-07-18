@@ -105,14 +105,17 @@ func ParseCiscoIOS(r io.Reader, source string) (DeclaredDevice, error) {
 						iface.Bindings = append(iface.Bindings, Binding{Ruleset: fields[2], Direction: dir})
 						recognized++
 					}
-				case len(fields) >= 4 && fields[0] == "switchport" && fields[1] == "access" && fields[2] == "vlan":
-					if v, err := strconv.Atoi(fields[3]); err == nil {
-						iface.VLAN = v
-						recognized++
-					}
-				case len(fields) >= 3 && fields[0] == "switchport" && fields[1] == "mode" && fields[2] == "trunk":
-					iface.Trunk = true
+				case fields[0] == "switchport":
+					iface.Switchport = true
 					recognized++
+					if len(fields) >= 4 && fields[1] == "access" && fields[2] == "vlan" {
+						if v, err := strconv.Atoi(fields[3]); err == nil {
+							iface.VLAN = v
+						}
+					}
+					if len(fields) >= 3 && fields[1] == "mode" && fields[2] == "trunk" {
+						iface.Trunk = true
+					}
 				}
 			case secACL:
 				if fields[0] == "permit" || fields[0] == "deny" {
@@ -151,6 +154,12 @@ func ParseCiscoIOS(r io.Reader, source string) (DeclaredDevice, error) {
 		switch {
 		case fields[0] == "hostname" && len(fields) >= 2:
 			dev.Hostname = fields[1]
+			recognized++
+		case len(fields) == 2 && fields[0] == "ip" && fields[1] == "routing":
+			dev.Routing = true
+			recognized++
+		case len(fields) == 3 && fields[0] == "no" && fields[1] == "ip" && fields[2] == "routing":
+			dev.Routing = false
 			recognized++
 		case fields[0] == "interface" && len(fields) >= 2:
 			dev.Interfaces = append(dev.Interfaces, Interface{Name: fields[1]})

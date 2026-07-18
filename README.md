@@ -143,6 +143,12 @@ matches an observed snapshot node are retained and named on the map as
 `NetworkGear`; controller-only devices are reported but not fabricated as
 traffic nodes.
 
+Cisco IOS running-configs work through the same import. Observed interface or
+management-SVI IPs are retained and labeled with the IOS hostname as a router,
+switch, or Layer-3 switch. L2 management SVIs are not misidentified as
+gateways, and unobserved config-only devices are reported without inventing
+traffic nodes. See the [Cisco export and matching rules](docs/config-ingest.md#cisco-ios).
+
 The CLI is a static binary. On Linux or macOS, make the downloaded CLI executable
 before its first run:
 
@@ -392,7 +398,7 @@ salient view
 | `map` | Render a snapshot as interactive HTML, SVG, or GraphML. |
 | `diff` | Compare two snapshots and optionally render a drift-highlighted map. |
 | `reconcile` | Compare a snapshot with an asset CSV and optionally render the findings. |
-| `declared` | Compare exported Cisco IOS/UniFi configs with observed inventory and policy. |
+| `declared` | Compare exported Cisco IOS/UniFi configs with observed inventory and policy; matched devices include map-ready identity. |
 | `unifi-export` | Export import-ready config JSON through the local Network Integration API. |
 | `mission` | Score dependency proximity to operator-selected mission systems. |
 | `stability` | Report terrain-rank stability across at least three stored snapshots. |

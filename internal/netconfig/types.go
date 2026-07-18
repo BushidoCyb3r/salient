@@ -78,14 +78,15 @@ type Binding struct {
 }
 
 type Interface struct {
-	Name     string    `json:"name"`
-	Model    string    `json:"model,omitempty"` // UniFi adopted-device model/type
-	Prefixes []string  `json:"prefixes"`        // CIDRs (primary + secondaries)
-	VLAN     int       `json:"vlan,omitempty"`
-	Trunk    bool      `json:"trunk,omitempty"` // switchport mode trunk
-	Shutdown bool      `json:"shutdown,omitempty"`
-	Bindings []Binding `json:"bindings,omitempty"`
-	MAC      string    `json:"mac,omitempty"` // UniFi device inventory match
+	Name       string    `json:"name"`
+	Model      string    `json:"model,omitempty"` // UniFi adopted-device model/type
+	Prefixes   []string  `json:"prefixes"`        // CIDRs (primary + secondaries)
+	VLAN       int       `json:"vlan,omitempty"`
+	Switchport bool      `json:"switchport,omitempty"` // Cisco IOS L2 interface
+	Trunk      bool      `json:"trunk,omitempty"`      // switchport mode trunk
+	Shutdown   bool      `json:"shutdown,omitempty"`
+	Bindings   []Binding `json:"bindings,omitempty"`
+	MAC        string    `json:"mac,omitempty"` // UniFi device inventory match
 }
 
 type VLAN struct {
@@ -116,6 +117,7 @@ type DeclaredDevice struct {
 	Source     string      `json:"source"`
 	Vendor     string      `json:"vendor"` // "cisco-ios" | "unifi"
 	Hostname   string      `json:"hostname"`
+	Routing    bool        `json:"routing,omitempty"` // explicit Cisco IOS `ip routing`
 	Interfaces []Interface `json:"interfaces,omitempty"`
 	VLANs      []VLAN      `json:"vlans,omitempty"`
 	DHCPPools  []Pool      `json:"dhcp_pools,omitempty"`
