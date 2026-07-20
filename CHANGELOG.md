@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-20
+
+Product-wide UI redesign.
+
+### Changed
+- Terrain HTML report rebuilt as an app-shell layout: sidebar with grid
+  stats, top-10 navigation, and handling warnings; evidence-rich detail
+  sections for the top 10; full ranked table with expandable evidence.
+- Operator Console restructured: left rail with brand block and segmented
+  tab navigation, slim toolbar over a dominant map canvas, and a monospace
+  task-log drawer. UI typography is now sans-serif with monospace reserved
+  for data (IPs, logs, filters).
+- `salient view` report index restyled to match the new design language.
+- New crimson brand accent (#e05252) across the report, GUI, and view index.
+- New logo artwork and application icon matching the crimson palette.
+
 ## [0.6.3] - 2026-07-18
 
 Cisco IOS map identity parity.
